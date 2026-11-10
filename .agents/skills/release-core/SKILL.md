@@ -42,8 +42,12 @@ The version teams will see is the date of this entry plus the commit that contai
 
 ## 3. Prepare the emails (drafts only)
 
-Read the **AI Champions** Google Sheet (columns: Name, Email, Company, Team, Team repository,
-Language, Core version, Onboarding date, Last email sent, Notes). Skip rows without an email.
+Read the **AI Champions** Google Sheet with the **Google Sheets connector** (`get_values`;
+spreadsheet id `192RjrWGwOgeHM53p0V8AjqvLkmzMeVZpndW6fGTQqB8`). Columns: Name, Email, Company,
+Team, Team repository, Language, Core version, Onboarding date, Last email sent, Notes.
+Skip rows without an email. If the Sheets connector is not connected, read it with the Google
+Drive connector (`read_file_content`) and tell the maintainer to connect Google Sheets in
+claude.ai → Settings → Connectors so the sheet can be updated in step 4.
 
 For each Champion, **create a draft** (never send) in their `Language`, using this structure:
 
@@ -69,10 +73,13 @@ List the drafts created (name, email, language) and tell the maintainer they can
 send them. Do **not** change the sheet yet.
 
 When the maintainer confirms the emails were sent, fill **Last email sent** with
-`<date> — version <YYYY-MM-DD>` for those rows. If no tool can edit the sheet, give the
-maintainer the exact values to paste.
+`<date> — version <YYYY-MM-DD>` for those rows, using the Google Sheets connector
+(`update_values`, one range per row). Show the rows and values before writing. If the Sheets
+connector is not connected, give the maintainer the exact values to paste.
 
 ## Tools
 
 - Shell: `git`
-- Google Drive (read the AI Champions sheet), Gmail (create drafts only)
+- Google Sheets connector (`get_values`, `update_values`) for the AI Champions sheet;
+  Google Drive (`read_file_content`) as a read-only fallback
+- Gmail (create drafts only, never send)
