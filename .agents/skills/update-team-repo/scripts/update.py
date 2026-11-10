@@ -13,7 +13,7 @@ Run from the TEMPLATE folder (a fresh copy of ai-team-template):
 The team's repository receives plain files, never the template's history. This script does
 not commit: the AI Champion commits under their own name (see the skill).
 
-Copied: .agents/core/ (mirrored), AGENTS.md, CLAUDE.md, .gitattributes, system skills, and the
+Copied: .agents/core/ (mirrored), AGENTS.md, CLAUDE.md, .gitattributes, system skills and subagents, and the
 launchers' content (keeping the team's launcher name). Never touched: .agents/local/,
 the team's own skills, documents, artifacts. Permissions are only ever added, never removed.
 
@@ -136,6 +136,11 @@ def apply(target, add_rules):
     for skill in manifest.get("system_skills", []):
         if skill not in template_only:
             mirror(f".agents/skills/{skill}", target)
+    for agent in manifest.get("system_agents", []):  # system subagents; the team's own are kept
+        src = TEMPLATE / ".agents/agents" / f"{agent}.md"
+        if src.is_file():
+            (target / ".agents/agents").mkdir(parents=True, exist_ok=True)
+            shutil.copy2(src, target / ".agents/agents" / f"{agent}.md")
 
     launcher = load_json(target / ".agents/local/team.json").get("launcher", TEMPLATE_LAUNCHER)
     for ext in (".command", ".bat"):

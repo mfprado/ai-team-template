@@ -8,6 +8,9 @@
     "update-team-repo",
     "release-core"
   ],
+  "system_agents": [
+    "improvement-reviewer"
+  ],
   "template_only_skills": [
     "create-team-repo",
     "update-team-repo",
