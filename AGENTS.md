@@ -19,6 +19,7 @@ Instructions for any AI agent (Codex, Claude Code, others) working in this team 
 | `.agents/local/` | This team's extra rules and hooks | You, when the team asks |
 | `.claude/`, `.codex/` | **Generated** from `.agents/` on every commit | Never edit. Change `.agents/` instead |
 | Visible folders (documents, artifacts) | The team's own work | The team and you |
+| `IDEAS.md` | The team's ideas, one line each | You, only through `ideas.py` |
 
 `.agents/core/manifest.json` lists the system skills owned by core (for example `migrate-skill`). Do not modify them; the team's own skills are everything else in `.agents/skills/`.
 
@@ -31,6 +32,8 @@ Read a rule file **only when its situation applies**. Team rules in `.agents/loc
 | Creating, migrating or editing a skill | `.agents/core/rules/skills.md` |
 | Producing a report, dashboard or any HTML output | `.agents/core/rules/artifacts.md` |
 | Anything involving credentials, messages to people, or changing permissions | `.agents/core/rules/safety.md` |
+| Someone shares an idea for the team, or asks about the team's ideas | `.agents/core/rules/ideas.md` |
+| An "IMPROVEMENT REVIEW" note appears, or someone asks what could work better | `.agents/core/rules/improvements.md` |
 | Any task covered by a file in `.agents/local/rules/` | That file |
 
 ## Sharing changes with the team

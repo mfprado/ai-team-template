@@ -20,6 +20,16 @@
           }
         ]
       }
+    ],
+    "UserPromptSubmit": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "sh \"$(git rev-parse --show-toplevel)\"/.agents/core/bin/py -I \"$(git rev-parse --show-toplevel)\"/.agents/core/hooks/review_tick.py"
+          }
+        ]
+      }
     ]
   }
 }

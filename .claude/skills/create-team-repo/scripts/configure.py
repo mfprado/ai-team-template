@@ -34,6 +34,10 @@ from pathlib import Path
 TEMPLATE = Path(__file__).resolve().parents[4]
 TEMPLATE_LAUNCHER = "Team-AI"
 VISIBLE_DIRS = ["documents", "artifacts"]
+IDEAS = {
+    "en": "# Team ideas\n\nIdeas for the team's AI workspace. Anyone can add one; the AI Champion updates its status.\n\n",
+    "es": "# Ideas del equipo\n\nIdeas para el espacio de IA del equipo. Cualquiera puede sumar una; el IA Champion actualiza su estado.\n\n",
+}
 
 README = """# {team} AI workspace
 
@@ -51,6 +55,7 @@ The shared AI workspace of the {team} team at {company}.
 | `documents/` | The team's documents |
 | `artifacts/` | Reports and dashboards to share with the team |
 | `artifacts/private/` | Reports only for you: they stay on your computer |
+| `IDEAS.md` | The team's ideas: tell the assistant "I have an idea", or add it on the team page |
 
 Anything else is organised as the team likes. Questions: ask your AI Champion.
 """
@@ -133,6 +138,7 @@ def main():
         (target / d).mkdir(exist_ok=True)
         (target / d / ".gitkeep").touch()
 
+    (target / "IDEAS.md").write_text(IDEAS[args.language], encoding="utf-8")
     (target / "README.md").write_text(
         README.format(team=args.team, company=args.company, launcher=launcher), encoding="utf-8")
 

@@ -28,6 +28,10 @@ T = {
         "sync": "Get the team's latest", "synced": "Up to date with the team.",
         "sync_fail": "Could not get the team's latest changes right now.",
         "tab_skills": "Skills", "tab_perms": "Permissions", "tab_artifacts": "Reports", "tab_history": "History",
+        "tab_ideas": "Ideas", "ideas_intro": "Ideas for the team's workspace. Anyone can add one; {name} decides what happens with each.",
+        "no_ideas": "No ideas yet.", "new_idea": "Your idea", "add_idea": "Add idea",
+        "idea_summary": "New idea: {text}", "set_status": "Status", "save_status": "Save status",
+        "status_summary": "Idea {n}: {status}", "waiting": "waiting for {name}",
         "team_skills": "Team skills", "system_skills": "System skills", "no_skills": "The team has no skills yet. Ask the assistant to bring one in.",
         "how_to_ask": "To use it, open Claude or Codex in this folder and ask for it in your own words.",
         "details": "Show the full instructions",
@@ -48,6 +52,10 @@ T = {
         "sync": "Traer lo último del equipo", "synced": "Al día con el equipo.",
         "sync_fail": "No se pudieron traer los últimos cambios del equipo ahora.",
         "tab_skills": "Skills", "tab_perms": "Permisos", "tab_artifacts": "Reportes", "tab_history": "Historial",
+        "tab_ideas": "Ideas", "ideas_intro": "Ideas para el espacio del equipo. Cualquiera puede sumar una; {name} decide qué se hace con cada una.",
+        "no_ideas": "Todavía no hay ideas.", "new_idea": "Tu idea", "add_idea": "Agregar idea",
+        "idea_summary": "Nueva idea: {text}", "set_status": "Estado", "save_status": "Guardar estado",
+        "status_summary": "Idea {n}: {status}", "waiting": "esperando a {name}",
         "team_skills": "Skills del equipo", "system_skills": "Skills del sistema", "no_skills": "El equipo todavía no tiene skills. Pedile al asistente que traiga una.",
         "how_to_ask": "Para usarla, abrí Claude o Codex en esta carpeta y pedila con tus palabras.",
         "details": "Ver las instrucciones completas",
@@ -141,6 +149,24 @@ def show_in_folder(path):
         webbrowser.open(path.parent.as_uri())
 
 
+def share(summary, paths):
+    """Share a change with the team (published or change request) and show the outcome."""
+    result = run(sys.executable, "-I", str(CORE / "scripts/propose_change.py"), "--summary", summary, "--paths", *paths)
+    try:
+        outcome = json.loads(result.stdout.strip().splitlines()[-1])
+    except (ValueError, IndexError):
+        outcome = {"status": "blocked", "message": result.stderr.strip() or result.stdout.strip()}
+    (st.success if outcome.get("status") in ("published", "requested") else st.warning)(outcome.get("message", ""))
+    if outcome.get("note_for_champion"):
+        st.write(t["note"].format(name=champion))
+        st.code(outcome["note_for_champion"], language=None)
+
+
+def is_champion():
+    email = git("config", "user.email").stdout.strip().lower()
+    return bool(email) and email == str(team.get("champion", {}).get("email", "")).lower()
+
+
 def rule_label(rule):
     what = rule.get("pattern") or rule.get("tool", "")
     return f"{rule.get('reason') or what}  ·  `{what}`"
@@ -162,7 +188,7 @@ if "synced" not in st.session_state or st.button(t["sync"]):
 st.caption(t["synced"] if st.session_state.get("synced") else t["sync_fail"])
 
 # Section picker that survives reruns (st.tabs jumps back to the first tab when a switch changes).
-SECTIONS = [t["tab_skills"], t["tab_perms"], t["tab_artifacts"], t["tab_history"]]
+SECTIONS = [t["tab_skills"], t["tab_ideas"], t["tab_perms"], t["tab_artifacts"], t["tab_history"]]
 section = st.radio("section", SECTIONS, horizontal=True, key="section", label_visibility="collapsed")
 st.divider()
 
@@ -184,6 +210,52 @@ if section == t["tab_skills"]:
                 st.caption(t["how_to_ask"])
                 if st.checkbox(t["details"], key=f"detail-{name}"):
                     st.markdown(body)
+
+# Ideas: anyone adds; the AI Champion sets the status
+if section == t["tab_ideas"]:
+    st.write(t["ideas_intro"].format(name=champion))
+    listed = run(sys.executable, "-I", str(CORE / "scripts/ideas.py"), "list")
+    try:
+        ideas = json.loads(listed.stdout or "[]")
+    except ValueError:
+        ideas = []
+    # Ideas still waiting in change requests (not yet in the team's version)
+    known = {(i["date"], i["who"], i["text"]) for i in ideas}
+    waiting = []
+    line = re.compile(r"^- \[[^\]]+\] (\d{4}-\d{2}-\d{2}) · (.+?) — (.+)$")
+    for b in git("branch", "-r", "--list", "origin/change/*").stdout.split():
+        for l in git("show", f"{b}:IDEAS.md").stdout.splitlines():
+            m = line.match(l)
+            if m and m.groups() not in known and m.groups() not in waiting:
+                waiting.append(m.groups())
+    for date, who, text in reversed(waiting):
+        col1, col2 = st.columns([4, 1.4])
+        col1.write(f"**{text}**  \n{who} · {date}")
+        col2.caption(t["waiting"].format(name=champion))
+    if not ideas and not waiting:
+        st.caption(t["no_ideas"])
+    champion_here = is_champion()
+    for idea in reversed(ideas):
+        col1, col2 = st.columns([4, 1.4])
+        col1.write(f"**{idea['text']}**  \n{idea['who']} · {idea['date']}")
+        if champion_here:
+            keys = ["new", "planned", "done"]
+            labels = {"en": {"new": "New", "planned": "Planned", "done": "Done"},
+                      "es": {"new": "Nueva", "planned": "En camino", "done": "Hecha"}}[team.get("language", "en") if team.get("language") in ("en", "es") else "en"]
+            choice = col2.selectbox(t["set_status"], keys, index=keys.index(idea["key"]),
+                                    format_func=labels.get, key=f"idea-{idea['id']}", label_visibility="collapsed")
+            if choice != idea["key"] and col2.button(t["save_status"], key=f"save-{idea['id']}"):
+                run(sys.executable, "-I", str(CORE / "scripts/ideas.py"), "status", "--id", str(idea["id"]), "--to", choice)
+                share(t["status_summary"].format(n=idea["id"], status=labels[choice]), ["IDEAS.md"])
+        else:
+            col2.write(f"`{idea['status']}`")
+    st.divider()
+    with st.form("new-idea", clear_on_submit=True):
+        text = st.text_area(t["new_idea"], max_chars=500)
+        if st.form_submit_button(t["add_idea"], type="primary") and text.strip():
+            run(sys.executable, "-I", str(CORE / "scripts/ideas.py"), "add", "--text", text)
+            share(t["idea_summary"].format(text=" ".join(text.split())[:80]), ["IDEAS.md"])
+            git("fetch", "--quiet", "origin")
 
 # Permissions: switches; changes are shared via propose_change.py
 if section == t["tab_perms"]:
@@ -217,17 +289,7 @@ if section == t["tab_perms"]:
                         perms["rules"][i]["enabled"] = False
                 perms_path.write_text(json.dumps(perms, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
                 run(sys.executable, "-I", str(CORE / "scripts/sync.py"))
-                result = run(sys.executable, "-I", str(CORE / "scripts/propose_change.py"),
-                             "--summary", t["perm_summary"].format(items="; ".join(items)),
-                             "--paths", ".agents/permissions.json")
-            try:
-                outcome = json.loads(result.stdout.strip().splitlines()[-1])
-            except (ValueError, IndexError):
-                outcome = {"status": "blocked", "message": result.stderr.strip() or result.stdout.strip()}
-            (st.success if outcome.get("status") in ("published", "requested") else st.warning)(outcome.get("message", ""))
-            if outcome.get("note_for_champion"):
-                st.write(t["note"].format(name=champion))
-                st.code(outcome["note_for_champion"], language=None)
+                share(t["perm_summary"].format(items="; ".join(items)), [".agents/permissions.json"])
 
 # Reports: open files from the artifacts folder
 if section == t["tab_artifacts"]:

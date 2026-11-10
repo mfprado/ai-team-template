@@ -65,6 +65,16 @@
           }
         ]
       }
+    ],
+    "UserPromptSubmit": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "sh \"$CLAUDE_PROJECT_DIR/.agents/core/bin/py\" -I \"$CLAUDE_PROJECT_DIR/.agents/core/hooks/review_tick.py\""
+          }
+        ]
+      }
     ]
   }
 }
