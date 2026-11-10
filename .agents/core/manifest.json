@@ -1,6 +1,10 @@
 {
   "description": "Files and skills owned by core. Identical in every team repository; updated from ai-team-template, never edited by hand.",
-  "version_file": ".agents/core/VERSION",
+  "source": {
+    "repository": "https://github.com/mfprado/ai-team-template",
+    "commit": null,
+    "note": "Versions are commit hashes. A team repository records here the full 40-character commit of the template its core came from; updating core means moving to a newer commit. null in the template itself."
+  },
   "system_skills": ["migrate-skill"],
   "paths": [
     "AGENTS.md",

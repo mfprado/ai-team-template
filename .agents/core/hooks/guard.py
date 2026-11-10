@@ -12,15 +12,17 @@ commands where the dangerous part is not at the start (`git -C . push origin +ma
 and edits to the policy itself.
 
 This is a guardrail against mistakes and common prompt-injection tricks, not a
-sandbox. If the policy file is unreadable it lets calls through with a warning
-(team decision); the pre-commit check refuses to save an invalid policy.
+sandbox. If the policy file is unreadable it falls back to FALLBACK_RULES (the
+critical basics) with a warning; the pre-commit check refuses to save an invalid policy.
 
 Standard library only.
 """
 
 import fnmatch
 import json
+import os
 import re
+import subprocess
 import shlex
 import sys
 from pathlib import Path, PurePosixPath
@@ -35,16 +37,45 @@ EDIT_TOOLS = {"edit", "write", "multiedit", "notebookedit", "apply_patch", "crea
 WRAPPERS = {"env", "command", "exec", "nohup", "time", "sudo", "nice", "xargs"}
 SHELLS = {"sh", "bash", "zsh", "dash"}
 GIT_GLOBAL_WITH_ARG = {"-C", "-c", "--git-dir", "--work-tree", "--namespace", "--exec-path"}
-SHELL_WRITE_HINTS = re.compile(r">|\btee\b|\bsed\s+-i|\bperl\s+-i|\bmv\b|\bcp\b|\brm\b|\btruncate\b|\bchmod\b|\bln\b|\bpython3?\s+-c\b")
+SEARCH_TOOLS = {"grep", "search"}
+# Shell commands that only read, allowed to name protected files without asking.
+READ_ONLY_PROGRAMS = {"cat", "less", "more", "head", "tail", "grep", "rg", "ls", "wc", "diff", "file", "stat"}
+READ_ONLY_GIT = {"diff", "log", "status", "show", "blame"}
+SYNC_SCRIPT = ".agents/core/scripts/sync.py"
+
+# Used when .agents/permissions.json cannot be read: the critical basics stay enforced.
+FALLBACK_RULES = [
+    {"tool": "Bash", "pattern": "git push --force", "tier": "deny"},
+    {"tool": "Bash", "pattern": "git push -f", "tier": "deny"},
+    {"tool": "Bash", "pattern": "git push --force-with-lease", "tier": "deny"},
+    {"tool": "Bash", "pattern": "git reset --hard", "tier": "deny"},
+    {"tool": "Read", "pattern": "**/.env", "tier": "deny"},
+    {"tool": "Read", "pattern": "**/.env.*", "tier": "deny"},
+    {"tool": "Read", "pattern": "**/*.pem", "tier": "deny"},
+    {"tool": "Read", "pattern": "**/*.key", "tier": "deny"},
+    {"tool": "mcp__*send*", "unless": ["*draft*"], "tier": "deny"},
+    {"tool": "mcp__*send_draft*", "tier": "deny"},
+    {"tool": "mcp__*schedule*", "unless": ["*draft*"], "tier": "deny"},
+    {"tool": "mcp__*post_message*", "unless": ["*draft*"], "tier": "deny"},
+    {"tool": "mcp__*reply*", "unless": ["*draft*"], "tier": "deny"},
+    {"tool": "mcp__*forward*", "unless": ["*draft*"], "tier": "deny"},
+    {"tool": "Edit", "pattern": ".agents/permissions.json", "tier": "ask"},
+    {"tool": "Edit", "pattern": ".agents/core/**", "tier": "ask"},
+    {"tool": "Edit", "pattern": ".claude/**", "tier": "ask"},
+    {"tool": "Edit", "pattern": ".codex/**", "tier": "ask"},
+]
 
 
 def load_rules():
     try:
         with POLICY.open(encoding="utf-8") as f:
-            return json.load(f).get("rules", [])
+            rules = json.load(f).get("rules")
+        if not isinstance(rules, list):
+            raise ValueError("no 'rules' list")
+        return rules
     except (OSError, ValueError) as exc:
-        print(f"guard: cannot read {POLICY.name} ({exc}); not enforcing", file=sys.stderr)
-        return []
+        print(f"guard: cannot read {POLICY.name} ({exc}); using built-in basic rules", file=sys.stderr)
+        return FALLBACK_RULES
 
 
 def command_of(tool_input):
@@ -55,11 +86,11 @@ def command_of(tool_input):
 
 
 def expand_flags(tokens):
-    """-uf -> -u -f ; --force-with-lease=main -> --force-with-lease"""
+    """-uf -> -u -f ; --force-with-lease=main -> --force-with-lease main"""
     out = []
     for t in tokens:
         if t.startswith("--") and "=" in t:
-            out.append(t.split("=", 1)[0])
+            out += t.split("=", 1)  # keep the value: it may be a path
         elif re.fullmatch(r"-[A-Za-z]{2,}", t):
             out += [f"-{c}" for c in t[1:]]
         else:
@@ -85,16 +116,23 @@ def normalize(tokens):
     return expand_flags(tokens)
 
 
+def tokenize(part):
+    """Split like a shell, with redirections (> >> <) as separate tokens."""
+    try:
+        lex = shlex.shlex(part, posix=True, punctuation_chars=True)
+        lex.whitespace_split = True
+        return list(lex)
+    except ValueError:
+        return re.sub(r"([<>]+)", r" \1 ", part).split()
+
+
 def segments(command, depth=0):
     """Yield normalized simple commands, recursing into `bash -c "..."`."""
     for part in re.split(r"&&|\|\||;|\||\n|`|\$\(|\)", command):
         part = part.strip()
         if not part:
             continue
-        try:
-            tokens = shlex.split(part)
-        except ValueError:
-            tokens = part.split()
+        tokens = tokenize(part)
         tokens = normalize(tokens)
         if not tokens:
             continue
@@ -111,18 +149,25 @@ def command_matches(rule_pattern, command):
     positional = [t for t in want if not t.startswith("-")]
     flags = [t for t in want if t.startswith("-")]
     for tokens in segments(command):
-        seg_positional = [t for t in tokens if not t.startswith("-")]
-        if seg_positional[: len(positional)] == positional and all(f in tokens for f in flags):
-            return True
+        # Look for the program anywhere, so wrapper options (`env -i`, `sudo -u x`) cannot hide it.
+        for i, t in enumerate(tokens):
+            if PurePosixPath(t.replace("\\", "/")).name != want[0]:
+                continue
+            sub = normalize(tokens[i:])
+            sub_positional = [x for x in sub if not x.startswith("-")]
+            if sub_positional[: len(positional)] == positional and all(f in sub for f in flags):
+                return True
     return False
 
 
 def relative(path):
-    p = Path(str(path))
+    """Normalize any spelling (./a/../b, a//b, absolute) to a path relative to the repo when inside it."""
+    raw = str(path).replace("\\", "/")
+    full = os.path.normpath(raw if os.path.isabs(raw) else os.path.join(str(ROOT), raw))
     try:
-        return PurePosixPath(p.resolve().relative_to(ROOT).as_posix()) if p.is_absolute() else PurePosixPath(str(path).replace("\\", "/"))
+        return PurePosixPath(Path(full).relative_to(ROOT).as_posix())
     except ValueError:
-        return PurePosixPath(str(path).replace("\\", "/"))
+        return PurePosixPath(full)
 
 
 def path_matches(pattern, path):
@@ -132,7 +177,7 @@ def path_matches(pattern, path):
     bare = pattern
     while bare.startswith("**/"):
         bare = bare[3:]
-    s = str(p).lstrip("./") if str(p).startswith("./") else str(p)
+    s = str(p)
     return fnmatch.fnmatch(p.name, bare) or fnmatch.fnmatch(s, pattern) or fnmatch.fnmatch(s, bare)
 
 
@@ -143,6 +188,36 @@ def paths_in(tool_input):
     if isinstance(patch, str):
         found += re.findall(r"^\*\*\* (?:Add|Update|Delete) File: (.+)$", patch, re.M)
     return found
+
+
+def read_only_or_sync(command):
+    """True when every part of the command only reads, or runs the sync script."""
+    if re.search(r"[<>]", command):
+        return False
+    for seg in segments(command):
+        prog = seg[0]
+        if prog in READ_ONLY_PROGRAMS:
+            continue
+        if prog == "git" and len(seg) > 1 and seg[1] in READ_ONLY_GIT:
+            continue
+        if prog.startswith("python") and len(seg) > 1 and relative(seg[1]) == PurePosixPath(SYNC_SCRIPT):
+            continue
+        return False
+    return True
+
+
+def search_reaches(pattern, tool_input):
+    """A folder-wide search can read a secret file without naming it. Search tools skip
+    git-ignored files, so it is only a problem if a matching file is NOT ignored."""
+    scope = tool_input.get("path") or "."
+    try:
+        out = subprocess.run(
+            ["git", "-C", str(ROOT), "ls-files", "--cached", "--others", "--exclude-standard", "--", str(relative(scope))],
+            capture_output=True, text=True, timeout=10,
+        ).stdout
+    except (OSError, subprocess.SubprocessError):
+        return True
+    return any(path_matches(pattern, f) for f in out.splitlines())
 
 
 def decide(rule, tool, tool_input):
@@ -158,12 +233,18 @@ def decide(rule, tool, tool_input):
             return False
         tools = READ_TOOLS if rule_tool == "Read" else EDIT_TOOLS
         if name in tools:
-            return any(path_matches(pattern, p) for p in paths_in(tool_input))
+            if any(path_matches(pattern, p) for p in paths_in(tool_input)):
+                return True
+            if rule_tool == "Read" and name in SEARCH_TOOLS and search_reaches(pattern, tool_input):
+                return "ask"  # folder-wide search that could reach a secret: the person decides
+            return False
         if name in SHELL_TOOLS:
             cmd = command_of(tool_input)
-            if rule_tool == "Edit" and not SHELL_WRITE_HINTS.search(cmd):
+            if rule_tool == "Edit" and read_only_or_sync(cmd):
                 return False
-            return any(path_matches(pattern, t) for seg in segments(cmd) for t in seg[1:])
+            words = [t for seg in segments(cmd) for t in seg[1:]]
+            words += [t.split("=", 1)[1] for t in words if "=" in t]  # of=path, --file=path
+            return any(path_matches(pattern, t) for t in words)
         return False
 
     if not fnmatch.fnmatch(name, rule_tool.lower()):
@@ -184,8 +265,12 @@ def main():
     rules = load_rules()
     for tier in ("deny", "ask"):
         for rule in (r for r in rules if r.get("tier", "deny") == tier):
-            if decide(rule, tool, tool_input):
+            result = decide(rule, tool, tool_input)
+            if result:
                 reason = rule.get("reason") or "Blocked by .agents/permissions.json."
+                if result == "ask":
+                    tier = "ask"
+                    reason = f"This search could read a protected file ({rule.get('pattern')}). {reason}"
                 if tier == "deny":
                     print(f"Blocked by team permissions: {reason}", file=sys.stderr)
                     return 2

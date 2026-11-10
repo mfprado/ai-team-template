@@ -23,11 +23,13 @@ CLAUDE.md                imports AGENTS.md (Claude Code)
 .agents/
   skills/                all skills (team + system)
   permissions.json       what the AI may not do
-  core/                  shared: VERSION, manifest, rules, hooks, git-hooks, scripts
+  core/                  shared: manifest, rules, hooks, git-hooks, scripts
   local/                 the team's own rules and hooks
 .claude/  .codex/        generated, do not edit
 ```
 
 ## Status
 
-v0.1.0: structure, rules, permissions, sync, guard hook, `migrate-skill`. Next: setup and the team UI.
+Versions are commit hashes of this repository: each team repository records in `.agents/core/manifest.json` the commit its core came from.
+
+Done: structure, rules, permissions, sync, guard hook, `migrate-skill`. Next: setup and the team UI.
