@@ -27,9 +27,12 @@ If the chosen template is not the one you are running from, explain it and conti
 that template's own `create-team-repo` skill. If that template is still empty, say the
 Spanish version is not ready yet and offer to continue in English or stop.
 
-## 2. Company and team
+## 2. Company, team and the AI Champion
 
-Ask for the **company** and the **team** names. Propose, and confirm:
+Ask for the **company** and the **team** names, and the Champion's **full name**, the **email
+of their GitHub account** and their **GitHub username**. The Champion is the only person who
+updates the team's main version directly; everyone else's changes reach them as change
+requests to approve. Propose, and confirm:
 
 - Repository name: `<company>-<team>-ai`, lowercase, hyphens (e.g. `acme-sales-ai`).
 - Launcher name: `<Team>-AI` (e.g. `Sales-AI`), the file the team double-clicks.
@@ -76,7 +79,8 @@ From `TEMPLATE_DIR`:
 
 ```
 sh .agents/core/bin/py .agents/skills/create-team-repo/scripts/configure.py \
-  --target "<Desktop>/<Launcher name>" --company "<company>" --team "<team>" --language <en|es>
+  --target "<Desktop>/<Launcher name>" --company "<company>" --team "<team>" --language <en|es> \
+  --champion-name "<full name>" --champion-email "<GitHub account email>" --champion-github "<username>"
 ```
 
 It copies the template's files (not its history, and not the template-only skills), writes
@@ -94,8 +98,7 @@ git config user.email
 ```
 
 Show the result: "Your changes will be saved as: <name> <email>". If either is missing or
-not theirs, ask for their **full name** and **the email of their GitHub account**, and set
-them for this repository only:
+does not match the name and GitHub email from step 2, set them for this repository only:
 
 ```
 git config user.name "<full name>"
@@ -113,6 +116,23 @@ git push -u origin main
 
 The team's checks run on this commit (generated files, secrets, skills). If they stop it,
 explain the message in plain words and fix it. Never commit or push under any other name.
+
+## 6b. Protect the team's main version
+
+Only the Champion should update `main`; teammates send change requests. The team's checks
+already enforce this on every computer. If `gh` is available, also ask GitHub to require a
+change request for `main` (the owner can still update it directly), after OK:
+
+```
+gh api -X PUT repos/<owner>/<repo-name>/branches/main/protection --input - <<'JSON'
+{"required_status_checks": null, "enforce_admins": false,
+ "required_pull_request_reviews": {"required_approving_review_count": 0},
+ "restrictions": null}
+JSON
+```
+
+If GitHub answers that the plan does not allow it (private repositories need a paid plan),
+tell the Champion in one sentence that the team's checks still protect it, and continue.
 
 ## 7. Prepare this computer
 

@@ -233,6 +233,58 @@ def search_reaches(pattern, tool_input):
     return any(path_matches(pattern, f) for f in out.splitlines())
 
 
+MAIN_BRANCHES = {"main", "master"}
+
+
+def team_info():
+    try:
+        return json.loads((ROOT / ".agents/local/team.json").read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        return {}
+
+
+def git_out(*args):
+    try:
+        return subprocess.run(["git", "-C", str(ROOT), *args], capture_output=True, text=True, timeout=10).stdout.strip()
+    except (OSError, subprocess.SubprocessError):
+        return ""
+
+
+def pushes_to_main(command):
+    """True if any part of the command pushes to the team's main version."""
+    current = None
+    for seg in segments(command):
+        if seg[0] != "git" or len(seg) < 2 or seg[1] != "push":
+            continue
+        targets = [t for t in seg[2:] if not t.startswith("-")]
+        refspecs = targets[1:]  # first positional is the remote
+        if not refspecs:
+            current = current or git_out("rev-parse", "--abbrev-ref", "HEAD")
+            if current in MAIN_BRANCHES or "--all" in seg or "--mirror" in seg:
+                return True
+            continue
+        for ref in refspecs:
+            dest = ref.lstrip("+").split(":")[-1].replace("refs/heads/", "")
+            if dest in MAIN_BRANCHES or (ref.lstrip("+") == "HEAD" and git_out("rev-parse", "--abbrev-ref", "HEAD") in MAIN_BRANCHES):
+                return True
+    return False
+
+
+def champion_only_push(tool, tool_input):
+    """Only the AI Champion updates the team's main version; everyone else sends a change request."""
+    if tool.lower() not in SHELL_TOOLS:
+        return None
+    info = team_info()
+    champion = str(info.get("champion", {}).get("email", "")).lower()
+    if not champion or not pushes_to_main(command_of(tool_input)):
+        return None
+    if git_out("config", "user.email").lower() == champion:
+        return None
+    name = info.get("champion", {}).get("name", "the AI Champion")
+    return (f"Only {name} can update the team's main version. Share this change as a change request instead: "
+            f"sh .agents/core/bin/py -I .agents/core/scripts/propose_change.py --summary \"<one plain sentence>\"")
+
+
 def decide(rule, tool, tool_input):
     rule_tool = rule.get("tool", "")
     pattern = rule.get("pattern")
@@ -284,6 +336,10 @@ def main():
     argv = sys.argv[1:]
     policy = Path(argv[argv.index("--policy") + 1]) if "--policy" in argv else POLICY
     rules = load_rules(policy)
+    blocked = champion_only_push(tool, tool_input)
+    if blocked:
+        print(f"Blocked by team permissions: {blocked}", file=sys.stderr)
+        return 2
     for tier in ("deny", "ask"):
         for rule in (r for r in rules if r.get("tier", "deny") == tier):
             result = decide(rule, tool, tool_input)

@@ -33,6 +33,20 @@ Read a rule file **only when its situation applies**. Team rules in `.agents/loc
 | Anything involving credentials, messages to people, or changing permissions | `.agents/core/rules/safety.md` |
 | Any task covered by a file in `.agents/local/rules/` | That file |
 
+## Sharing changes with the team
+
+After you change anything the team uses (a skill, a rule, a permission, a hook, a document),
+ask: **"Do you want to apply this change so everyone on the team can use it?"** If yes, run:
+
+```
+sh .agents/core/bin/py -I .agents/core/scripts/propose_change.py --summary "<one plain sentence>"
+```
+
+Tell the person its `message`. If it returns `note_for_champion`, offer it as a very short
+message they can send to their AI Champion (never send it yourself). Only the AI Champion
+updates the team's main version directly; for everyone else this creates a change request
+the Champion approves. Never push to `main` yourself.
+
 ## Always
 
 - **Deterministic first.** Fixed steps belong in scripts inside the skill; you only reason where judgement is needed.

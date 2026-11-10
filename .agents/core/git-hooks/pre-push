@@ -1,0 +1,4 @@
+#!/bin/sh
+# Only the AI Champion updates main; everyone else sends a change request.
+ROOT="$(git rev-parse --show-toplevel)"
+exec sh "$ROOT/.agents/core/bin/py" -I "$ROOT/.agents/core/scripts/pre_push.py"

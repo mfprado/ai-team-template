@@ -5,14 +5,15 @@ Run from the TEMPLATE folder (a fresh copy of ai-team-template):
 
   sh .agents/core/bin/py .agents/skills/create-team-repo/scripts/configure.py \
       --target "<path to the team's empty repository>" \
-      --company "Acme" --team "Sales" --language en
+      --company "Acme" --team "Sales" --language en \
+      --champion-name "Maria Prado" --champion-email "maria@acme.com" --champion-github "mariap"
 
 The team's repository receives plain files, never the template's git history, so every
 commit in it is made by the AI Champion. Nothing in it points back to the template.
 
 What it does (deterministic, so every team repository starts the same way):
 - copies every file the template tracks, except template-only skills
-- writes .agents/local/team.json (company, team, language, launcher name)
+- writes .agents/local/team.json (company, team, language, launcher name, AI Champion)
 - creates the visible folders documents/ and artifacts/
 - writes the team's README
 - renames the launchers Team-AI.* to <Team>-AI.*
@@ -96,6 +97,9 @@ def main():
     parser.add_argument("--company", required=True)
     parser.add_argument("--team", required=True)
     parser.add_argument("--language", required=True, choices=["en", "es"])
+    parser.add_argument("--champion-name", required=True)
+    parser.add_argument("--champion-email", required=True)
+    parser.add_argument("--champion-github", required=True)
     args = parser.parse_args()
 
     target = Path(args.target).expanduser().resolve()
@@ -122,6 +126,7 @@ def main():
     team_file.parent.mkdir(parents=True, exist_ok=True)
     team_file.write_text(json.dumps({
         "company": args.company, "team": args.team, "language": args.language, "launcher": launcher,
+        "champion": {"name": args.champion_name, "email": args.champion_email, "github": args.champion_github},
     }, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
 
     for d in VISIBLE_DIRS:

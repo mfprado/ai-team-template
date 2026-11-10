@@ -5,6 +5,6 @@
   { "expect": "deny",  "event": { "tool_name": "mcp__slack__slack_send_message", "tool_input": {} } },
   { "expect": "ask",   "event": { "tool_name": "Edit", "tool_input": { "file_path": "./docs/../.agents/permissions.json" } } },
   { "expect": "allow", "event": { "tool_name": "mcp__slack__slack_send_message_draft", "tool_input": {} } },
-  { "expect": "allow", "event": { "tool_name": "Bash", "tool_input": { "command": "git push origin main" } } },
+  { "expect": "allow", "event": { "tool_name": "Bash", "tool_input": { "command": "git push -u origin change/self-test" } } },
   { "expect": "allow", "event": { "tool_name": "Read", "tool_input": { "file_path": "README.md" } } }
 ]
