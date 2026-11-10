@@ -18,6 +18,14 @@
     { "tool": "mcp__*schedule*", "unless": ["*draft*"], "tier": "deny", "reason": "Scheduling a message is sending it." },
     { "tool": "mcp__*post_message*", "unless": ["*draft*"], "tier": "deny", "reason": "Messages are drafted, never sent by the AI." },
     { "tool": "mcp__*reply*", "unless": ["*draft*"], "tier": "deny", "reason": "Messages are drafted, never sent by the AI." },
-    { "tool": "mcp__*forward*", "unless": ["*draft*"], "tier": "deny", "reason": "Messages are drafted, never sent by the AI." }
+    { "tool": "mcp__*forward*", "unless": ["*draft*"], "tier": "deny", "reason": "Messages are drafted, never sent by the AI." },
+    { "tool": "mcp__*send_draft*", "tier": "deny", "reason": "Sending a draft is sending a message." },
+
+    { "tool": "Edit", "pattern": ".agents/permissions.json", "tier": "ask", "reason": "Changes what the AI is allowed to do. Approve only if you agreed to this change." },
+    { "tool": "Edit", "pattern": ".agents/core/**", "tier": "ask", "reason": "Shared system files, identical in every team repository." },
+    { "tool": "Edit", "pattern": ".claude/**", "tier": "ask", "reason": "Generated tool files: change .agents/ instead." },
+    { "tool": "Edit", "pattern": ".codex/**", "tier": "ask", "reason": "Generated tool files: change .agents/ instead." },
+    { "tool": "Edit", "pattern": "AGENTS.md", "tier": "ask", "reason": "Instructions for every agent in this repository." },
+    { "tool": "Edit", "pattern": "CLAUDE.md", "tier": "ask", "reason": "Instructions for every agent in this repository." }
   ]
 }

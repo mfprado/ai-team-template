@@ -16,11 +16,17 @@ Codex reads .agents/skills/ and AGENTS.md natively, so they are not copied.
 Usage:
   python3 .agents/core/scripts/sync.py           write the generated files
   python3 .agents/core/scripts/sync.py --check   exit 1 if anything is out of date
+  python3 .agents/core/scripts/sync.py --staged  only copy skill files staged for commit (pre-commit)
+
+Safety: only skill files git knows about are copied (tracked, staged, or new and not
+ignored), never symlinks or anything resolving outside .agents/skills/. The pre-commit
+also scans the generated copies for secrets.
 
 Standard library only.
 """
 
 import json
+import subprocess
 import sys
 from pathlib import Path
 
@@ -64,6 +70,8 @@ def claude_permissions(rules):
             perms[tier] += [f"Bash({pattern})", f"Bash({pattern} *)"]
         elif tool == "Read" and pattern:
             perms[tier].append(f"Read({strip_globstar(pattern)})")
+        elif tool == "Edit" and pattern:
+            perms[tier].append(f"Edit(/{pattern})")  # leading / = relative to the project
         elif "*" not in tool and pattern is None:
             perms[tier].append(tool)
         # Tool-name globs in the middle of a name (e.g. mcp__*send*) cannot be
@@ -122,17 +130,34 @@ def codex_hooks():
 
 # ---------- Build and compare ----------
 
-def desired_files():
+def skill_sources(staged_only):
+    """Skill files git knows about. Staged-only in pre-commit: exactly what is being committed."""
+    args = ["git", "-C", str(ROOT), "ls-files", "--cached", "-z"]
+    if not staged_only:
+        args += ["--others", "--exclude-standard"]
+    out = subprocess.run(args + ["--", ".agents/skills"], capture_output=True, check=True).stdout
+    base = SKILLS_SRC.resolve()
+    sources = []
+    for rel in sorted(set(filter(None, out.decode("utf-8").split("\0")))):
+        src = ROOT / rel
+        if src.is_symlink() or any(p.is_symlink() for p in src.parents if SKILLS_SRC in p.parents or p == SKILLS_SRC):
+            print(f"sync: skipped symlink {rel}", file=sys.stderr)
+            continue
+        if not src.is_file() or base not in src.resolve().parents or "__pycache__" in src.parts:
+            continue
+        sources.append(src)
+    return sources
+
+
+def desired_files(staged_only=False):
     rules = load_policy()
     files = {
         CLAUDE_SETTINGS: claude_settings(rules).encode(),
         CODEX_RULES: codex_rules(rules).encode(),
         CODEX_HOOKS: codex_hooks().encode(),
     }
-    if SKILLS_SRC.is_dir():
-        for src in sorted(SKILLS_SRC.rglob("*")):
-            if src.is_file() and "__pycache__" not in src.parts:
-                files[CLAUDE_SKILLS / src.relative_to(SKILLS_SRC)] = src.read_bytes()
+    for src in skill_sources(staged_only):
+        files[CLAUDE_SKILLS / src.relative_to(SKILLS_SRC)] = src.read_bytes()
     return files
 
 
@@ -144,7 +169,7 @@ def stale_skill_files(files):
 
 def main():
     check = "--check" in sys.argv[1:]
-    files = desired_files()
+    files = desired_files(staged_only="--staged" in sys.argv[1:])
     changed = [p for p, data in files.items() if not p.is_file() or p.read_bytes() != data]
     stale = stale_skill_files(files)
 

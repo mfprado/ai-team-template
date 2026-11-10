@@ -1,5 +1,13 @@
 {
   "permissions": {
+    "ask": [
+      "Edit(/.agents/permissions.json)",
+      "Edit(/.agents/core/**)",
+      "Edit(/.claude/**)",
+      "Edit(/.codex/**)",
+      "Edit(/AGENTS.md)",
+      "Edit(/CLAUDE.md)"
+    ],
     "deny": [
       "Bash(git push --force)",
       "Bash(git push --force *)",

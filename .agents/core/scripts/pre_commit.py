@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Pre-commit checks for a team repository. Runs with or without an agent.
 
-1. Regenerate .claude/ and .codex/ from .agents/ and add them to the commit.
+1. Regenerate .claude/ and .codex/ from the staged .agents/ files and add them to the commit.
 2. Block private artifacts (artifacts/private/, artefactos/privado/).
 3. Block likely secrets in staged files.
 4. Check every staged skill has a valid SKILL.md (name + description, name = folder).
@@ -42,9 +42,7 @@ def check_private(files):
 
 def check_secrets(files):
     problems = []
-    for f in files:
-        if f.startswith((".claude/", ".codex/")):
-            continue
+    for f in files:  # generated .claude/ and .codex/ copies are scanned too
         data = git("show", f":{f}", binary=True)
         if b"\0" in data[:8000]:
             continue  # binary file
@@ -87,7 +85,7 @@ def check_skills(files):
 
 
 def main():
-    sync = subprocess.run([sys.executable, str(ROOT / ".agents/core/scripts/sync.py")], cwd=ROOT)
+    sync = subprocess.run([sys.executable, str(ROOT / ".agents/core/scripts/sync.py"), "--staged"], cwd=ROOT)
     if sync.returncode != 0:
         print("Could not update the tool files (.claude/, .codex/).")
         return 1
