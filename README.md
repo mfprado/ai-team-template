@@ -43,6 +43,9 @@ Only their own work: the launcher that opens the workspace, this README, and the
 - **One universal source.** Skills, rules and permissions live in `.agents/`, in open formats any agent reads (`AGENTS.md`, Agent Skills `SKILL.md`).
 - **Generated per tool.** On every commit, `.agents/core/scripts/sync.py` writes what each tool needs: `.claude/` for Claude Code, `.codex/` for Codex. Nobody edits those by hand.
 - **Guardrails.** `.agents/permissions.json` says what the AI may not do. It is enforced by each tool's native settings and by a guard hook that runs before every tool call.
+- **What the guard is for.** It prevents mistakes and common tricks by people and agents who
+  mean well; it is not a sandbox against a determined attacker. The real protection of the
+  team's main version is GitHub's branch protection (paid plans for private repositories).
 - **Core and local.** `.agents/core/` is identical in every team repository and is updated from this template; `.agents/local/` belongs to the team.
 
 ## Structure
@@ -64,6 +67,7 @@ CLAUDE.md                imports AGENTS.md (Claude Code)
 Each team repository records in `.agents/core/manifest.json` the core version it has: date + commit of this template.
 
 Done: structure, rules, permissions, sync, guard hook, launcher and per-computer setup,
-`migrate-skill`, `create-team-repo`, `update-team-repo`, `release-core`. Next: the team UI (Streamlit).
+`migrate-skill`, `create-team-repo`, `update-team-repo`, `release-core`, change requests
+(`propose_change.py`), and the team page (Streamlit: skills, permissions, reports, history).
 
 Template-only skills (never copied to teams): `create-team-repo`, `update-team-repo`, `release-core`.

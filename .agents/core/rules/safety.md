@@ -19,6 +19,13 @@ Applies to anything involving credentials, messages to people, or permissions.
 - Never force-push or rewrite git history (`git push --force`, `git reset --hard`, rebasing
   shared work). Every change must stay recoverable.
 
+## Team checks
+
+The team checks (the guard before each action, and the checks before saving and sharing)
+exist to prevent mistakes. Work with them, never around them: no `--no-verify`, no `-c`
+overrides on git, no changing `HOME` or git settings to skip them, no editing core files to
+silence them. If a check stops you, follow its message and explain it to the person.
+
 ## Permissions
 
 - What the AI may not do is defined in `.agents/permissions.json`. It is enforced by each

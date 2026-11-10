@@ -28,5 +28,38 @@ if ! command -v uv >/dev/null 2>&1; then
 fi
 uv python install 3.12 --quiet >/dev/null 2>&1
 
-uv run --quiet --no-project --python 3.12 .agents/core/facade/setup.py
-finish $?
+uv run --quiet --no-project --python 3.12 .agents/core/facade/setup.py || finish 1
+
+# GitHub's tool: lets the assistant send change requests to the AI Champion.
+if ! command -v gh >/dev/null 2>&1; then
+  echo "Your computer needs GitHub's tool to send changes to your AI Champion for approval."
+  read -r -p "Install it now? [y/n] " answer
+  if [[ "$answer" =~ ^[yYsS] ]]; then
+    if command -v brew >/dev/null 2>&1; then
+      brew install gh
+    else
+      uv run --quiet --no-project --python 3.12 .agents/core/facade/install_gh.py
+    fi
+  fi
+fi
+if command -v gh >/dev/null 2>&1; then
+  if ! gh auth status --hostname github.com >/dev/null 2>&1; then
+    echo "Now sign in to GitHub in the browser window that opens (one time only)."
+    gh auth login --hostname github.com --git-protocol https --web
+  fi
+  gh auth setup-git --hostname github.com >/dev/null 2>&1
+fi
+
+# The team page: opens in the browser. Keep this window open while you use it.
+PORT=8501
+uv run --quiet --no-project --python 3.12 --with streamlit==1.41.1 \
+  streamlit run .agents/core/facade/app.py --server.headless true --server.port "$PORT" \
+  --server.address 127.0.0.1 --browser.gatherUsageStats false --client.toolbarMode viewer >/dev/null 2>&1 &
+APP=$!
+for _ in $(seq 1 60); do
+  curl -s "http://127.0.0.1:$PORT/_stcore/health" >/dev/null 2>&1 && break
+  sleep 1
+done
+open "http://127.0.0.1:$PORT"
+echo "The team page is open in your browser. Close this window when you are done."
+wait $APP
