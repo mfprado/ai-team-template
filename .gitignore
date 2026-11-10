@@ -1,0 +1,12 @@
+# Private artifacts: stay on each person's computer, never committed
+artifacts/private/
+artefactos/privado/
+
+# Personal agent settings
+.claude/settings.local.json
+
+# System files
+__pycache__/
+*.pyc
+.DS_Store
+Thumbs.db

@@ -1,0 +1,10 @@
+{
+  "description": "Files and skills owned by core. Identical in every team repository; updated from ai-team-template, never edited by hand.",
+  "version_file": ".agents/core/VERSION",
+  "system_skills": ["migrate-skill"],
+  "paths": [
+    "AGENTS.md",
+    "CLAUDE.md",
+    ".agents/core/"
+  ]
+}
