@@ -1,0 +1,9 @@
+{
+  "description": "Fixed policy for the guard self-test. Independent of the team's permissions.json, so a team can relax its own rules without breaking its commits.",
+  "rules": [
+    { "tool": "Bash", "pattern": "git push --force", "tier": "deny" },
+    { "tool": "Read", "pattern": "**/.env", "tier": "deny" },
+    { "tool": "mcp__*send*", "unless": ["*draft*"], "tier": "deny" },
+    { "tool": "Edit", "pattern": ".agents/permissions.json", "tier": "ask" }
+  ]
+}

@@ -26,6 +26,10 @@
     { "tool": "Edit", "pattern": ".claude/**", "tier": "ask", "reason": "Generated tool files: change .agents/ instead." },
     { "tool": "Edit", "pattern": ".codex/**", "tier": "ask", "reason": "Generated tool files: change .agents/ instead." },
     { "tool": "Edit", "pattern": "AGENTS.md", "tier": "ask", "reason": "Instructions for every agent in this repository." },
-    { "tool": "Edit", "pattern": "CLAUDE.md", "tier": "ask", "reason": "Instructions for every agent in this repository." }
+    { "tool": "Edit", "pattern": "CLAUDE.md", "tier": "ask", "reason": "Instructions for every agent in this repository." },
+    { "tool": "Edit", "pattern": "**/.venv", "tier": "ask", "reason": "A Python environment in the folder could change how the team checks run." },
+    { "tool": "Edit", "pattern": "**/.venv/**", "tier": "ask", "reason": "A Python environment in the folder could change how the team checks run." },
+    { "tool": "Edit", "pattern": "**/.python-version", "tier": "ask", "reason": "Pins which Python runs the team checks." },
+    { "tool": "Bash", "pattern": "uv venv", "tier": "ask", "reason": "Creates a Python environment in the folder, which could change how the team checks run." }
   ]
 }

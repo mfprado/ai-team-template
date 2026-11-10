@@ -5,6 +5,7 @@ Safe to repeat: each step checks before changing anything.
 1. Turn on the team's git checks (core.hooksPath).
 2. Hide technical files so they don't show in Finder / File Explorer.
 3. Mark the folder as trusted in Codex, so its rules and hooks load (with a notice).
+4. Check the team checks (guard) work; if not, restore .agents/core/ from the last saved version.
 
 Standard library only. Messages are plain words for non-technical people.
 """
@@ -75,11 +76,30 @@ def codex_trust():
             "(the folder was marked as trusted in Codex's settings).")
 
 
+def guard_ok():
+    test = run(sys.executable, "-I", str(ROOT / ".agents/core/scripts/selftest.py"))
+    return test.returncode == 0
+
+
+def repair_guard():
+    if guard_ok():
+        return None
+    run("git", "-C", str(ROOT), "checkout", "HEAD", "--", ".agents/core")
+    if guard_ok():
+        return "The team checks were broken on this computer and have been repaired."
+    run("git", "-C", str(ROOT), "pull", "--ff-only", "--quiet")
+    run("git", "-C", str(ROOT), "checkout", "HEAD", "--", ".agents/core")
+    if guard_ok():
+        return "The team checks were broken and have been repaired with the team's latest version."
+    return ("The team checks are still not working. Please contact your AI Champion "
+            "before using the AI in this folder.")
+
+
 def main():
     if not (ROOT / ".git").exists():
         print("This folder is not connected to the team yet. Ask your AI Champion for help.")
         return 1
-    notes = [n for n in (git_hooks(), hide_files(), codex_trust()) if n]
+    notes = [n for n in (git_hooks(), hide_files(), codex_trust(), repair_guard()) if n]
     for n in notes:
         print(f"- {n}")
     print("Your team folder is ready.")

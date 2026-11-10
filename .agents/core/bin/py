@@ -1,12 +1,22 @@
 #!/bin/sh
 # Run a Python script with whatever Python this computer has.
 # Used by hooks and git hooks so shared settings never contain personal paths.
+#
+# Security: never use a Python chosen by the project folder (.venv, .python-version,
+# VIRTUAL_ENV), or a file in the repo could replace the guard's interpreter.
+# - uv is asked from outside the folder (cd /) for a system interpreter (--system).
+# - Variables that redirect Python are cleared.
+# - Hooks pass -I (isolated mode): Python ignores PYTHON* variables and the current folder.
+#
 # Order: Python managed by uv (installed by the launcher), python3, python, py -3.
-if command -v uv >/dev/null 2>&1 && PY="$(uv python find 3.12 2>/dev/null)" && [ -n "$PY" ]; then
-  exec "$PY" "$@"
-fi
-for candidate in "$HOME/.local/bin/uv" "$HOME/.cargo/bin/uv"; do
-  if [ -x "$candidate" ] && PY="$("$candidate" python find 3.12 2>/dev/null)" && [ -n "$PY" ]; then
+unset VIRTUAL_ENV UV_PYTHON PYTHONHOME PYTHONPATH PYTHONSTARTUP
+
+uv_python() {
+  (cd / && "$1" python find --system 3.12 2>/dev/null)
+}
+
+for uv_bin in "$(command -v uv 2>/dev/null)" "$HOME/.local/bin/uv" "$HOME/.cargo/bin/uv"; do
+  if [ -n "$uv_bin" ] && [ -x "$uv_bin" ] && PY="$(uv_python "$uv_bin")" && [ -n "$PY" ]; then
     exec "$PY" "$@"
   fi
 done
@@ -14,4 +24,4 @@ if command -v python3 >/dev/null 2>&1; then exec python3 "$@"; fi
 if command -v python >/dev/null 2>&1; then exec python "$@"; fi
 if command -v py >/dev/null 2>&1; then exec py -3 "$@"; fi
 echo "Python not found. Open the team launcher once so it can install what is needed." >&2
-exit 1
+exit 127

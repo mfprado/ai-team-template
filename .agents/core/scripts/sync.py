@@ -40,7 +40,7 @@ CLAUDE_SETTINGS = ROOT / ".claude" / "settings.json"
 CODEX_RULES = ROOT / ".codex" / "rules" / "default.rules"
 CODEX_HOOKS = ROOT / ".codex" / "hooks.json"
 
-GUARD = ".agents/core/hooks/guard.py"
+GUARD = ".agents/core/hooks/guard.sh"  # wrapper: blocks with a repair message if guard.py breaks
 SESSION_START = ".agents/core/hooks/session_start.py"
 PY = ".agents/core/bin/py"  # finds Python on any computer; no personal paths in shared settings
 
@@ -81,8 +81,8 @@ def claude_permissions(rules):
 
 
 def claude_settings(rules):
-    guard = f'sh "$CLAUDE_PROJECT_DIR/{PY}" "$CLAUDE_PROJECT_DIR/{GUARD}"'
-    start = f'sh "$CLAUDE_PROJECT_DIR/{PY}" "$CLAUDE_PROJECT_DIR/{SESSION_START}"'
+    guard = f'sh "$CLAUDE_PROJECT_DIR/{GUARD}"'
+    start = f'sh "$CLAUDE_PROJECT_DIR/{PY}" -I "$CLAUDE_PROJECT_DIR/{SESSION_START}"'
     settings = {
         "permissions": claude_permissions(rules),
         "hooks": {
@@ -122,8 +122,8 @@ def codex_hooks():
     top = '"$(git rev-parse --show-toplevel)"'
     hooks = {
         "hooks": {
-            "PreToolUse": [{"matcher": "*", "hooks": [{"type": "command", "command": f"sh {top}/{PY} {top}/{GUARD}"}]}],
-            "SessionStart": [{"hooks": [{"type": "command", "command": f"sh {top}/{PY} {top}/{SESSION_START}"}]}],
+            "PreToolUse": [{"matcher": "*", "hooks": [{"type": "command", "command": f"sh {top}/{GUARD}"}]}],
+            "SessionStart": [{"hooks": [{"type": "command", "command": f"sh {top}/{PY} -I {top}/{SESSION_START}"}]}],
         }
     }
     return json.dumps(hooks, indent=2) + "\n"

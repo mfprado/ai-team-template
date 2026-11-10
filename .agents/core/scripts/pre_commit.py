@@ -5,6 +5,7 @@
 2. Block private artifacts (artifacts/private/, artefactos/privado/).
 3. Block likely secrets in staged files.
 4. Check every staged skill has a valid SKILL.md (name + description, name = folder).
+5. Self-test the guard hook: a broken guard is never saved.
 
 Messages are plain words: the person committing may not be technical.
 Standard library only.
@@ -84,6 +85,16 @@ def check_skills(files):
     return problems
 
 
+def check_guard():
+    test = subprocess.run([sys.executable, "-I", str(ROOT / ".agents/core/scripts/selftest.py")],
+                          capture_output=True, text=True, cwd=ROOT)
+    if test.returncode == 0:
+        return []
+    detail = test.stdout.strip().replace("\n", "; ")
+    return [f"The team checks (guard) no longer work, so this change would remove the team's protection. "
+            f"Undo the change to .agents/core/ ({detail})."]
+
+
 def main():
     sync = subprocess.run([sys.executable, str(ROOT / ".agents/core/scripts/sync.py"), "--staged"], cwd=ROOT)
     if sync.returncode != 0:
@@ -92,7 +103,7 @@ def main():
     git("add", "--all", "--", ".claude", ".codex")
 
     files = staged_files()
-    problems = check_private(files) + check_secrets(files) + check_skills(files)
+    problems = check_private(files) + check_secrets(files) + check_skills(files) + check_guard()
     if problems:
         print("This change was not saved:")
         for p in problems:

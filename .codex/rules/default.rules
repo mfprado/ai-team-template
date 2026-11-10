@@ -30,3 +30,9 @@ prefix_rule(
     decision = "forbidden",
     justification = "Rewrites history.",
 )
+
+prefix_rule(
+    pattern = ["uv", "venv"],
+    decision = "prompt",
+    justification = "Creates a Python environment in the folder, which could change how the team checks run.",
+)

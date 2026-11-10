@@ -40,3 +40,4 @@ Read a rule file **only when its situation applies**. Team rules in `.agents/loc
 - **Never read or print secrets** (`.env`, keys, tokens). Ask the person to configure them instead.
 - **Nothing is lost.** Every change goes through git. Do not force-push or rewrite history.
 - After changing anything in `.agents/`, regenerate the tool files: `sh .agents/core/bin/py .agents/core/scripts/sync.py`.
+- **If a team check stops you** (a message starting with "TEAM CHECKS", or a blocked save), never work around it. Follow its instructions, and tell the person what to do in one simple sentence (usually: double-click the team launcher).

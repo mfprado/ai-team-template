@@ -64,18 +64,21 @@ FALLBACK_RULES = [
     {"tool": "Edit", "pattern": ".agents/core/**", "tier": "ask"},
     {"tool": "Edit", "pattern": ".claude/**", "tier": "ask"},
     {"tool": "Edit", "pattern": ".codex/**", "tier": "ask"},
+    {"tool": "Edit", "pattern": "**/.venv", "tier": "ask"},
+    {"tool": "Edit", "pattern": "**/.venv/**", "tier": "ask"},
+    {"tool": "Edit", "pattern": "**/.python-version", "tier": "ask"},
 ]
 
 
-def load_rules():
+def load_rules(policy=POLICY):
     try:
-        with POLICY.open(encoding="utf-8") as f:
+        with policy.open(encoding="utf-8") as f:
             rules = json.load(f).get("rules")
         if not isinstance(rules, list):
             raise ValueError("no 'rules' list")
         return rules
     except (OSError, ValueError) as exc:
-        print(f"guard: cannot read {POLICY.name} ({exc}); using built-in basic rules", file=sys.stderr)
+        print(f"guard: cannot read {policy.name} ({exc}); using built-in basic rules", file=sys.stderr)
         return FALLBACK_RULES
 
 
@@ -203,11 +206,13 @@ def read_only_or_sync(command):
             continue
         args = seg[1:]
         if prog == "sh" and args and relative(args[0]) == PurePosixPath(PY_FINDER):
-            args = args[1:]  # sh .agents/core/bin/py <script>
+            args = [a for a in args[1:] if a not in ("-I", "-E", "-s", "-P")]  # sh .agents/core/bin/py [-I] <script>
         elif prog == "py":
             pass  # .agents/core/bin/py run directly, or Windows' py launcher
         elif not prog.startswith("python"):
             return False
+        else:
+            args = [a for a in args if a not in ("-I", "-E", "-s", "-P")]
         if args and relative(args[0]) == PurePosixPath(SYNC_SCRIPT):
             continue
         return False
@@ -275,7 +280,10 @@ def main():
     if not isinstance(tool_input, dict):
         tool_input = {"command": tool_input}
 
-    rules = load_rules()
+    # --policy <file> is only used by the self-test (selftest.py); hooks never pass it.
+    argv = sys.argv[1:]
+    policy = Path(argv[argv.index("--policy") + 1]) if "--policy" in argv else POLICY
+    rules = load_rules(policy)
     for tier in ("deny", "ask"):
         for rule in (r for r in rules if r.get("tier", "deny") == tier):
             result = decide(rule, tool, tool_input)
