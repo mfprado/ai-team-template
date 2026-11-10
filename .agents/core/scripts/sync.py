@@ -47,7 +47,8 @@ PY = ".agents/core/bin/py"  # finds Python on any computer; no personal paths in
 
 def load_policy():
     with POLICY.open(encoding="utf-8") as f:
-        return json.load(f).get("rules", [])
+        rules = json.load(f).get("rules", [])
+    return [r for r in rules if r.get("enabled", True) is not False]  # switched off in the team UI
 
 
 def strip_globstar(pattern):

@@ -2,34 +2,212 @@
   "version": 1,
   "description": "What the AI may not do in this repository. Source of truth: sync.py turns it into .claude/settings.json and .codex/rules, and the guard hook enforces it before every tool call. Format modelled on agent-perms (tool / pattern / tier); \"unless\" lists tool-name globs exempt from a rule (e.g. drafts).",
   "rules": [
-    { "tool": "Bash", "pattern": "git push --force", "tier": "deny", "reason": "Force-pushing rewrites shared history." },
-    { "tool": "Bash", "pattern": "git push -f", "tier": "deny", "reason": "Force-pushing rewrites shared history." },
-    { "tool": "Bash", "pattern": "git push --force-with-lease", "tier": "deny", "reason": "Force-pushing rewrites shared history." },
-    { "tool": "Bash", "pattern": "git reset --hard", "tier": "deny", "reason": "Discards work that cannot be recovered." },
-    { "tool": "Bash", "pattern": "git filter-branch", "tier": "deny", "reason": "Rewrites history." },
-
-    { "tool": "Read", "pattern": "**/.env", "tier": "deny", "reason": "Secrets file." },
-    { "tool": "Read", "pattern": "**/.env.*", "tier": "deny", "reason": "Secrets file." },
-    { "tool": "Read", "pattern": "**/secrets.toml", "tier": "deny", "reason": "Secrets file." },
-    { "tool": "Read", "pattern": "**/*.pem", "tier": "deny", "reason": "Private key." },
-    { "tool": "Read", "pattern": "**/*.key", "tier": "deny", "reason": "Private key." },
-
-    { "tool": "mcp__*send*", "unless": ["*draft*"], "tier": "deny", "reason": "Messages are drafted, never sent by the AI." },
-    { "tool": "mcp__*schedule*", "unless": ["*draft*"], "tier": "deny", "reason": "Scheduling a message is sending it." },
-    { "tool": "mcp__*post_message*", "unless": ["*draft*"], "tier": "deny", "reason": "Messages are drafted, never sent by the AI." },
-    { "tool": "mcp__*reply*", "unless": ["*draft*"], "tier": "deny", "reason": "Messages are drafted, never sent by the AI." },
-    { "tool": "mcp__*forward*", "unless": ["*draft*"], "tier": "deny", "reason": "Messages are drafted, never sent by the AI." },
-    { "tool": "mcp__*send_draft*", "tier": "deny", "reason": "Sending a draft is sending a message." },
-
-    { "tool": "Edit", "pattern": ".agents/permissions.json", "tier": "ask", "reason": "Changes what the AI is allowed to do. Approve only if you agreed to this change." },
-    { "tool": "Edit", "pattern": ".agents/core/**", "tier": "ask", "reason": "Shared system files, identical in every team repository." },
-    { "tool": "Edit", "pattern": ".claude/**", "tier": "ask", "reason": "Generated tool files: change .agents/ instead." },
-    { "tool": "Edit", "pattern": ".codex/**", "tier": "ask", "reason": "Generated tool files: change .agents/ instead." },
-    { "tool": "Edit", "pattern": "AGENTS.md", "tier": "ask", "reason": "Instructions for every agent in this repository." },
-    { "tool": "Edit", "pattern": "CLAUDE.md", "tier": "ask", "reason": "Instructions for every agent in this repository." },
-    { "tool": "Edit", "pattern": "**/.venv", "tier": "ask", "reason": "A Python environment in the folder could change how the team checks run." },
-    { "tool": "Edit", "pattern": "**/.venv/**", "tier": "ask", "reason": "A Python environment in the folder could change how the team checks run." },
-    { "tool": "Edit", "pattern": "**/.python-version", "tier": "ask", "reason": "Pins which Python runs the team checks." },
-    { "tool": "Bash", "pattern": "uv venv", "tier": "ask", "reason": "Creates a Python environment in the folder, which could change how the team checks run." }
+    {
+      "tool": "Bash",
+      "pattern": "git push --force",
+      "tier": "deny",
+      "reason": "Force-pushing rewrites shared history."
+    },
+    {
+      "tool": "Bash",
+      "pattern": "git push -f",
+      "tier": "deny",
+      "reason": "Force-pushing rewrites shared history."
+    },
+    {
+      "tool": "Bash",
+      "pattern": "git push --force-with-lease",
+      "tier": "deny",
+      "reason": "Force-pushing rewrites shared history."
+    },
+    {
+      "tool": "Bash",
+      "pattern": "git reset --hard",
+      "tier": "deny",
+      "reason": "Discards work that cannot be recovered."
+    },
+    {
+      "tool": "Bash",
+      "pattern": "git filter-branch",
+      "tier": "deny",
+      "reason": "Rewrites history."
+    },
+    {
+      "tool": "Read",
+      "pattern": "**/.env",
+      "tier": "deny",
+      "reason": "Secrets file."
+    },
+    {
+      "tool": "Read",
+      "pattern": "**/.env.*",
+      "tier": "deny",
+      "reason": "Secrets file."
+    },
+    {
+      "tool": "Read",
+      "pattern": "**/secrets.toml",
+      "tier": "deny",
+      "reason": "Secrets file."
+    },
+    {
+      "tool": "Read",
+      "pattern": "**/*.pem",
+      "tier": "deny",
+      "reason": "Private key."
+    },
+    {
+      "tool": "Read",
+      "pattern": "**/*.key",
+      "tier": "deny",
+      "reason": "Private key."
+    },
+    {
+      "tool": "mcp__*send*",
+      "unless": [
+        "*draft*"
+      ],
+      "tier": "deny",
+      "reason": "Messages are drafted, never sent by the AI."
+    },
+    {
+      "tool": "mcp__*schedule*",
+      "unless": [
+        "*draft*"
+      ],
+      "tier": "deny",
+      "reason": "Scheduling a message is sending it."
+    },
+    {
+      "tool": "mcp__*post_message*",
+      "unless": [
+        "*draft*"
+      ],
+      "tier": "deny",
+      "reason": "Messages are drafted, never sent by the AI."
+    },
+    {
+      "tool": "mcp__*reply*",
+      "unless": [
+        "*draft*"
+      ],
+      "tier": "deny",
+      "reason": "Messages are drafted, never sent by the AI."
+    },
+    {
+      "tool": "mcp__*forward*",
+      "unless": [
+        "*draft*"
+      ],
+      "tier": "deny",
+      "reason": "Messages are drafted, never sent by the AI."
+    },
+    {
+      "tool": "mcp__*send_draft*",
+      "tier": "deny",
+      "reason": "Sending a draft is sending a message."
+    },
+    {
+      "tool": "Edit",
+      "pattern": ".agents/permissions.json",
+      "tier": "ask",
+      "reason": "Changes what the AI is allowed to do. Approve only if you agreed to this change."
+    },
+    {
+      "tool": "Edit",
+      "pattern": ".agents/core/**",
+      "tier": "ask",
+      "reason": "Shared system files, identical in every team repository."
+    },
+    {
+      "tool": "Edit",
+      "pattern": ".claude/**",
+      "tier": "ask",
+      "reason": "Generated tool files: change .agents/ instead."
+    },
+    {
+      "tool": "Edit",
+      "pattern": ".codex/**",
+      "tier": "ask",
+      "reason": "Generated tool files: change .agents/ instead."
+    },
+    {
+      "tool": "Edit",
+      "pattern": "AGENTS.md",
+      "tier": "ask",
+      "reason": "Instructions for every agent in this repository."
+    },
+    {
+      "tool": "Edit",
+      "pattern": "CLAUDE.md",
+      "tier": "ask",
+      "reason": "Instructions for every agent in this repository."
+    },
+    {
+      "tool": "Edit",
+      "pattern": "**/.venv",
+      "tier": "ask",
+      "reason": "A Python environment in the folder could change how the team checks run."
+    },
+    {
+      "tool": "Edit",
+      "pattern": "**/.venv/**",
+      "tier": "ask",
+      "reason": "A Python environment in the folder could change how the team checks run."
+    },
+    {
+      "tool": "Edit",
+      "pattern": "**/.python-version",
+      "tier": "ask",
+      "reason": "Pins which Python runs the team checks."
+    },
+    {
+      "tool": "Bash",
+      "pattern": "uv venv",
+      "tier": "ask",
+      "reason": "Creates a Python environment in the folder, which could change how the team checks run."
+    },
+    {
+      "tool": "Bash",
+      "pattern": "git push --no-verify",
+      "tier": "deny",
+      "reason": "Skips the team checks."
+    },
+    {
+      "tool": "Bash",
+      "pattern": "git commit --no-verify",
+      "tier": "deny",
+      "reason": "Skips the team checks."
+    },
+    {
+      "tool": "Bash",
+      "pattern": "git commit -n",
+      "tier": "deny",
+      "reason": "Skips the team checks."
+    },
+    {
+      "tool": "Bash",
+      "pattern": "git config core.hooksPath",
+      "tier": "deny",
+      "reason": "Turns off the team checks."
+    },
+    {
+      "tool": "Bash",
+      "pattern": "git config user.email",
+      "tier": "ask",
+      "reason": "Changes whose name the team's changes are saved under."
+    },
+    {
+      "tool": "Bash",
+      "pattern": "git config user.name",
+      "tier": "ask",
+      "reason": "Changes whose name the team's changes are saved under."
+    },
+    {
+      "tool": "Edit",
+      "pattern": ".agents/local/team.json",
+      "tier": "ask",
+      "reason": "Team settings, including who the AI Champion is."
+    }
   ]
 }

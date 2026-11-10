@@ -36,3 +36,39 @@ prefix_rule(
     decision = "prompt",
     justification = "Creates a Python environment in the folder, which could change how the team checks run.",
 )
+
+prefix_rule(
+    pattern = ["git", "push", "--no-verify"],
+    decision = "forbidden",
+    justification = "Skips the team checks.",
+)
+
+prefix_rule(
+    pattern = ["git", "commit", "--no-verify"],
+    decision = "forbidden",
+    justification = "Skips the team checks.",
+)
+
+prefix_rule(
+    pattern = ["git", "commit", "-n"],
+    decision = "forbidden",
+    justification = "Skips the team checks.",
+)
+
+prefix_rule(
+    pattern = ["git", "config", "core.hooksPath"],
+    decision = "forbidden",
+    justification = "Turns off the team checks.",
+)
+
+prefix_rule(
+    pattern = ["git", "config", "user.email"],
+    decision = "prompt",
+    justification = "Changes whose name the team's changes are saved under.",
+)
+
+prefix_rule(
+    pattern = ["git", "config", "user.name"],
+    decision = "prompt",
+    justification = "Changes whose name the team's changes are saved under.",
+)

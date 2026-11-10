@@ -65,6 +65,11 @@ FALLBACK_RULES = [
     {"tool": "Edit", "pattern": ".agents/core/**", "tier": "ask"},
     {"tool": "Edit", "pattern": ".claude/**", "tier": "ask"},
     {"tool": "Edit", "pattern": ".codex/**", "tier": "ask"},
+    {"tool": "Bash", "pattern": "git push --no-verify", "tier": "deny"},
+    {"tool": "Bash", "pattern": "git commit --no-verify", "tier": "deny"},
+    {"tool": "Bash", "pattern": "git commit -n", "tier": "deny"},
+    {"tool": "Bash", "pattern": "git config core.hooksPath", "tier": "deny"},
+    {"tool": "Edit", "pattern": ".agents/local/team.json", "tier": "ask"},
     {"tool": "Edit", "pattern": "**/.venv", "tier": "ask"},
     {"tool": "Edit", "pattern": "**/.venv/**", "tier": "ask"},
     {"tool": "Edit", "pattern": "**/.python-version", "tier": "ask"},
@@ -77,7 +82,7 @@ def load_rules(policy=POLICY):
             rules = json.load(f).get("rules")
         if not isinstance(rules, list):
             raise ValueError("no 'rules' list")
-        return rules
+        return [r for r in rules if r.get("enabled", True) is not False]  # switched off in the team UI
     except (OSError, ValueError) as exc:
         print(f"guard: cannot read {policy.name} ({exc}); using built-in basic rules", file=sys.stderr)
         return FALLBACK_RULES
@@ -271,6 +276,20 @@ def pushes_to_main(command):
     return False
 
 
+def disables_hooks(tool, tool_input):
+    """`git -c core.hooksPath=... <cmd>` runs git without the team checks."""
+    if tool.lower() not in SHELL_TOOLS:
+        return False
+    for part in re.split(r"&&|\|\||;|\||\n|`|\$\(|\)", command_of(tool_input)):
+        tokens = tokenize(part.strip())
+        for i, t in enumerate(tokens[:-1]):
+            if t == "-c" and tokens[i + 1].lower().startswith("core.hookspath"):
+                return True
+        if any(t.lower().startswith("-ccore.hookspath") for t in tokens):
+            return True
+    return False
+
+
 def champion_only_push(tool, tool_input):
     """Only the AI Champion updates the team's main version; everyone else sends a change request."""
     if tool.lower() not in SHELL_TOOLS:
@@ -337,6 +356,9 @@ def main():
     argv = sys.argv[1:]
     policy = Path(argv[argv.index("--policy") + 1]) if "--policy" in argv else POLICY
     rules = load_rules(policy)
+    if disables_hooks(tool, tool_input):
+        print("Blocked by team permissions: Turns off the team checks.", file=sys.stderr)
+        return 2
     blocked = champion_only_push(tool, tool_input)
     if blocked:
         print(f"Blocked by team permissions: {blocked}", file=sys.stderr)

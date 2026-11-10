@@ -132,7 +132,9 @@ JSON
 ```
 
 If GitHub answers that the plan does not allow it (private repositories need a paid plan),
-tell the Champion in one sentence that the team's checks still protect it, and continue.
+tell the Champion, in two short sentences: the team's checks already prevent mistakes on
+every computer, and with a paid GitHub plan (Pro or Team) the main version can be protected
+for real, so nobody but them can change it. Then continue.
 
 ## 7. Prepare this computer
 
