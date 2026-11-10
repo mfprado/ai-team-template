@@ -1,10 +1,7 @@
 {
-  "description": "Files and skills owned by core. Identical in every team repository; updated from ai-team-template, never edited by hand.",
-  "source": {
-    "repository": "https://github.com/mfprado/ai-team-template",
-    "commit": null,
-    "note": "Versions are commit hashes. A team repository records here the full 40-character commit of the template its core came from; updating core means moving to a newer commit. null in the template itself."
-  },
+  "description": "Files and skills owned by core. Identical in every team repository; never edited by hand. Updated only by the AI Champion, who copies a new core version in and commits it under their own name.",
+  "core_version": null,
+  "core_version_note": "Date and commit of the template this core came from, e.g. {\"date\": \"2026-11-12\", \"commit\": \"<40-char hash>\"}. Set when a team repository is created or updated; null in the template itself.",
   "system_skills": [
     "migrate-skill",
     "create-team-repo"

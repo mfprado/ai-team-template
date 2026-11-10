@@ -10,7 +10,7 @@ the first workshop. Go **one step at a time**: explain the step in a sentence, a
 need, and **ask before every action** that creates, downloads or publishes anything.
 Talk in the Champion's language. Keep it short and friendly; they may not be technical.
 
-This skill is **template-only**: it is removed from the team's repository at the end.
+This skill is **template-only**: it is never copied into the team's repository.
 
 You are probably running from a temporary copy of the template. Call it `TEMPLATE_DIR`.
 
@@ -35,27 +35,23 @@ Ask for the **company** and the **team** names. Propose, and confirm:
 - Launcher name: `<Team>-AI` (e.g. `Sales-AI`), the file the team double-clicks.
 - GitHub owner: the Champion's account or the company's organization. Ask which.
 
-## 3. Create the repository on GitHub
+## 3. Create an EMPTY repository on GitHub
 
-Record the template commit first (the version the team starts from):
+The team's repository must contain only the Champion's own commits, never ours. So it starts
+**empty** and receives the template's files as plain files (no template history).
 
-```
-git ls-remote <template URL> HEAD
-```
-
-Keep the 40-character hash.
-
-**If you can create it yourself** (`gh auth status` succeeds, or a GitHub connector can
-create a repository from a template): say exactly what you will create and wait for OK.
+**If you can create it yourself** (`gh auth status` succeeds, or a GitHub connector can create
+repositories): say exactly what you will create and wait for OK.
 
 ```
-gh repo create <owner>/<repo-name> --private --template <template owner>/<template name>
+gh repo create <owner>/<repo-name> --private
 ```
 
 **Otherwise, guide the Champion click by click:**
-1. Open the template page and click **Use this template** → **Create a new repository**.
+1. Open https://github.com/new
 2. Owner: `<owner>`. Repository name: `<repo-name>`. Visibility: **Private**.
-3. Click **Create repository**, and tell you when it is done.
+3. Leave **everything else empty**: no README, no .gitignore, no license.
+4. Click **Create repository**, and tell you when it is done.
 
 ## 4. Download it to the Desktop
 
@@ -65,38 +61,58 @@ Find the real Desktop (it moves with OneDrive and language on Windows):
 sh TEMPLATE_DIR/.agents/core/bin/py TEMPLATE_DIR/.agents/skills/create-team-repo/scripts/desktop_path.py
 ```
 
-Ask before cloning into `<Desktop>/<Launcher name>` (e.g. `Desktop/Sales-AI`):
+Ask before downloading the empty repository into `<Desktop>/<Launcher name>` (e.g. `Desktop/Sales-AI`):
 
 ```
 git clone https://github.com/<owner>/<repo-name>.git "<Desktop>/<Launcher name>"
 ```
 
-If the clone asks the Champion to sign in to GitHub, tell them to follow the window that opens.
+Git warns that the repository is empty: that is expected. If it asks the Champion to sign in
+to GitHub, tell them to follow the window that opens.
 
-## 5. Configure it for the team
+## 5. Copy the skeleton and configure it
 
-From the new folder (not `TEMPLATE_DIR`):
+From `TEMPLATE_DIR`:
 
 ```
 sh .agents/core/bin/py .agents/skills/create-team-repo/scripts/configure.py \
-  --company "<company>" --team "<team>" --language <en|es> --template-commit <hash>
+  --target "<Desktop>/<Launcher name>" --company "<company>" --team "<team>" --language <en|es>
 ```
 
-It writes the team settings, creates `documents/` and `artifacts/`, writes the team README,
-renames the launchers, records the core version and removes this skill.
+It copies the template's files (not its history, and not the template-only skills), writes
+the team settings, creates `documents/` and `artifacts/`, writes the team README, renames the
+launchers and records the core version (date + commit). Nothing in the new repository points
+back to the template.
 
-## 6. Publish
+## 6. Make sure commits are in the Champion's name
 
-Show the Champion a one-line summary of what will be saved, then, after OK:
+Every commit must be authored by the Champion. In the new folder, check:
+
+```
+git config user.name
+git config user.email
+```
+
+Show the result: "Your changes will be saved as: <name> <email>". If either is missing or
+not theirs, ask for their **full name** and **the email of their GitHub account**, and set
+them for this repository only:
+
+```
+git config user.name "<full name>"
+git config user.email "<GitHub account email>"
+```
+
+Then, after showing a one-line summary of what will be saved and getting OK:
 
 ```
 git add --all
 git commit -m "Set up <team> AI workspace"
-git push origin main
+git branch -M main
+git push -u origin main
 ```
 
 The team's checks run on this commit (generated files, secrets, skills). If they stop it,
-explain the message in plain words and fix it.
+explain the message in plain words and fix it. Never commit or push under any other name.
 
 ## 7. Prepare this computer
 
@@ -119,4 +135,5 @@ paste or attach a skill, script, instructions or macro they already use.
 ## Tools
 
 - Shell: `git`, `gh` (optional), `sh .agents/core/bin/py <script>`
+- Never cherry-pick, merge or push template commits into the team's repository.
 - Scripts: `scripts/desktop_path.py`, `scripts/configure.py`

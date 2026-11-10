@@ -12,8 +12,10 @@ Open Claude or Codex in an empty folder and paste:
 > Download it to a temporary folder, read `.agents/skills/create-team-repo/SKILL.md` and follow
 > it step by step, asking me before each action.
 
-The `create-team-repo` skill asks for the language, company and team, creates the private
-repository, downloads it to the Desktop, configures it and removes itself.
+The `create-team-repo` skill asks for the language, company and team, creates an empty
+private repository, copies this template's files into it (never its history) and configures
+it. Every commit in the team's repository is the AI Champion's own; nothing in it points back
+to this template.
 
 ## What the team sees
 
@@ -42,7 +44,7 @@ CLAUDE.md                imports AGENTS.md (Claude Code)
 
 ## Status
 
-Versions are commit hashes of this repository: each team repository records in `.agents/core/manifest.json` the commit its core came from.
+Each team repository records in `.agents/core/manifest.json` the core version it has: date + commit of this template.
 
 Done: structure, rules, permissions, sync, guard hook, launcher and per-computer setup,
 `migrate-skill`, `create-team-repo`. Next: the team UI (Streamlit).
