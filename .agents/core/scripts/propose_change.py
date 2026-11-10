@@ -1,7 +1,11 @@
 #!/usr/bin/env python3
 """Share a change with the whole team. Used by the agent and by the team UI.
 
-  sh .agents/core/bin/py -I .agents/core/scripts/propose_change.py --summary "Added a weekly report skill"
+  sh .agents/core/bin/py -I .agents/core/scripts/propose_change.py --summary "Added a weekly report skill" \
+      --paths .agents/skills/weekly-report
+
+--paths limits the change to those files or folders (plus the generated .claude/ and .codex/),
+so unrelated unsaved work in the folder is left alone. Without it, everything changed is shared.
 
 - The AI Champion's changes go straight to the team's main version.
 - Anyone else's changes become a change request (a pull request, behind the scenes) that
@@ -78,8 +82,14 @@ def remote_url_to_web(url):
     return f"https://github.com/{m.group(1)}" if m else None
 
 
-def commit_all(summary):
-    git("add", "--all")
+GENERATED = [".claude", ".codex"]
+
+
+def commit_all(summary, paths=None):
+    if paths:
+        git("add", "--all", "--", *paths, *[g for g in GENERATED if (ROOT / g).exists()])
+    else:
+        git("add", "--all")
     result = git("commit", "-m", summary)
     if result.returncode != 0:
         return (result.stdout + result.stderr).strip()
@@ -89,6 +99,7 @@ def commit_all(summary):
 def main():
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     parser.add_argument("--summary", required=True, help="one plain sentence describing the change")
+    parser.add_argument("--paths", nargs="*", default=None, help="only share these files or folders")
     args = parser.parse_args()
 
     info = team()
@@ -100,7 +111,8 @@ def main():
 
     git("fetch", "--quiet", "origin")
     has_upstream = git("rev-parse", "--verify", "--quiet", "origin/main").returncode == 0
-    dirty = bool(git("status", "--porcelain").stdout.strip())
+    status_args = ["status", "--porcelain"] + (["--", *args.paths, *GENERATED] if args.paths else [])
+    dirty = bool(git(*status_args).stdout.strip())
     ahead = int(git("rev-list", "--count", "origin/main..HEAD").stdout.strip() or 0) if has_upstream else 0
     if not dirty and not ahead:
         return out("nothing", t["nothing"])
@@ -108,10 +120,10 @@ def main():
     # The AI Champion: straight to the team's main version.
     if is_champion(info):
         if dirty:
-            problem = commit_all(args.summary)
+            problem = commit_all(args.summary, args.paths)
             if problem:
                 return out("blocked", t["blocked"].format(why=problem)) or 1
-        if has_upstream and git("pull", "--rebase", "--quiet", "origin", "main").returncode != 0:
+        if has_upstream and git("pull", "--rebase", "--autostash", "--quiet", "origin", "main").returncode != 0:
             git("rebase", "--abort")
             return out("saved_not_shared", t["saved"].format(why="the team version changed meanwhile", champion=champion_name))
         push = git("push", "origin", "HEAD:main")
@@ -121,13 +133,22 @@ def main():
 
     # Anyone else: a change request on its own branch.
     branch = f"change/{slug(args.summary)}-{datetime.datetime.now():%Y%m%d-%H%M}"
+    # Unrelated unsaved work stays on this computer, untouched, while the change is sent.
+    stashed = False
+    if args.paths:
+        others = [l[3:] for l in git("status", "--porcelain").stdout.splitlines()
+                  if not any(l[3:].startswith(p.rstrip("/")) for p in [*args.paths, *GENERATED])]
+        if others:
+            stashed = git("stash", "push", "--include-untracked", "--quiet", "--", *others).returncode == 0
     if git("checkout", "-b", branch).returncode != 0:
         return out("blocked", t["blocked"].format(why=f"could not create {branch}")) or 1
     if dirty:
-        problem = commit_all(args.summary)
+        problem = commit_all(args.summary, args.paths)
         if problem:
             git("checkout", "-")
             git("branch", "-D", branch)
+            if stashed:
+                git("stash", "pop", "--quiet")
             return out("blocked", t["blocked"].format(why=problem)) or 1
     if has_upstream:  # keep the local main version identical to the team's
         git("branch", "-f", "main", "origin/main")
@@ -147,6 +168,8 @@ def main():
         url = f"{web}/compare/main...{branch}?expand=1" if web else branch
 
     git("checkout", "main")
+    if stashed:
+        git("stash", "pop", "--quiet")
     first = champion_name.split()[0] if champion.get("name") else champion_name
     return out("requested", t["requested"].format(champion=champion_name), branch=branch, url=url,
                note_for_champion=t["note"].format(first=first, summary=args.summary, url=url))

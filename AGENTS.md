@@ -39,8 +39,10 @@ After you change anything the team uses (a skill, a rule, a permission, a hook, 
 ask: **"Do you want to apply this change so everyone on the team can use it?"** If yes, run:
 
 ```
-sh .agents/core/bin/py -I .agents/core/scripts/propose_change.py --summary "<one plain sentence>"
+sh .agents/core/bin/py -I .agents/core/scripts/propose_change.py --summary "<one plain sentence>" --paths <files or folders you changed>
 ```
+
+List in `--paths` only what belongs to this change, so other unsaved work stays where it is.
 
 Tell the person its `message`. If it returns `note_for_champion`, offer it as a very short
 message they can send to their AI Champion (never send it yourself). Only the AI Champion

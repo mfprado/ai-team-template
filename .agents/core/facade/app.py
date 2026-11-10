@@ -7,6 +7,7 @@ team; anyone else's become a change request the Champion approves (propose_chang
 
 import datetime
 import json
+import platform
 import re
 import subprocess
 import sys
@@ -17,6 +18,9 @@ import streamlit as st
 
 ROOT = Path(__file__).resolve().parents[3]
 CORE = ROOT / ".agents/core"
+# Only documents are opened directly; anything else (e.g. .command, .bat, .exe) could run.
+SAFE_TO_OPEN = {".html", ".htm", ".pdf", ".png", ".jpg", ".jpeg", ".gif", ".svg", ".csv",
+                ".txt", ".md", ".xlsx", ".xls", ".docx", ".doc", ".pptx", ".ppt"}
 
 T = {
     "en": {
@@ -32,7 +36,7 @@ T = {
         "apply": "Apply for the whole team", "applying": "Sharing the change...",
         "note": "Short message you can send to {name}:",
         "shared": "Shared reports", "private": "Only on this computer", "no_files": "Nothing here yet.",
-        "open": "Open", "pending": "Change requests waiting for {name}", "no_pending": "No change requests waiting.",
+        "open": "Open", "show_folder": "Show in folder", "pending": "Change requests waiting for {name}", "no_pending": "No change requests waiting.",
         "recent": "Recent changes", "changed_what": "changed",
         "what": {"skill": "skill {x}", "perms": "permissions", "docs": "documents", "reports": "reports",
                  "rules": "team rules", "system": "system", "other": "other files"},
@@ -52,7 +56,7 @@ T = {
         "apply": "Aplicar para todo el equipo", "applying": "Compartiendo el cambio...",
         "note": "Mensaje corto que podés mandarle a {name}:",
         "shared": "Reportes compartidos", "private": "Solo en esta computadora", "no_files": "Todavía no hay nada.",
-        "open": "Abrir", "pending": "Pedidos de cambio esperando a {name}", "no_pending": "No hay pedidos de cambio esperando.",
+        "open": "Abrir", "show_folder": "Ver en la carpeta", "pending": "Pedidos de cambio esperando a {name}", "no_pending": "No hay pedidos de cambio esperando.",
         "recent": "Cambios recientes", "changed_what": "cambió",
         "what": {"skill": "la skill {x}", "perms": "los permisos", "docs": "documentos", "reports": "reportes",
                  "rules": "reglas del equipo", "system": "el sistema", "other": "otros archivos"},
@@ -124,6 +128,17 @@ def describe_paths(paths, t):
         if item not in found:
             found.append(item)
     return ", ".join(found)
+
+
+def show_in_folder(path):
+    """Reveal a file in Finder / File Explorer without opening (running) it."""
+    system = platform.system()
+    if system == "Darwin":
+        subprocess.run(["open", "-R", str(path)], check=False)
+    elif system == "Windows":
+        subprocess.run(["explorer", f"/select,{path}"], check=False)
+    else:
+        webbrowser.open(path.parent.as_uri())
 
 
 def rule_label(rule):
@@ -203,7 +218,8 @@ if section == t["tab_perms"]:
                 perms_path.write_text(json.dumps(perms, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
                 run(sys.executable, "-I", str(CORE / "scripts/sync.py"))
                 result = run(sys.executable, "-I", str(CORE / "scripts/propose_change.py"),
-                             "--summary", t["perm_summary"].format(items="; ".join(items)))
+                             "--summary", t["perm_summary"].format(items="; ".join(items)),
+                             "--paths", ".agents/permissions.json")
             try:
                 outcome = json.loads(result.stdout.strip().splitlines()[-1])
             except (ValueError, IndexError):
@@ -227,8 +243,11 @@ if section == t["tab_artifacts"]:
         for p in sorted(files, key=lambda p: p.stat().st_mtime, reverse=True):
             col1, col2 = st.columns([4, 1])
             col1.write(f"**{p.relative_to(folder)}**  ·  {ago(int(p.stat().st_mtime), t)}")
-            if col2.button(t["open"], key=f"open-{p}"):
-                webbrowser.open(p.as_uri())
+            if p.suffix.lower() in SAFE_TO_OPEN:
+                if col2.button(t["open"], key=f"open-{p}"):
+                    webbrowser.open(p.as_uri())
+            elif col2.button(t["show_folder"], key=f"open-{p}"):
+                show_in_folder(p)
 
 # History: who changed what, in plain words
 if section == t["tab_history"]:
