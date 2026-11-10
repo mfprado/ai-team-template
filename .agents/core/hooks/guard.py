@@ -154,6 +154,37 @@ def segments(command, depth=0):
         yield tokens
 
 
+GIT_CONFIG_SKIP = {"set", "get", "unset", "--add", "--replace-all", "--unset", "--unset-all", "--local",
+                   "--global", "--system", "--worktree", "--type", "--bool", "--int", "--path"}
+GIT_CONFIG_WITH_ARG = {"--file", "-f", "--blob", "--type"}
+
+
+def normalize_git_config(tokens):
+    """`git config --file x set User.Email v` -> `git config user.email v` (keys are case-insensitive)."""
+    if len(tokens) < 2 or tokens[0] != "git" or tokens[1] != "config":
+        return tokens
+    out, i = ["git", "config"], 2
+    while i < len(tokens):
+        t = tokens[i]
+        if t in GIT_CONFIG_WITH_ARG:
+            i += 2
+            continue
+        if t in GIT_CONFIG_SKIP or t.startswith(("--file=", "--type=")):
+            i += 1
+            continue
+        out.append(t.lower() if len(out) == 2 else t)  # the key
+        i += 1
+    return out
+
+
+def flag_present(flag, tokens):
+    """Exact flag, or an unambiguous git abbreviation of a long option (--no-ver -> --no-verify)."""
+    if flag in tokens:
+        return True
+    return flag.startswith("--") and any(
+        t.startswith("--") and len(t) >= 5 and flag.startswith(t.split("=", 1)[0]) for t in tokens)
+
+
 def command_matches(rule_pattern, command):
     want = rule_pattern.split()
     positional = [t for t in want if not t.startswith("-")]
@@ -163,9 +194,10 @@ def command_matches(rule_pattern, command):
         for i, t in enumerate(tokens):
             if PurePosixPath(t.replace("\\", "/")).name != want[0]:
                 continue
-            sub = normalize(tokens[i:])
+            sub = normalize_git_config(normalize(tokens[i:]))
             sub_positional = [x for x in sub if not x.startswith("-")]
-            if sub_positional[: len(positional)] == positional and all(f in sub for f in flags):
+            want_positional = [x.lower() for x in positional] if sub[:2] == ["git", "config"] else positional
+            if sub_positional[: len(want_positional)] == want_positional and all(flag_present(f, sub) for f in flags):
                 return True
     return False
 
@@ -276,17 +308,39 @@ def pushes_to_main(command):
     return False
 
 
+GIT_CONFIG_ENV = re.compile(r"\bGIT_CONFIG_(COUNT|KEY_\d+|VALUE_\d+|PARAMETERS|GLOBAL|SYSTEM|NOSYSTEM)\s*=", re.I)
+
+
+def raw_segments(command, depth=0):
+    """Simple commands as typed (before normalize), recursing into `sh -c "..."`."""
+    for part in re.split(r"&&|\|\||;|\||\n|`|\$\(|\)", command):
+        tokens = tokenize(part.strip())
+        if not tokens:
+            continue
+        yield tokens
+        for i, tk in enumerate(tokens[:-1]):
+            if PurePosixPath(tk).name in SHELLS and "-c" in tokens[i + 1:] and depth < 3:
+                j = tokens.index("-c", i + 1)
+                if j + 1 < len(tokens):
+                    yield from raw_segments(tokens[j + 1], depth + 1)
+                break
+
+
 def disables_hooks(tool, tool_input):
-    """`git -c core.hooksPath=... <cmd>` runs git without the team checks."""
+    """Ways to run git without the team checks: -c / --config-env core.hooksPath, GIT_CONFIG_* variables."""
     if tool.lower() not in SHELL_TOOLS:
         return False
-    for part in re.split(r"&&|\|\||;|\||\n|`|\$\(|\)", command_of(tool_input)):
-        tokens = tokenize(part.strip())
-        for i, t in enumerate(tokens[:-1]):
-            if t == "-c" and tokens[i + 1].lower().startswith("core.hookspath"):
+    command = command_of(tool_input)
+    if GIT_CONFIG_ENV.search(command):
+        return True
+    for tokens in raw_segments(command):
+        low = [t.lower() for t in tokens]
+        for i, t in enumerate(low):
+            nxt = low[i + 1] if i + 1 < len(low) else ""
+            if t in ("-c", "--config-env") and nxt.startswith("core.hookspath"):
                 return True
-        if any(t.lower().startswith("-ccore.hookspath") for t in tokens):
-            return True
+            if t.startswith(("-ccore.hookspath", "--config-env=core.hookspath")):
+                return True
     return False
 
 
