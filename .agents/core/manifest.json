@@ -5,7 +5,13 @@
     "commit": null,
     "note": "Versions are commit hashes. A team repository records here the full 40-character commit of the template its core came from; updating core means moving to a newer commit. null in the template itself."
   },
-  "system_skills": ["migrate-skill"],
+  "system_skills": [
+    "migrate-skill",
+    "create-team-repo"
+  ],
+  "template_only_skills": [
+    "create-team-repo"
+  ],
   "paths": [
     "AGENTS.md",
     "CLAUDE.md",

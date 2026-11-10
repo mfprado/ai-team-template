@@ -42,6 +42,7 @@ CODEX_HOOKS = ROOT / ".codex" / "hooks.json"
 
 GUARD = ".agents/core/hooks/guard.py"
 SESSION_START = ".agents/core/hooks/session_start.py"
+PY = ".agents/core/bin/py"  # finds Python on any computer; no personal paths in shared settings
 
 
 def load_policy():
@@ -80,8 +81,8 @@ def claude_permissions(rules):
 
 
 def claude_settings(rules):
-    guard = f'python3 "$CLAUDE_PROJECT_DIR/{GUARD}"'
-    start = f'python3 "$CLAUDE_PROJECT_DIR/{SESSION_START}"'
+    guard = f'sh "$CLAUDE_PROJECT_DIR/{PY}" "$CLAUDE_PROJECT_DIR/{GUARD}"'
+    start = f'sh "$CLAUDE_PROJECT_DIR/{PY}" "$CLAUDE_PROJECT_DIR/{SESSION_START}"'
     settings = {
         "permissions": claude_permissions(rules),
         "hooks": {
@@ -121,8 +122,8 @@ def codex_hooks():
     top = '"$(git rev-parse --show-toplevel)"'
     hooks = {
         "hooks": {
-            "PreToolUse": [{"matcher": "*", "hooks": [{"type": "command", "command": f"python3 {top}/{GUARD}"}]}],
-            "SessionStart": [{"hooks": [{"type": "command", "command": f"python3 {top}/{SESSION_START}"}]}],
+            "PreToolUse": [{"matcher": "*", "hooks": [{"type": "command", "command": f"sh {top}/{PY} {top}/{GUARD}"}]}],
+            "SessionStart": [{"hooks": [{"type": "command", "command": f"sh {top}/{PY} {top}/{SESSION_START}"}]}],
         }
     }
     return json.dumps(hooks, indent=2) + "\n"

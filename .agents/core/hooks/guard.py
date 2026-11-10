@@ -42,6 +42,7 @@ SEARCH_TOOLS = {"grep", "search"}
 READ_ONLY_PROGRAMS = {"cat", "less", "more", "head", "tail", "grep", "rg", "ls", "wc", "diff", "file", "stat"}
 READ_ONLY_GIT = {"diff", "log", "status", "show", "blame"}
 SYNC_SCRIPT = ".agents/core/scripts/sync.py"
+PY_FINDER = ".agents/core/bin/py"
 
 # Used when .agents/permissions.json cannot be read: the critical basics stay enforced.
 FALLBACK_RULES = [
@@ -200,7 +201,14 @@ def read_only_or_sync(command):
             continue
         if prog == "git" and len(seg) > 1 and seg[1] in READ_ONLY_GIT:
             continue
-        if prog.startswith("python") and len(seg) > 1 and relative(seg[1]) == PurePosixPath(SYNC_SCRIPT):
+        args = seg[1:]
+        if prog == "sh" and args and relative(args[0]) == PurePosixPath(PY_FINDER):
+            args = args[1:]  # sh .agents/core/bin/py <script>
+        elif prog == "py":
+            pass  # .agents/core/bin/py run directly, or Windows' py launcher
+        elif not prog.startswith("python"):
+            return False
+        if args and relative(args[0]) == PurePosixPath(SYNC_SCRIPT):
             continue
         return False
     return True
@@ -242,7 +250,12 @@ def decide(rule, tool, tool_input):
             cmd = command_of(tool_input)
             if rule_tool == "Edit" and read_only_or_sync(cmd):
                 return False
-            words = [t for seg in segments(cmd) for t in seg[1:]]
+            words = []
+            for seg in segments(cmd):
+                args = seg[1:]
+                if seg[0] in SHELLS and args and relative(args[0]) == PurePosixPath(PY_FINDER):
+                    args = args[1:]  # `sh .agents/core/bin/py script`: bin/py is the interpreter, not a target
+                words += args
             words += [t.split("=", 1)[1] for t in words if "=" in t]  # of=path, --file=path
             return any(path_matches(pattern, t) for t in words)
         return False

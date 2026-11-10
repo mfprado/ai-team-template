@@ -6,7 +6,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "python3 \"$(git rev-parse --show-toplevel)\"/.agents/core/hooks/guard.py"
+            "command": "sh \"$(git rev-parse --show-toplevel)\"/.agents/core/bin/py \"$(git rev-parse --show-toplevel)\"/.agents/core/hooks/guard.py"
           }
         ]
       }
@@ -16,7 +16,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "python3 \"$(git rev-parse --show-toplevel)\"/.agents/core/hooks/session_start.py"
+            "command": "sh \"$(git rev-parse --show-toplevel)\"/.agents/core/bin/py \"$(git rev-parse --show-toplevel)\"/.agents/core/hooks/session_start.py"
           }
         ]
       }

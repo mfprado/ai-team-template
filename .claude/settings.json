@@ -33,7 +33,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "python3 \"$CLAUDE_PROJECT_DIR/.agents/core/hooks/guard.py\""
+            "command": "sh \"$CLAUDE_PROJECT_DIR/.agents/core/bin/py\" \"$CLAUDE_PROJECT_DIR/.agents/core/hooks/guard.py\""
           }
         ]
       }
@@ -43,7 +43,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "python3 \"$CLAUDE_PROJECT_DIR/.agents/core/hooks/session_start.py\""
+            "command": "sh \"$CLAUDE_PROJECT_DIR/.agents/core/bin/py\" \"$CLAUDE_PROJECT_DIR/.agents/core/hooks/session_start.py\""
           }
         ]
       }

@@ -24,5 +24,5 @@ Applies to anything involving credentials, messages to people, or permissions.
 - What the AI may not do is defined in `.agents/permissions.json`. It is enforced by each
   tool's settings and by a guard hook, so a blocked action will fail even if attempted.
 - Change `.agents/permissions.json` **only after explaining the change in plain words and
-  getting the person's agreement.** Then run `python3 .agents/core/scripts/sync.py`.
+  getting the person's agreement.** Then run `sh .agents/core/bin/py .agents/core/scripts/sync.py`.
 - Never edit `.claude/` or `.codex/` directly: they are regenerated from `.agents/`.

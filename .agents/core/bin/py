@@ -1,0 +1,17 @@
+#!/bin/sh
+# Run a Python script with whatever Python this computer has.
+# Used by hooks and git hooks so shared settings never contain personal paths.
+# Order: Python managed by uv (installed by the launcher), python3, python, py -3.
+if command -v uv >/dev/null 2>&1 && PY="$(uv python find 3.12 2>/dev/null)" && [ -n "$PY" ]; then
+  exec "$PY" "$@"
+fi
+for candidate in "$HOME/.local/bin/uv" "$HOME/.cargo/bin/uv"; do
+  if [ -x "$candidate" ] && PY="$("$candidate" python find 3.12 2>/dev/null)" && [ -n "$PY" ]; then
+    exec "$PY" "$@"
+  fi
+done
+if command -v python3 >/dev/null 2>&1; then exec python3 "$@"; fi
+if command -v python >/dev/null 2>&1; then exec python "$@"; fi
+if command -v py >/dev/null 2>&1; then exec py -3 "$@"; fi
+echo "Python not found. Open the team launcher once so it can install what is needed." >&2
+exit 1

@@ -27,5 +27,5 @@ Applies when creating, migrating or editing a skill.
 
 ## After changing a skill
 
-Run `python3 .agents/core/scripts/sync.py` so Claude Code and Codex both see the change.
+Run `sh .agents/core/bin/py .agents/core/scripts/sync.py` so Claude Code and Codex both see the change.
 Never edit system skills listed in `.agents/core/manifest.json`.
