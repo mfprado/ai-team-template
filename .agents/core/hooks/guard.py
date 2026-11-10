@@ -41,7 +41,8 @@ SEARCH_TOOLS = {"grep", "search"}
 # Shell commands that only read, allowed to name protected files without asking.
 READ_ONLY_PROGRAMS = {"cat", "less", "more", "head", "tail", "grep", "rg", "ls", "wc", "diff", "file", "stat"}
 READ_ONLY_GIT = {"diff", "log", "status", "show", "blame"}
-SYNC_SCRIPT = ".agents/core/scripts/sync.py"
+# Core scripts the agent runs as part of normal work: running them is not editing core.
+CORE_SCRIPTS = {PurePosixPath(f".agents/core/scripts/{n}") for n in ("sync.py", "propose_change.py", "selftest.py")}
 PY_FINDER = ".agents/core/bin/py"
 
 # Used when .agents/permissions.json cannot be read: the critical basics stay enforced.
@@ -195,7 +196,7 @@ def paths_in(tool_input):
 
 
 def read_only_or_sync(command):
-    """True when every part of the command only reads, or runs the sync script."""
+    """True when every part of the command only reads, or runs a known core script."""
     if re.search(r"[<>]", command):
         return False
     for seg in segments(command):
@@ -213,7 +214,7 @@ def read_only_or_sync(command):
             return False
         else:
             args = [a for a in args if a not in ("-I", "-E", "-s", "-P")]
-        if args and relative(args[0]) == PurePosixPath(SYNC_SCRIPT):
+        if args and relative(args[0]) in CORE_SCRIPTS:
             continue
         return False
     return True
