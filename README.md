@@ -17,6 +17,23 @@ private repository, copies this template's files into it (never its history) and
 it. Every commit in the team's repository is the AI Champion's own; nothing in it points back
 to this template.
 
+## Improvements reach every team (by email, never automatically)
+
+Team repositories never point back to this template and never pull from it. To ship an
+improvement:
+
+1. **Maintainers** change the core here and run `release-core`: it writes the plain-words
+   entry in `.agents/core/CHANGES.md` and prepares one email draft per AI Champion from the
+   *AI Champions* sheet (drafts only; a maintainer sends them).
+2. **Each AI Champion** follows the email: opens Claude or Codex, pastes the prompt, and
+   `update-team-repo` (run from a fresh copy of this template) shows what changes, proposes
+   any new safety rule, copies the new files onto a branch, commits under the Champion's name
+   and opens a pull request in the team's repository.
+3. The Champion (or their IT team) reviews and merges it. Teammates get it on their next session.
+
+The team's own skills, rules (`.agents/local/`) and permissions are never changed; new
+default permissions are only added if the Champion accepts them.
+
 ## What the team sees
 
 Only their own work: the launcher that opens the workspace, this README, and their documents and artifacts folders (created in the team's language at setup). Everything technical lives in hidden folders.
@@ -47,4 +64,6 @@ CLAUDE.md                imports AGENTS.md (Claude Code)
 Each team repository records in `.agents/core/manifest.json` the core version it has: date + commit of this template.
 
 Done: structure, rules, permissions, sync, guard hook, launcher and per-computer setup,
-`migrate-skill`, `create-team-repo`. Next: the team UI (Streamlit).
+`migrate-skill`, `create-team-repo`, `update-team-repo`, `release-core`. Next: the team UI (Streamlit).
+
+Template-only skills (never copied to teams): `create-team-repo`, `update-team-repo`, `release-core`.

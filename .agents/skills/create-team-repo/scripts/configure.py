@@ -136,7 +136,8 @@ def main():
         if src.exists():
             src.rename(target / f"{launcher}{ext}")
 
-    sync = subprocess.run([sys.executable, "-I", str(target / ".agents/core/scripts/sync.py")], cwd=target)
+    sync = subprocess.run([sys.executable, "-I", str(target / ".agents/core/scripts/sync.py")], cwd=target,
+                          capture_output=True, text=True)
     print(json.dumps({
         "launcher": launcher, "files_copied": copied, "core_version": f"{date} ({commit[:7]})",
         "left_out": template_only, "sync_ok": sync.returncode == 0,

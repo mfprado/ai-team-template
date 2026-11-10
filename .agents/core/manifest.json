@@ -4,10 +4,14 @@
   "core_version_note": "Date and commit of the template this core came from, e.g. {\"date\": \"2026-11-12\", \"commit\": \"<40-char hash>\"}. Set when a team repository is created or updated; null in the template itself.",
   "system_skills": [
     "migrate-skill",
-    "create-team-repo"
+    "create-team-repo",
+    "update-team-repo",
+    "release-core"
   ],
   "template_only_skills": [
-    "create-team-repo"
+    "create-team-repo",
+    "update-team-repo",
+    "release-core"
   ],
   "paths": [
     "AGENTS.md",
