@@ -26,6 +26,7 @@ Standard library only.
 """
 
 import json
+import re
 import subprocess
 import sys
 from pathlib import Path
@@ -161,9 +162,18 @@ def agent_files():
     files = {}
     if not AGENTS_SRC.is_dir():
         return files
-    for src in sorted(AGENTS_SRC.glob("*.md")):
+    out = subprocess.run(["git", "-C", str(ROOT), "ls-files", "--cached", "--others", "--exclude-standard", "-z",
+                          "--", ".agents/agents"], capture_output=True, check=True).stdout.decode("utf-8")
+    base = AGENTS_SRC.resolve()
+    for rel in sorted(filter(None, out.split("\0"))):
+        src = ROOT / rel
+        # Same safety as skills: tracked files only, no symlinks, nothing outside .agents/agents/,
+        # and the output name comes from the file name, never from its contents.
+        if (src.suffix != ".md" or src.is_symlink() or not src.is_file() or src.resolve().parent != base
+                or not re.fullmatch(r"[a-z0-9][a-z0-9-]{0,63}", src.stem)):
+            continue
         fields, body = split_front_matter(src.read_text(encoding="utf-8"))
-        name, description = fields.get("name", src.stem), fields.get("description", "")
+        name, description = src.stem, fields.get("description", "").replace("\n", " ")
         claude = (f"---\nname: {name}\ndescription: {description}\ntools: Read, Grep, Glob\n"
                   f"model: inherit\n---\n\n{body}")
         files[CLAUDE_AGENTS / f"{name}.md"] = claude.encode()
