@@ -56,7 +56,7 @@ For each Champion, **create a draft** (never send) in their `Language`, using th
   1. Greeting by first name; one sentence on why this matters for their team.
   2. The "What the team gets" bullets, translated if needed.
   3. How to apply it, step by step:
-     - Open Claude or Codex in an empty folder and paste:
+     - Open Claude or Codex on your Desktop and paste:
        "Update my team's AI workspace with the latest version of
        https://github.com/mfprado/ai-team-template. Download it to a temporary folder, read
        `.agents/skills/update-team-repo/SKILL.md` and follow it step by step, asking me before

@@ -6,7 +6,7 @@ Template for a team's shared AI workspace. Each team gets its own copy: a privat
 
 ## Create a team repository (AI Champions)
 
-Open Claude or Codex in an empty folder and paste:
+Open Claude or Codex on your Desktop and paste:
 
 > Create my team's AI workspace from the template https://github.com/mfprado/ai-team-template.
 > Download it to a temporary folder, read `.agents/skills/create-team-repo/SKILL.md` and follow

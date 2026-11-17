@@ -7,6 +7,9 @@ The Desktop is not always ~/Desktop:
 - Linux uses a localized name (Escritorio) recorded by xdg-user-dirs.
 - macOS always uses ~/Desktop on disk, even when Finder shows "Escritorio".
 
+Optional argument: a folder name. Then a second line says whether <Desktop>/<name> is
+"free" or "exists", so the caller never runs a check that fails just because it is free.
+
 Standard library only.
 """
 
@@ -55,6 +58,8 @@ def main():
     if not path.is_dir():
         path = Path.home()
     print(os.fspath(path))
+    if len(sys.argv) > 1:
+        print("exists" if (path / sys.argv[1]).exists() else "free")
     return 0
 
 

@@ -6,10 +6,13 @@ Run from the TEMPLATE folder (a fresh copy of ai-team-template):
   sh .agents/core/bin/py .agents/skills/create-team-repo/scripts/configure.py \
       --target "<path to the team's empty repository>" \
       --company "Acme" --team "Sales" --language en \
-      --champion-name "Maria Prado" --champion-email "maria@acme.com" --champion-github "mariap"
+      --champion-name "Maria Prado" --champion-email "maria@acme.com"
 
 The team's repository receives plain files, never the template's git history, so every
 commit in it is made by the AI Champion. Nothing in it points back to the template.
+
+--champion-github is optional: when left out, the GitHub username is read from the GitHub CLI
+(gh) if it is signed in, and left empty otherwise. Only the email is needed by the team checks.
 
 What it does (deterministic, so every team repository starts the same way):
 - copies every file the template tracks, except template-only skills
@@ -72,10 +75,14 @@ def launcher_name(team):
     return "-".join(words + ["AI"])
 
 
+SYSTEM_FILES = (".DS_Store", "Thumbs.db", "desktop.ini")
+
+
 def target_is_empty_repo(target):
     if not (target / ".git").exists():
         return False
-    entries = [p for p in target.iterdir() if p.name != ".git"]
+    # Files the system adds on its own (Finder, Explorer) do not count as content.
+    entries = [p for p in target.iterdir() if p.name not in (".git", *SYSTEM_FILES)]
     has_commits = subprocess.run(["git", "-C", str(target), "rev-parse", "--verify", "HEAD"],
                                  capture_output=True).returncode == 0
     return not entries and not has_commits
@@ -96,6 +103,14 @@ def copy_skeleton(target, template_only):
     return copied
 
 
+def gh_username():
+    try:
+        out = subprocess.run(["gh", "api", "user", "--jq", ".login"], capture_output=True, text=True, timeout=20)
+    except (OSError, subprocess.TimeoutExpired):
+        return ""
+    return out.stdout.strip() if out.returncode == 0 else ""
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     parser.add_argument("--target", required=True)
@@ -104,7 +119,7 @@ def main():
     parser.add_argument("--language", required=True, choices=["en", "es"])
     parser.add_argument("--champion-name", required=True)
     parser.add_argument("--champion-email", required=True)
-    parser.add_argument("--champion-github", required=True)
+    parser.add_argument("--champion-github", default=None)
     args = parser.parse_args()
 
     target = Path(args.target).expanduser().resolve()
@@ -126,12 +141,13 @@ def main():
     (target / ".agents/core/manifest.json").write_text(
         json.dumps(manifest, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
 
+    github = args.champion_github if args.champion_github is not None else gh_username()
     launcher = launcher_name(args.team)
     team_file = target / ".agents/local/team.json"
     team_file.parent.mkdir(parents=True, exist_ok=True)
     team_file.write_text(json.dumps({
         "company": args.company, "team": args.team, "language": args.language, "launcher": launcher,
-        "champion": {"name": args.champion_name, "email": args.champion_email, "github": args.champion_github},
+        "champion": {"name": args.champion_name, "email": args.champion_email, "github": github},
     }, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
 
     for d in VISIBLE_DIRS:

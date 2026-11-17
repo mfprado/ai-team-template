@@ -9,6 +9,8 @@ You are helping an **AI Champion** create their team's shared AI workspace, usua
 the first workshop. Go **one step at a time**: explain the step in a sentence, ask what you
 need, and **ask before every action** that creates, downloads or publishes anything.
 Talk in the Champion's language. Keep it short and friendly; they may not be technical.
+When you ask for OK, say what will happen in plain words (one or two lines). Do not show
+commands, file paths or how scripts work unless they ask; you still read scripts before running them.
 
 This skill is **template-only**: it is never copied into the team's repository.
 
@@ -29,45 +31,78 @@ Spanish version is not ready yet and offer to continue in English or stop.
 
 ## 2. Company, team and the AI Champion
 
-Ask for the **company** and the **team** names, and the Champion's **full name**, the **email
-of their GitHub account** and their **GitHub username**. The Champion is the only person who
-updates the team's main version directly; everyone else's changes reach them as change
-requests to approve. Propose, and confirm:
+The Champion is learning: most have never used GitHub. With them, never say "repository",
+"owner", "clone" or "launcher". Say **the team's shared folder** (it lives on GitHub and on
+each teammate's computer) and **the icon you double-click to open it**.
 
-- Repository name: `<company>-<team>-ai`, lowercase, hyphens (e.g. `acme-sales-ai`).
-- Launcher name: `<Team>-AI` (e.g. `Sales-AI`), the file the team double-clicks.
-- GitHub owner: the Champion's account or the company's organization. Ask which.
+Ask only three things:
 
-## 3. Create an EMPTY repository on GitHub
+1. The **company** name.
+2. The **team** name.
+3. Their **full name** and the **email** they use for GitHub (or will use, if they have no
+   account yet).
+
+Do not ask for their GitHub username: you learn it later (step 3 or 5).
+
+Then ask: **"Did someone at your company (for example IT) already create a shared folder on
+GitHub for your team and send you a link?"**
+
+- **Yes:** ask for the link. It looks like `https://github.com/<owner>/<repo-name>`; take both
+  from it and skip creating it in step 3. It must be empty and the Champion must be able to
+  manage it; if not, tell them to ask the person who created it.
+- **No:** ask if they already have a GitHub account with that email. If not, guide them: open
+  https://github.com/signup, sign up with that email, choose the **Free** plan, confirm the
+  email GitHub sends, and tell you when done. The shared folder will live in their own account.
+
+The Champion is the only person who updates the team's main version directly; everyone
+else's changes reach them as change requests to approve. Say it in one sentence.
+
+Propose the name, and confirm:
+
+- **Shared folder name:** `<company>-<team>-ai`, lowercase, hyphens (e.g. `acme-sales-ai`).
+  This is the repository name on GitHub. Skip it when the folder already exists.
+
+Then just tell them (nothing to choose): on their Desktop they will get a folder called
+`<Team>-AI` (e.g. `Sales-AI`), with an icon of the same name they double-click to open it.
+Internally that is the launcher name, `<Team>-AI`.
+
+## 3. Create the EMPTY shared folder on GitHub
+
+Skip this step when the company already created it (step 2).
 
 The team's repository must contain only the Champion's own commits, never ours. So it starts
 **empty** and receives the template's files as plain files (no template history).
 
 **If you can create it yourself** (`gh auth status` succeeds, or a GitHub connector can create
-repositories): say exactly what you will create and wait for OK.
+repositories): the owner is the signed-in account (`gh api user --jq .login`), which is also
+the Champion's GitHub username. Say what you will create, in plain words, and wait for OK.
 
 ```
 gh repo create <owner>/<repo-name> --private
 ```
 
 **Otherwise, guide the Champion click by click:**
-1. Open https://github.com/new
-2. Owner: `<owner>`. Repository name: `<repo-name>`. Visibility: **Private**.
+1. Open https://github.com/new (sign in if GitHub asks).
+2. Repository name: `<repo-name>`. Visibility: **Private**. Leave the owner as it is.
 3. Leave **everything else empty**: no README, no .gitignore, no license.
-4. Click **Create repository**, and tell you when it is done.
+4. Click **Create repository**, then paste you the address of the page that opens
+   (`https://github.com/<owner>/<repo-name>`). The owner in it is their GitHub username.
 
 ## 4. Download it to the Desktop
 
-Find the real Desktop (it moves with OneDrive and language on Windows):
+The Champion opened you on their Desktop. Still find the real Desktop (it moves with
+OneDrive and language on Windows) and use that path:
 
 ```
-sh TEMPLATE_DIR/.agents/core/bin/py TEMPLATE_DIR/.agents/skills/create-team-repo/scripts/desktop_path.py
+sh TEMPLATE_DIR/.agents/core/bin/py TEMPLATE_DIR/.agents/skills/create-team-repo/scripts/desktop_path.py "<Team>-AI"
 ```
 
-Ask before downloading the empty repository into `<Desktop>/<Launcher name>` (e.g. `Desktop/Sales-AI`):
+It prints the Desktop path, then `free` or `exists` for `<Desktop>/<Team>-AI`. Do not check
+with another command (a failing check looks like an error to the Champion). If it `exists`, stop and ask the Champion what it is; never mix
+files into it. Otherwise ask before downloading the empty shared folder there:
 
 ```
-git clone https://github.com/<owner>/<repo-name>.git "<Desktop>/<Launcher name>"
+git clone https://github.com/<owner>/<repo-name>.git "<Desktop>/<Team>-AI"
 ```
 
 Git warns that the repository is empty: that is expected. If it asks the Champion to sign in
@@ -79,9 +114,13 @@ From `TEMPLATE_DIR`:
 
 ```
 sh .agents/core/bin/py .agents/skills/create-team-repo/scripts/configure.py \
-  --target "<Desktop>/<Launcher name>" --company "<company>" --team "<team>" --language <en|es> \
-  --champion-name "<full name>" --champion-email "<GitHub account email>" --champion-github "<username>"
+  --target "<Desktop>/<Team>-AI" --company "<company>" --team "<team>" --language <en|es> \
+  --champion-name "<full name>" --champion-email "<GitHub account email>" [--champion-github "<username>"]
 ```
+
+Pass `--champion-github` only when you learned the username in step 3 and the shared folder
+is in the Champion's own account; otherwise leave it out and the script reads it from `gh`
+when it can.
 
 It copies the template's files (not its history, and not the template-only skills), writes
 the team settings, creates `documents/` and `artifacts/`, writes the team README, renames the
@@ -138,7 +177,7 @@ for real, so nobody but them can change it. Then continue.
 
 ## 7. Prepare this computer
 
-Ask the Champion to double-click **`<Launcher name>`** in the new folder. The first time it
+Ask the Champion to double-click the **`<Team>-AI`** icon in the new folder. The first time it
 installs what is needed, turns on the team checks, hides technical files and lets Codex
 use the team rules. If it shows an error, read it with them and help.
 
@@ -151,7 +190,7 @@ paste or attach a skill, script, instructions or macro they already use.
 
 - Delete `TEMPLATE_DIR` (the temporary copy), after saying so.
 - Tell the Champion, in three short lines: where the folder is, how to open it (the
-  launcher, then choose the folder in Claude or Codex), and what comes next (adding
+  `<Team>-AI` icon, then choose the folder in Claude or Codex), and what comes next (adding
   teammates is a later step with their facilitator).
 
 ## Tools
