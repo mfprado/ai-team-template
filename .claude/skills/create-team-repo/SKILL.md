@@ -44,6 +44,10 @@ Ask only three things:
 
 Do not ask for their GitHub username: you learn it later (step 3 or 5).
 
+Also ask, as optional: **"Do you have your company's brand: its website, a brand guide, or a
+logo file? I'll use its colours and logo for your team's page, the folder's icon and the
+reports the AI makes."** Keep what they give for step 7b; if they have nothing, skip it.
+
 Then ask: **"Did someone at your company (for example IT) already create a shared folder on
 GitHub for your team and send you a link?"**
 
@@ -54,8 +58,9 @@ GitHub for your team and send you a link?"**
   https://github.com/signup, sign up with that email, choose the **Free** plan, confirm the
   email GitHub sends, and tell you when done. The shared folder will live in their own account.
 
-The Champion is the only person who updates the team's main version directly; everyone
-else's changes reach them as change requests to approve. Say it in one sentence.
+Say in one sentence: by default everyone on the team can save changes for everyone, and the
+team page shows who changed what; if they prefer to approve teammates' changes first, they can
+turn that on later in the team page's Settings.
 
 Propose the name, and confirm:
 
@@ -156,11 +161,12 @@ git push -u origin main
 The team's checks run on this commit (generated files, secrets, skills). If they stop it,
 explain the message in plain words and fix it. Never commit or push under any other name.
 
-## 6b. Protect the team's main version
+## 6b. Approval (only if the Champion asks for it)
 
-Only the Champion should update `main`; teammates send change requests. The team's checks
-already enforce this on every computer. If `gh` is available, also ask GitHub to require a
-change request for `main` (the owner can still update it directly), after OK:
+By default everyone updates `main`, so skip this step. If the Champion wants to approve
+teammates' changes, turn it on in the team page's Settings (step 7 opens it). The team's
+checks then enforce it on every computer. If `gh` is available, you may also ask GitHub to
+require a change request for `main` (the owner can still update it directly), after OK:
 
 ```
 gh api -X PUT repos/<owner>/<repo-name>/branches/main/protection --input - <<'JSON'
@@ -177,9 +183,42 @@ for real, so nobody but them can change it. Then continue.
 
 ## 7. Prepare this computer
 
-Ask the Champion to double-click the **`<Team>-AI`** icon in the new folder. The first time it
-installs what is needed, turns on the team checks, hides technical files and lets Codex
-use the team rules. If it shows an error, read it with them and help.
+Ask the Champion to double-click the **`<Team>-AI`** icon in the new folder and tell you when
+a window has opened and stopped moving. The first time it installs what is needed, turns on
+the team checks, hides technical files and lets Codex use the team rules, then opens the
+team page in the browser (keep the window open while using it).
+
+You cannot see that window, and never ask the Champion to copy it: read
+`<Desktop>/<Team>-AI/.git/launch.log`, where the launcher writes what the window shows.
+
+- No log: the launcher has not run yet. On Mac, if it was blocked, right-click the icon and
+  choose **Open**; on Windows, if a blue "Windows protected your PC" box appears, click
+  **More info**, then **Run anyway**.
+- `Setup finished.` and `Launcher finished.`: done.
+- Anything else: explain the last lines in plain words and help fix them.
+
+## 7b. Company brand (if they gave a website, brand guide or logo in step 2)
+
+1. Find the brand. From a website: its main colour (buttons, header), background and text
+   colours, and its logo (prefer a square or SVG/PNG logo; ask before downloading it, saying
+   from where). From a brand guide or logo file they attach: read the colours from it.
+2. Show it in plain words and wait for OK, for example: "Main colour: dark blue (#0B3D91).
+   Background: white. Logo: the one at the top of your website."
+3. Save it (uv is installed by the launcher in step 7):
+
+   ```
+   ~/.local/bin/uv run --quiet --no-project --python 3.12 --with pillow \
+     .agents/core/scripts/brand.py --primary "<#hex>" [--background "<#hex>"] [--text "<#hex>"] \
+     [--font sans|serif] [--logo "<logo file>"]
+   ```
+
+   On Windows, uv is `%USERPROFILE%\.local\bin\uv.exe`. Run it inside the team folder.
+4. Ask the Champion to close the team page window and double-click the icon again: the page
+   shows the company colours and logo, and the folder gets the company's icon.
+5. Save it for the whole team (AGENTS.md, "Sharing changes"), with `--paths .agents/local/brand.json
+   .agents/local/brand`.
+
+Reports and dashboards the AI makes from now on use these colours and logo (artifacts rule).
 
 ## 8. First automation
 

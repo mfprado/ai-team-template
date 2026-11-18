@@ -345,12 +345,12 @@ def disables_hooks(tool, tool_input):
 
 
 def champion_only_push(tool, tool_input):
-    """Only the AI Champion updates the team's main version; everyone else sends a change request."""
+    """When the Champion asked to approve changes, only they update the main version; others send a change request."""
     if tool.lower() not in SHELL_TOOLS:
         return None
     info = team_info()
     champion = str(info.get("champion", {}).get("email", "")).lower()
-    if not champion or not pushes_to_main(command_of(tool_input)):
+    if not champion or not info.get("changes_need_approval") or not pushes_to_main(command_of(tool_input)):
         return None
     if git_out("config", "user.email").lower() == champion:
         return None

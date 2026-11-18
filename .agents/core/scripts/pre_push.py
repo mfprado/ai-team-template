@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
-"""Pre-push check: only the AI Champion updates the team's main version.
+"""Pre-push check: when the AI Champion asked to approve changes, only they update main.
 
-Works with or without an agent (git runs it). Everyone else shares changes as a change
-request: sh .agents/core/bin/py -I .agents/core/scripts/propose_change.py --summary "..."
+By default everyone updates the team's main version directly. If team.json has
+"changes_need_approval": true, everyone else shares changes as a change request: sh .agents/core/bin/py -I .agents/core/scripts/propose_change.py --summary "..."
 Git sends one line per ref on stdin: <local ref> <local sha> <remote ref> <remote sha>.
 Standard library only.
 """
@@ -22,8 +22,8 @@ def main():
     except (OSError, ValueError):
         return 0  # not a configured team repository (e.g. the template itself)
     champion = info.get("champion", {})
-    if not champion.get("email"):
-        return 0
+    if not champion.get("email") or not info.get("changes_need_approval"):
+        return 0  # no Champion yet, or everyone updates the main version (the default)
     me = subprocess.run(["git", "-C", str(ROOT), "config", "user.email"], capture_output=True, text=True).stdout.strip()
     if me.lower() == champion["email"].lower():
         return 0

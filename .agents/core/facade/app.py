@@ -15,6 +15,7 @@ import webbrowser
 from pathlib import Path
 
 import streamlit as st
+import streamlit.components.v1 as components
 
 ROOT = Path(__file__).resolve().parents[3]
 CORE = ROOT / ".agents/core"
@@ -33,19 +34,33 @@ T = {
         "idea_summary": "New idea: {text}", "set_status": "Status", "save_status": "Save status",
         "status_summary": "Idea {n}: {status}", "waiting": "waiting for {name}",
         "team_skills": "Team skills", "system_skills": "System skills", "no_skills": "The team has no skills yet. Ask the assistant to bring one in.",
-        "how_to_ask": "To use it, open Claude or Codex in this folder and ask for it in your own words.",
-        "details": "Show the full instructions",
+        "how_to_ask": "To use it, open Claude or Codex in this folder and paste this (or say it in your own words):",
+        "default_ask": "Use the {name} skill.",
+        "details": "See the step-by-step instructions the AI follows",
+        "details_intro": "This is what the AI reads when you ask for this. You do not need it to use the skill.",
         "perms_intro": "What the AI is not allowed to do in this folder. Switch a rule off only if the team agrees.",
         "blocked": "Blocked", "asks": "Asks first", "changed": "You changed:", "on": "on", "off": "off",
         "apply": "Apply for the whole team", "applying": "Sharing the change...",
         "note": "Short message you can send to {name}:",
         "shared": "Shared reports", "private": "Only on this computer", "no_files": "Nothing here yet.",
-        "open": "Open", "show_folder": "Show in folder", "pending": "Change requests waiting for {name}", "no_pending": "No change requests waiting.",
-        "recent": "Recent changes", "changed_what": "changed",
+        "open": "Open", "show_folder": "Show in folder", "pending": "Changes waiting for {name}'s approval", "no_pending": "Nothing waiting for approval.",
+        "recent": "Recent changes",
+        "sensitive": "Changes how the AI works for everyone", "changed_what": "changed",
         "what": {"skill": "skill {x}", "perms": "permissions", "docs": "documents", "reports": "reports",
                  "rules": "team rules", "system": "system", "other": "other files"},
         "ago": {"now": "just now", "min": "{n} min ago", "h": "{n} h ago", "d": "{n} days ago"},
         "perm_summary": "Permissions: {items}",
+        "tab_settings": "Settings",
+        "reports_intro": "Reports, dashboards and small apps made with the AI. Ask the assistant for a new one any time.",
+        "shared_by": "by {who}", "view": "View", "back": "Back to the list",
+        "open_link": "Open it", "link_note": "This one lives in Claude or Codex. It opens in a new browser tab.",
+        "share_team": "Share with the team", "share_confirm": "Everyone on the team will be able to see **{title}**. Share it?",
+        "share_yes": "Yes, share it", "share_no": "Cancel", "close": "Close", "share_summary": "Shared report: {title}",
+        "settings_intro": "Only you ({name}) see these settings.",
+        "direct_label": "Teammates' changes wait for my approval before they reach everyone",
+        "direct_help": "Off (the usual): everyone's changes reach the team straight away, and History shows who changed what. On: teammates' changes wait in History until you approve them.",
+        "direct_summary": "Settings: teammates' changes wait for approval ({state})",
+        "save": "Save for the whole team",
     },
     "es": {
         "title": "Espacio de IA de {team}", "champion": "IA Champion: {name}",
@@ -57,8 +72,10 @@ T = {
         "idea_summary": "Nueva idea: {text}", "set_status": "Estado", "save_status": "Guardar estado",
         "status_summary": "Idea {n}: {status}", "waiting": "esperando a {name}",
         "team_skills": "Skills del equipo", "system_skills": "Skills del sistema", "no_skills": "El equipo todavía no tiene skills. Pedile al asistente que traiga una.",
-        "how_to_ask": "Para usarla, abrí Claude o Codex en esta carpeta y pedila con tus palabras.",
-        "details": "Ver las instrucciones completas",
+        "how_to_ask": "Para usarla, abrí Claude o Codex en esta carpeta y pegá esto (o pedilo con tus palabras):",
+        "default_ask": "Usá la skill {name}.",
+        "details": "Ver las instrucciones paso a paso que sigue la IA",
+        "details_intro": "Esto es lo que lee la IA cuando le pedís esto. No lo necesitás para usar la skill.",
         "perms_intro": "Lo que la IA no puede hacer en esta carpeta. Apagá una regla solo si el equipo está de acuerdo.",
         "blocked": "Bloqueado", "asks": "Pide confirmación", "changed": "Cambiaste:", "on": "activada", "off": "desactivada",
         "apply": "Aplicar para todo el equipo", "applying": "Compartiendo el cambio...",
@@ -66,10 +83,22 @@ T = {
         "shared": "Reportes compartidos", "private": "Solo en esta computadora", "no_files": "Todavía no hay nada.",
         "open": "Abrir", "show_folder": "Ver en la carpeta", "pending": "Pedidos de cambio esperando a {name}", "no_pending": "No hay pedidos de cambio esperando.",
         "recent": "Cambios recientes", "changed_what": "cambió",
+        "sensitive": "Cambia cómo funciona la IA para todos",
         "what": {"skill": "la skill {x}", "perms": "los permisos", "docs": "documentos", "reports": "reportes",
                  "rules": "reglas del equipo", "system": "el sistema", "other": "otros archivos"},
         "ago": {"now": "recién", "min": "hace {n} min", "h": "hace {n} h", "d": "hace {n} días"},
         "perm_summary": "Permisos: {items}",
+        "tab_settings": "Configuración",
+        "reports_intro": "Reportes, tableros y pequeñas apps hechos con la IA. Pedile uno nuevo al asistente cuando quieras.",
+        "shared_by": "de {who}", "view": "Ver", "back": "Volver a la lista",
+        "open_link": "Abrir", "link_note": "Este está en Claude o Codex. Se abre en otra pestaña del navegador.",
+        "share_team": "Compartir con el equipo", "share_confirm": "Todo el equipo va a poder ver **{title}**. ¿Lo compartís?",
+        "share_yes": "Sí, compartir", "share_no": "Cancelar", "close": "Cerrar", "share_summary": "Reporte compartido: {title}",
+        "settings_intro": "Solo vos ({name}) ves esta configuración.",
+        "direct_label": "Los cambios del equipo esperan mi aprobación antes de llegar a todos",
+        "direct_help": "Apagado (lo habitual): los cambios de todos llegan al equipo enseguida, e Historial muestra quién cambió qué. Prendido: los cambios del equipo esperan en Historial hasta que los apruebes.",
+        "direct_summary": "Configuración: los cambios del equipo esperan aprobación ({state})",
+        "save": "Guardar para todo el equipo",
     },
 }
 
@@ -100,6 +129,19 @@ def front_matter(text):
                     fields[k.strip()] = v.strip().strip("\"'")
             body = text[end + 4:]
     return fields, body
+
+
+def skill_card(name, description):
+    """Plain words for a skill: a title, what it does, and a request to paste.
+
+    Descriptions are written for the AI: "<what it does>. Use when someone says "<request>", ..."
+    The first part is the summary; the first quoted request is the one to paste.
+    """
+    title = name.replace("-", " ").capitalize()
+    parts = re.split(r"\s*\b(?:Use (?:it )?when|Usar? cuando|Usala cuando)\b", description, maxsplit=1)
+    summary, when = parts[0].strip() or description, parts[1] if len(parts) > 1 else ""
+    asks = re.findall(r'["\u201c]([^"\u201d]{3,})["\u201d]', when)
+    return title, summary, asks[0] if asks else None
 
 
 def ago(ts, t):
@@ -178,7 +220,12 @@ team = load_json(ROOT / ".agents/local/team.json", {})
 t = T.get(team.get("language"), T["en"])
 champion = team.get("champion", {}).get("name") or "the AI Champion"
 
-st.set_page_config(page_title=t["title"].format(team=team.get("team", "Team")), layout="centered")
+logo = ROOT / ".agents/local/brand/logo.png"
+icon = ROOT / ".agents/local/brand/icon.png"
+st.set_page_config(page_title=t["title"].format(team=team.get("team", "Team")), layout="centered",
+                   page_icon=str(icon) if icon.exists() else None)
+if logo.exists():
+    st.image(str(logo), width=160)
 st.title(t["title"].format(team=team.get("team", "Team")))
 st.caption(t["champion"].format(name=champion))
 
@@ -188,7 +235,9 @@ if "synced" not in st.session_state or st.button(t["sync"]):
 st.caption(t["synced"] if st.session_state.get("synced") else t["sync_fail"])
 
 # Section picker that survives reruns (st.tabs jumps back to the first tab when a switch changes).
-SECTIONS = [t["tab_skills"], t["tab_ideas"], t["tab_perms"], t["tab_artifacts"], t["tab_history"]]
+SECTIONS = [t["tab_skills"], t["tab_artifacts"], t["tab_ideas"], t["tab_perms"], t["tab_history"]]
+if is_champion():
+    SECTIONS.append(t["tab_settings"])
 section = st.radio("section", SECTIONS, horizontal=True, key="section", label_visibility="collapsed")
 st.divider()
 
@@ -205,10 +254,14 @@ if section == t["tab_skills"]:
         if not group:
             st.info(t["no_skills"])
         for name, description, body in group:
-            with st.expander(name):
-                st.write(description)
+            title, summary, ask = skill_card(name, description)
+            with st.container(border=True):
+                st.markdown(f"**{title}**")
+                st.write(summary)
                 st.caption(t["how_to_ask"])
-                if st.checkbox(t["details"], key=f"detail-{name}"):
+                st.code(ask or t["default_ask"].format(name=name), language="text")
+                with st.expander(t["details"]):
+                    st.caption(t["details_intro"])
                     st.markdown(body)
 
 # Ideas: anyone adds; the AI Champion sets the status
@@ -291,31 +344,132 @@ if section == t["tab_perms"]:
                 run(sys.executable, "-I", str(CORE / "scripts/sync.py"))
                 share(t["perm_summary"].format(items="; ".join(items)), [".agents/permissions.json"])
 
-# Reports: open files from the artifacts folder
+# Reports: hosted links (Claude or Codex) and files, viewed inside the page
+def artifact_folders():
+    base = ROOT / ("artefactos" if team.get("language") == "es" else "artifacts")
+    return base, base / ("privado" if team.get("language") == "es" else "private")
+
+
+def report_items():
+    base, private = artifact_folders()
+    items = []
+    for folder, is_private in ((base, False), (private, True)):
+        for link in load_json(folder / "links.json", []):
+            items.append({"kind": "link", "title": link.get("title", link.get("url")), "url": link.get("url"),
+                          "who": link.get("by"), "when": link.get("date"), "private": is_private, "key": link.get("url")})
+        if folder.is_dir():
+            for p in folder.rglob("*"):
+                if not p.is_file() or p.name in ("links.json", ".gitkeep", ".DS_Store") or (not is_private and private in p.parents):
+                    continue
+                items.append({"kind": "file", "title": p.stem.replace("-", " ").replace("_", " ").capitalize(), "path": p,
+                              "who": None, "when": ago(int(p.stat().st_mtime), t), "private": is_private, "key": str(p)})
+    return items
+
+
+def share_report(item):
+    """Move a private report to the team's folder and share it (published or change request)."""
+    base, private = artifact_folders()
+    if item["kind"] == "link":
+        mine = [l for l in load_json(private / "links.json", []) if l.get("url") != item["url"]]
+        (private / "links.json").write_text(json.dumps(mine, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
+        team_links = [l for l in load_json(base / "links.json", []) if l.get("url") != item["url"]]
+        team_links.append({"title": item["title"], "url": item["url"], "by": item["who"] or git("config", "user.name").stdout.strip(),
+                           "date": item["when"] or f"{datetime.date.today()}"})
+        (base / "links.json").write_text(json.dumps(team_links, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
+        target = base / "links.json"
+    else:
+        target = base / item["path"].relative_to(private)
+        while target.exists():
+            target = target.with_name(f"{target.stem}-2{target.suffix}")
+        target.parent.mkdir(parents=True, exist_ok=True)
+        item["path"].rename(target)
+    share(t["share_summary"].format(title=item["title"]), [str(target.relative_to(ROOT))])
+
+
+@st.dialog(" ")
+def confirm_share(item):
+    st.write(t["share_confirm"].format(title=item["title"]))
+    yes, no = st.columns(2)
+    if yes.button(t["share_yes"], type="primary"):
+        with st.spinner(t["applying"]):
+            share_report(item)
+        st.session_state.pop("viewing", None)
+        if st.button(t["close"]):
+            st.rerun()
+    elif no.button(t["share_no"]):
+        st.rerun()
+
+
+def show_report(item):
+    head, action = st.columns([3, 2])
+    head.subheader(item["title"])
+    if item["private"] and action.button(t["share_team"], type="primary", use_container_width=True):
+        confirm_share(item)
+    if item["kind"] == "link":
+        st.caption(t["link_note"])
+        st.link_button(t["open_link"], item["url"])
+        return
+    p = item["path"]
+    if p.suffix.lower() in (".html", ".htm"):
+        # White by default (reports written without a background are unreadable on a dark page).
+        page = "<style>html{background:#fff;color:#111}</style>" + p.read_text(encoding="utf-8", errors="replace")
+        components.html(page, height=720, scrolling=True)
+    elif p.suffix.lower() in (".png", ".jpg", ".jpeg", ".gif", ".svg"):
+        st.image(str(p))
+    elif p.suffix.lower() in (".md", ".txt", ".csv"):
+        st.markdown(p.read_text(encoding="utf-8", errors="replace")) if p.suffix.lower() == ".md" else st.text(p.read_text(encoding="utf-8", errors="replace"))
+    elif p.suffix.lower() in SAFE_TO_OPEN:
+        if st.button(t["open"]):
+            webbrowser.open(p.as_uri())
+    elif st.button(t["show_folder"]):
+        show_in_folder(p)
+
+
 if section == t["tab_artifacts"]:
-    base = ROOT / "artifacts"
-    private = base / "private"
-    for heading, folder, files in (
-        (t["shared"], base, [p for p in base.rglob("*") if p.is_file() and private not in p.parents and p.name != ".gitkeep"] if base.is_dir() else []),
-        (t["private"], private, [p for p in private.rglob("*") if p.is_file()] if private.is_dir() else []),
-    ):
-        st.subheader(heading)
-        if not files:
-            st.caption(t["no_files"])
-        for p in sorted(files, key=lambda p: p.stat().st_mtime, reverse=True):
-            col1, col2 = st.columns([4, 1])
-            col1.write(f"**{p.relative_to(folder)}**  ·  {ago(int(p.stat().st_mtime), t)}")
-            if p.suffix.lower() in SAFE_TO_OPEN:
-                if col2.button(t["open"], key=f"open-{p}"):
-                    webbrowser.open(p.as_uri())
-            elif col2.button(t["show_folder"], key=f"open-{p}"):
-                show_in_folder(p)
+    items = report_items()
+    viewing = next((i for i in items if i["key"] == st.session_state.get("viewing")), None)
+    if viewing:
+        if st.button(f"← {t['back']}"):
+            st.session_state.pop("viewing", None)
+            st.rerun()
+        show_report(viewing)
+    else:
+        st.write(t["reports_intro"])
+        for heading, group in ((t["shared"], [i for i in items if not i["private"]]),
+                               (t["private"], [i for i in items if i["private"]])):
+            st.subheader(heading)
+            if not group:
+                st.caption(t["no_files"])
+            for item in group:
+                col1, col2 = st.columns([4, 1])
+                meta = " · ".join(x for x in (t["shared_by"].format(who=item["who"]) if item["who"] else "", item["when"] or "") if x)
+                col1.write(f"**{item['title']}**" + (f"  ·  {meta}" if meta else ""))
+                if col2.button(t["view"], key=f"view-{item['key']}"):
+                    st.session_state.viewing = item["key"]
+                    st.rerun()
+
+# Settings: only the AI Champion
+if section == t.get("tab_settings") and is_champion():
+    st.caption(t["settings_intro"].format(name=champion))
+    current = bool(team.get("changes_need_approval"))
+    wanted = st.toggle(t["direct_label"], value=current, help=t["direct_help"])
+    if wanted != current and st.button(t["save"], type="primary"):
+        team_file = ROOT / ".agents/local/team.json"
+        data = load_json(team_file, {})
+        if wanted:
+            data["changes_need_approval"] = True
+        else:
+            data.pop("changes_need_approval", None)
+        team_file.write_text(json.dumps(data, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
+        with st.spinner(t["applying"]):
+            share(t["direct_summary"].format(state=t["on"] if wanted else t["off"]), [".agents/local/team.json"])
 
 # History: who changed what, in plain words
 if section == t["tab_history"]:
     pending = [b.strip().removeprefix("origin/") for b in git("branch", "-r", "--list", "origin/change/*").stdout.splitlines()]
-    st.subheader(t["pending"].format(name=champion))
-    if not pending:
+    if pending or team.get("changes_need_approval"):
+        st.subheader(t["pending"].format(name=champion))
+    if not pending and team.get("changes_need_approval"):
         st.caption(t["no_pending"])
     for b in pending:
         log = git("log", "-1", "--format=%an\x1f%at\x1f%s", f"origin/{b}").stdout.strip().split("\x1f")
@@ -328,4 +482,6 @@ if section == t["tab_history"]:
         lines = [l for l in record.splitlines() if l.strip()]
         author, ts, subject = lines[0].split("\x1f")
         what = describe_paths(lines[1:], t)
-        st.write(f"- **{author}** {t['changed_what']} {what or '—'} · {ago(int(ts), t)}  \n  {subject}")
+        sensitive = any(l == ".agents/permissions.json" or l.startswith((".agents/local/", ".agents/core/")) for l in lines[1:])
+        flag = f"  \n  :orange[**{t['sensitive']}**]" if sensitive else ""
+        st.write(f"- **{author}** {t['changed_what']} {what or '—'} · {ago(int(ts), t)}  \n  {subject}{flag}")

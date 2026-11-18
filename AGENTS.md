@@ -7,6 +7,9 @@ Instructions for any AI agent (Codex, Claude Code, others) working in this team 
 - The people using this repository are **not technical**. Most have never used git, a terminal or Markdown, and they should not need to.
 - Answer in the **team's language** (see `.agents/local/team.json`, key `language`; if missing, use the language the person writes in).
 - Keep answers short and plain. No jargon, no file paths unless asked. Say what you did and what they should check.
+- Ask questions in natural language. Never say commit, push, branch, merge or repository: say
+  "save it for the whole team", "get the team's latest", "the team's shared folder" (full list
+  in `.agents/core/rules/changes.md`).
 - Never ask them to run commands, edit files by hand or use git. Do it yourself, or explain it in everyday words.
 
 ## What lives where
@@ -32,6 +35,7 @@ Read a rule file **only when its situation applies**. Team rules in `.agents/loc
 | Creating, migrating or editing a skill | `.agents/core/rules/skills.md` |
 | Producing a report, dashboard or any HTML output | `.agents/core/rules/artifacts.md` |
 | Anything involving credentials, messages to people, or changing permissions | `.agents/core/rules/safety.md` |
+| Changing a skill, rule, permission, hook or team setting, or sharing a change that clashes with someone else's | `.agents/core/rules/changes.md` |
 | Someone shares an idea for the team, or asks about the team's ideas | `.agents/core/rules/ideas.md` |
 | An "IMPROVEMENT REVIEW" note appears, or someone asks what could work better | `.agents/core/rules/improvements.md` |
 | Any task covered by a file in `.agents/local/rules/` | That file |
@@ -39,7 +43,7 @@ Read a rule file **only when its situation applies**. Team rules in `.agents/loc
 ## Sharing changes with the team
 
 After you change anything the team uses (a skill, a rule, a permission, a hook, a document),
-ask: **"Do you want to apply this change so everyone on the team can use it?"** If yes, run:
+ask: **"Do you want to save this for the whole team?"** If yes, run:
 
 ```
 sh .agents/core/bin/py -I .agents/core/scripts/propose_change.py --summary "<one plain sentence>" --paths <files or folders you changed>
@@ -47,10 +51,14 @@ sh .agents/core/bin/py -I .agents/core/scripts/propose_change.py --summary "<one
 
 List in `--paths` only what belongs to this change, so other unsaved work stays where it is.
 
-Tell the person its `message`. If it returns `note_for_champion`, offer it as a very short
-message they can send to their AI Champion (never send it yourself). Only the AI Champion
-updates the team's main version directly; for everyone else this creates a change request
-the Champion approves. Never push to `main` yourself.
+Tell the person its `message`. By default every change reaches the team's main version
+straight away, and the team page's History shows who changed what. If the Champion turned on
+approval in Settings, a teammate's change becomes a change request instead: when the script
+returns `note_for_champion`, offer it as a very short message they can send to their AI
+Champion (never send it yourself). Never push to `main` yourself; always use the script.
+
+Before changing how the AI works for the whole team (skills, rules, permissions, hooks,
+settings), read `.agents/core/rules/changes.md`.
 
 ## Always
 

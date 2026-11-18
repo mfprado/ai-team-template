@@ -10,6 +10,11 @@ __pycache__/
 *.pyc
 .DS_Store
 Thumbs.db
+desktop.ini
+Icon?
+
+# Made on each computer from the team's brand (setup.py)
+.streamlit/
 
 # Secrets: never saved in the team's repository
 .env

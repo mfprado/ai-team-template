@@ -117,8 +117,8 @@ def main():
     if not dirty and not ahead:
         return out("nothing", t["nothing"])
 
-    # The AI Champion: straight to the team's main version.
-    if is_champion(info):
+    # Straight to the team's main version: everyone by default, only the Champion if they approve changes.
+    if is_champion(info) or not info.get("changes_need_approval"):
         if dirty:
             problem = commit_all(args.summary, args.paths)
             if problem:
