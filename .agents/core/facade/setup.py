@@ -42,14 +42,15 @@ def git_hooks():
 
 
 def hide_files():
+    # Each system only shows its own launcher: Mac hides the Windows one (.bat) and the other way round.
     if SYSTEM == "Darwin":
-        targets = [ROOT / f for f in HIDDEN_FILES]
+        targets = [ROOT / f for f in HIDDEN_FILES] + list(ROOT.glob("*.bat"))
         for t in targets:
             if t.exists():
                 run("chflags", "hidden", str(t))
     elif SYSTEM == "Windows":
-        for name in HIDDEN_DIRS + HIDDEN_FILES:
-            t = ROOT / name
+        targets = [ROOT / name for name in HIDDEN_DIRS + HIDDEN_FILES] + list(ROOT.glob("*.command"))
+        for t in targets:
             if t.exists():
                 run("attrib", "+h", str(t))
     # Linux: names starting with a dot are hidden; AGENTS.md/CLAUDE.md stay visible.
@@ -122,15 +123,16 @@ MAC_SET_ICON = """function run(argv) {
 
 
 def folder_icon(icon_png, icon_ico, team):
-    """Give the team folder (and the Mac launcher) the company's icon. Redone only when the icon changes."""
+    """Give the team folder (and the Mac launcher) the company's icon. True the first time or when it changes."""
     stamp = ROOT / ".git/brand-icon"
     source = icon_ico if SYSTEM == "Windows" else icon_png
     if not source.exists():
         return False
     digest = hashlib.sha256(source.read_bytes()).hexdigest()
-    if stamp.exists() and stamp.read_text().strip() == digest:
+    unchanged = stamp.exists() and stamp.read_text().strip() == digest
+    if unchanged and SYSTEM != "Darwin":
         return False
-    if SYSTEM == "Darwin":
+    if SYSTEM == "Darwin":  # every launch: an update replaces the launcher file and drops its icon
         targets = [str(ROOT)] + [str(p) for p in ROOT.glob("*.command")]
         if run("osascript", "-l", "JavaScript", "-e", MAC_SET_ICON, str(source), *targets).returncode != 0:
             return False
@@ -145,7 +147,33 @@ def folder_icon(icon_png, icon_ico, team):
     else:
         return False
     stamp.write_text(digest + "\n")
-    return True
+    return not unchanged
+
+
+WINDOWS_SHORTCUT = """$s = (New-Object -ComObject WScript.Shell).CreateShortcut($env:TEAM_LNK)
+$s.TargetPath = $env:TEAM_BAT
+$s.WorkingDirectory = $env:TEAM_ROOT
+$s.IconLocation = "$env:TEAM_ICO,0"
+$s.Save()"""
+
+
+def windows_shortcut(icon_ico):
+    """Windows cannot give a .bat file an icon: show a shortcut with the company icon instead, and hide the .bat."""
+    if SYSTEM != "Windows" or not icon_ico.exists():
+        return False
+    bats = sorted(ROOT.glob("*.bat"))
+    if not bats:
+        return False
+    lnk = bats[0].with_suffix(".lnk")
+    created = False
+    if not lnk.exists():
+        env = dict(os.environ, TEAM_LNK=str(lnk), TEAM_BAT=str(bats[0]), TEAM_ROOT=str(ROOT), TEAM_ICO=str(icon_ico))
+        subprocess.run(["powershell", "-NoProfile", "-Command", WINDOWS_SHORTCUT], env=env,
+                       capture_output=True, text=True, check=False)
+        created = lnk.exists()
+    if lnk.exists():
+        run("attrib", "+h", str(bats[0]))
+    return created
 
 
 def apply_brand():
@@ -158,7 +186,9 @@ def apply_brand():
         return None
     page_theme(brand)
     brand_dir = ROOT / ".agents/local/brand"
-    if folder_icon(brand_dir / "icon.png", brand_dir / "icon.ico", team):
+    changed = folder_icon(brand_dir / "icon.png", brand_dir / "icon.ico", team)
+    changed = windows_shortcut(brand_dir / "icon.ico") or changed
+    if changed:
         return "The team folder now has your company's icon."
     return None
 
