@@ -28,12 +28,18 @@ T = {
         "title": "{team} AI workspace", "champion": "AI Champion: {name}",
         "sync": "Get the team's latest", "synced": "Up to date with the team.",
         "sync_fail": "Could not get the team's latest changes right now.",
-        "tab_skills": "Skills", "tab_perms": "Permissions", "tab_artifacts": "Reports", "tab_history": "History",
+        "tab_skills": "Skills", "tab_perms": "Permissions", "tab_artifacts": "Artifacts", "tab_history": "History",
         "tab_ideas": "Ideas", "ideas_intro": "Ideas for the team's workspace. Anyone can add one; {name} decides what happens with each.",
         "no_ideas": "No ideas yet.", "new_idea": "Your idea", "add_idea": "Add idea",
         "idea_summary": "New idea: {text}", "set_status": "Status", "save_status": "Save status",
         "status_summary": "Idea {n}: {status}", "waiting": "waiting for {name}",
-        "team_skills": "Team skills", "system_skills": "System skills", "no_skills": "The team has no skills yet. Ask the assistant to bring one in.",
+        "team_skills": "Team skills", "system_skills": "System skills", "no_skills": "Your team has no skills yet. A skill is a task the AI does the same way for everyone, like a weekly report.",
+        "try_asking": "To start, open Claude or Codex in this folder and paste:",
+        "ask_skill": "Help me bring an automation I already use to the team.",
+        "no_shared": "No shared artifacts yet. Reports, dashboards and small apps the team shares appear here.",
+        "ask_report": "Make a report about <topic> and share it with the team.",
+        "no_private": "Nothing private on this computer.",
+        "up_to_date": "Up to date", "not_synced": "Not up to date", "menu": "Menu",
         "how_to_ask": "To use it, open Claude or Codex in this folder and paste this (or say it in your own words):",
         "default_ask": "Use the {name} skill.",
         "details": "See the step-by-step instructions the AI follows",
@@ -42,20 +48,20 @@ T = {
         "blocked": "Blocked", "asks": "Asks first", "changed": "You changed:", "on": "on", "off": "off",
         "apply": "Apply for the whole team", "applying": "Sharing the change...",
         "note": "Short message you can send to {name}:",
-        "shared": "Shared reports", "private": "Only on this computer", "no_files": "Nothing here yet.",
+        "shared": "Shared with the team", "private": "Only on this computer", "no_files": "Nothing here yet.",
         "open": "Open", "show_folder": "Show in folder", "pending": "Changes waiting for {name}'s approval", "no_pending": "Nothing waiting for approval.",
         "recent": "Recent changes",
         "sensitive": "Changes how the AI works for everyone", "changed_what": "changed",
-        "what": {"skill": "skill {x}", "perms": "permissions", "docs": "documents", "reports": "reports",
+        "what": {"skill": "skill {x}", "perms": "permissions", "docs": "documents", "reports": "artifacts",
                  "rules": "team rules", "system": "system", "other": "other files"},
         "ago": {"now": "just now", "min": "{n} min ago", "h": "{n} h ago", "d": "{n} days ago"},
         "perm_summary": "Permissions: {items}",
         "tab_settings": "Settings",
-        "reports_intro": "Reports, dashboards and small apps made with the AI. Ask the assistant for a new one any time.",
+        "reports_intro": "Artifacts are reports, dashboards and small apps made with the AI. Ask the assistant for a new one any time.",
         "shared_by": "by {who}", "view": "View", "back": "Back to the list",
         "open_link": "Open it", "link_note": "This one lives in Claude or Codex. It opens in a new browser tab.",
         "share_team": "Share with the team", "share_confirm": "Everyone on the team will be able to see **{title}**. Share it?",
-        "share_yes": "Yes, share it", "share_no": "Cancel", "close": "Close", "share_summary": "Shared report: {title}",
+        "share_yes": "Yes, share it", "share_no": "Cancel", "close": "Close", "share_summary": "Shared artifact: {title}",
         "settings_intro": "Only you ({name}) see these settings.",
         "direct_label": "Teammates' changes wait for my approval before they reach everyone",
         "direct_help": "Off (the usual): everyone's changes reach the team straight away, and History shows who changed what. On: teammates' changes wait in History until you approve them.",
@@ -66,12 +72,18 @@ T = {
         "title": "Espacio de IA de {team}", "champion": "IA Champion: {name}",
         "sync": "Traer lo último del equipo", "synced": "Al día con el equipo.",
         "sync_fail": "No se pudieron traer los últimos cambios del equipo ahora.",
-        "tab_skills": "Skills", "tab_perms": "Permisos", "tab_artifacts": "Reportes", "tab_history": "Historial",
+        "tab_skills": "Skills", "tab_perms": "Permisos", "tab_artifacts": "Artefactos", "tab_history": "Historial",
         "tab_ideas": "Ideas", "ideas_intro": "Ideas para el espacio del equipo. Cualquiera puede sumar una; {name} decide qué se hace con cada una.",
         "no_ideas": "Todavía no hay ideas.", "new_idea": "Tu idea", "add_idea": "Agregar idea",
         "idea_summary": "Nueva idea: {text}", "set_status": "Estado", "save_status": "Guardar estado",
         "status_summary": "Idea {n}: {status}", "waiting": "esperando a {name}",
-        "team_skills": "Skills del equipo", "system_skills": "Skills del sistema", "no_skills": "El equipo todavía no tiene skills. Pedile al asistente que traiga una.",
+        "team_skills": "Skills del equipo", "system_skills": "Skills del sistema", "no_skills": "Tu equipo todavía no tiene skills. Una skill es una tarea que la IA hace igual para todos, como un reporte semanal.",
+        "try_asking": "Para empezar, abrí Claude o Codex en esta carpeta y pegá:",
+        "ask_skill": "Ayudame a traer al equipo una automatización que ya uso.",
+        "no_shared": "Todavía no hay artefactos compartidos. Acá aparecen los reportes, tableros y pequeñas apps que comparte el equipo.",
+        "ask_report": "Hacé un reporte sobre <tema> y compartilo con el equipo.",
+        "no_private": "No hay nada privado en esta computadora.",
+        "up_to_date": "Al día", "not_synced": "No está al día", "menu": "Menú",
         "how_to_ask": "Para usarla, abrí Claude o Codex en esta carpeta y pegá esto (o pedilo con tus palabras):",
         "default_ask": "Usá la skill {name}.",
         "details": "Ver las instrucciones paso a paso que sigue la IA",
@@ -80,20 +92,20 @@ T = {
         "blocked": "Bloqueado", "asks": "Pide confirmación", "changed": "Cambiaste:", "on": "activada", "off": "desactivada",
         "apply": "Aplicar para todo el equipo", "applying": "Compartiendo el cambio...",
         "note": "Mensaje corto que podés mandarle a {name}:",
-        "shared": "Reportes compartidos", "private": "Solo en esta computadora", "no_files": "Todavía no hay nada.",
+        "shared": "Compartidos con el equipo", "private": "Solo en esta computadora", "no_files": "Todavía no hay nada.",
         "open": "Abrir", "show_folder": "Ver en la carpeta", "pending": "Pedidos de cambio esperando a {name}", "no_pending": "No hay pedidos de cambio esperando.",
         "recent": "Cambios recientes", "changed_what": "cambió",
         "sensitive": "Cambia cómo funciona la IA para todos",
-        "what": {"skill": "la skill {x}", "perms": "los permisos", "docs": "documentos", "reports": "reportes",
+        "what": {"skill": "la skill {x}", "perms": "los permisos", "docs": "documentos", "reports": "artefactos",
                  "rules": "reglas del equipo", "system": "el sistema", "other": "otros archivos"},
         "ago": {"now": "recién", "min": "hace {n} min", "h": "hace {n} h", "d": "hace {n} días"},
         "perm_summary": "Permisos: {items}",
         "tab_settings": "Configuración",
-        "reports_intro": "Reportes, tableros y pequeñas apps hechos con la IA. Pedile uno nuevo al asistente cuando quieras.",
+        "reports_intro": "Los artefactos son reportes, tableros y pequeñas apps hechos con la IA. Pedile uno nuevo al asistente cuando quieras.",
         "shared_by": "de {who}", "view": "Ver", "back": "Volver a la lista",
         "open_link": "Abrir", "link_note": "Este está en Claude o Codex. Se abre en otra pestaña del navegador.",
         "share_team": "Compartir con el equipo", "share_confirm": "Todo el equipo va a poder ver **{title}**. ¿Lo compartís?",
-        "share_yes": "Sí, compartir", "share_no": "Cancelar", "close": "Cerrar", "share_summary": "Reporte compartido: {title}",
+        "share_yes": "Sí, compartir", "share_no": "Cancelar", "close": "Cerrar", "share_summary": "Artefacto compartido: {title}",
         "settings_intro": "Solo vos ({name}) ves esta configuración.",
         "direct_label": "Los cambios del equipo esperan mi aprobación antes de llegar a todos",
         "direct_help": "Apagado (lo habitual): los cambios de todos llegan al equipo enseguida, e Historial muestra quién cambió qué. Prendido: los cambios del equipo esperan en Historial hasta que los apruebes.",
@@ -224,22 +236,50 @@ logo = ROOT / ".agents/local/brand/logo.png"
 icon = ROOT / ".agents/local/brand/icon.png"
 st.set_page_config(page_title=t["title"].format(team=team.get("team", "Team")), layout="centered",
                    page_icon=str(icon) if icon.exists() else None)
-if logo.exists():
-    st.image(str(logo), width=160)
-st.title(t["title"].format(team=team.get("team", "Team")))
-st.caption(t["champion"].format(name=champion))
-
-if "synced" not in st.session_state or st.button(t["sync"]):
-    ok = git("pull", "--ff-only", "--quiet").returncode == 0
-    st.session_state.synced = ok
-st.caption(t["synced"] if st.session_state.get("synced") else t["sync_fail"])
-
 # Section picker that survives reruns (st.tabs jumps back to the first tab when a switch changes).
 SECTIONS = [t["tab_skills"], t["tab_artifacts"], t["tab_ideas"], t["tab_perms"], t["tab_history"]]
+ICONS = dict(zip(SECTIONS, [":material/auto_awesome:", ":material/bar_chart:", ":material/lightbulb:",
+                            ":material/shield:", ":material/history:"]))
 if is_champion():
     SECTIONS.append(t["tab_settings"])
-section = st.radio("section", SECTIONS, horizontal=True, key="section", label_visibility="collapsed")
-st.divider()
+    ICONS[t["tab_settings"]] = ":material/settings:"
+
+with st.sidebar:
+    if logo.exists():
+        st.image(str(logo), width=140)
+    st.markdown(f"### {team.get('team', 'Team')}")
+    st.caption(t["champion"].format(name=champion))
+    status, refresh = st.columns([3, 1], vertical_alignment="center")
+    if "synced" not in st.session_state or refresh.button(":material/refresh:", help=t["sync"]):
+        st.session_state.synced = git("pull", "--ff-only", "--quiet").returncode == 0
+    status.markdown(f":green-background[{t['up_to_date']}]" if st.session_state.get("synced")
+                    else f":orange-background[{t['not_synced']}]", help=None if st.session_state.get("synced") else t["sync_fail"])
+    st.divider()
+    if st.session_state.get("section") not in SECTIONS:
+        st.session_state.section = SECTIONS[0]
+    # Menu buttons read like a list: icon and text on the left.
+    st.markdown("<style>.st-key-menu button{justify-content:flex-start}"
+                ".st-key-menu button>div{justify-content:flex-start}</style>", unsafe_allow_html=True)
+    menu = st.container(key="menu")
+    for name in SECTIONS:
+        current = st.session_state.section == name
+        if menu.button(name, icon=ICONS[name], type="primary" if current else "secondary",
+                     use_container_width=True, key=f"menu-{name}") and not current:
+            st.session_state.section = name
+            st.rerun()
+    section = st.session_state.section
+
+st.title(section)
+
+
+def empty_state(text, prompt=None):
+    """A friendly empty section: what goes here and, when useful, a request to paste."""
+    with st.container(border=True):
+        st.write(text)
+        if prompt:
+            st.caption(t["try_asking"])
+            st.code(prompt, language="text")
+
 
 # Skills: read only
 if section == t["tab_skills"]:
@@ -252,7 +292,7 @@ if section == t["tab_skills"]:
                            (t["system_skills"], [s for s in skills if s[0] in system])):
         st.subheader(heading)
         if not group:
-            st.info(t["no_skills"])
+            empty_state(t["no_skills"], t["ask_skill"])
         for name, description, body in group:
             title, summary, ask = skill_card(name, description)
             with st.container(border=True):
@@ -439,7 +479,7 @@ if section == t["tab_artifacts"]:
                                (t["private"], [i for i in items if i["private"]])):
             st.subheader(heading)
             if not group:
-                st.caption(t["no_files"])
+                empty_state(t["no_private"]) if heading == t["private"] else empty_state(t["no_shared"], t["ask_report"])
             for item in group:
                 col1, col2 = st.columns([4, 1])
                 meta = " · ".join(x for x in (t["shared_by"].format(who=item["who"]) if item["who"] else "", item["when"] or "") if x)
