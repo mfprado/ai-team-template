@@ -57,6 +57,12 @@ approval in Settings, a teammate's change becomes a change request instead: when
 returns `note_for_champion`, offer it as a very short message they can send to their AI
 Champion (never send it yourself). Never push to `main` yourself; always use the script.
 
+**Cloud sessions** (Claude Code on the web, Codex cloud) often start on a branch of their own.
+That branch is not the team's version: nobody sees it. Still share with the script, which
+sends the change to the team's main version (or a change request, if approval is on). Do not
+leave the work on the session's branch or open a pull request instead, even if the tool
+suggests it.
+
 Before changing how the AI works for the whole team (skills, rules, permissions, hooks,
 settings), read `.agents/core/rules/changes.md`.
 

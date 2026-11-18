@@ -70,12 +70,10 @@ if not errorlevel 1 (
   gh auth setup-git --hostname github.com >nul 2>nul
 )
 
-rem The team page: opens in the browser. Keep this window open while you use it.
-set PORT=8501
-start "" /b cmd /c "timeout /t 8 /nobreak >nul & start http://127.0.0.1:%PORT%"
-echo The team page will open in your browser. Close this window when you are done.
+rem The team page: opens in the browser, at this team's own address (several teams can be open).
+rem Keep this window open while you use it.
 echo Launcher finished.>> "%LOG%"
-uv run --quiet --no-project --python 3.12 --with streamlit==1.41.1 streamlit run .agents\core\facade\app.py --server.headless true --server.port %PORT% --server.address 127.0.0.1 --browser.gatherUsageStats false --client.toolbarMode viewer
+uv run --quiet --no-project --python 3.12 --with streamlit==1.41.1 .agents\core\facade\page.py
 exit /b 0
 
 :finish_error

@@ -99,12 +99,33 @@ def repair_guard():
             "before using the AI in this folder.")
 
 
+def rgb(hex_colour):
+    return [int(hex_colour[i:i + 2], 16) for i in (1, 3, 5)]
+
+
+def is_dark(hex_colour):
+    r, g, b = rgb(hex_colour)
+    return 0.299 * r + 0.587 * g + 0.114 * b < 128
+
+
+def mix(a, b, amount):
+    """a moved `amount` (0..1) of the way towards b."""
+    return "#" + "".join(f"{round(x + (y - x) * amount):02X}" for x, y in zip(rgb(a), rgb(b)))
+
+
 def page_theme(brand):
     """The team page reads .streamlit/config.toml from the folder it starts in (the team folder)."""
     lines = ["[theme]"]
-    if brand.get("background") or brand.get("text"):
-        lines += [f'backgroundColor = "{brand["background"]}"'] if brand.get("background") else []
-        lines += [f'textColor = "{brand["text"]}"'] if brand.get("text") else []
+    background, text = brand.get("background"), brand.get("text")
+    if background or text:
+        # Without a base, Streamlit keeps its light sidebar and inputs: light text on a dark
+        # brand becomes unreadable there. Pick the base from the colours and tint the sidebar.
+        dark = is_dark(background) if background else not is_dark(text)
+        lines.append(f'base = "{"dark" if dark else "light"}"')
+        if background:
+            lines.append(f'backgroundColor = "{background}"')
+            lines.append(f'secondaryBackgroundColor = "{mix(background, text or ("#FFFFFF" if dark else "#000000"), 0.08)}"')
+        lines += [f'textColor = "{text}"'] if text else []
     else:
         lines.append('base = "light"')
     lines += [f'primaryColor = "{brand["primary"]}"', f'font = "{"serif" if brand.get("font") == "serif" else "sans serif"}"']

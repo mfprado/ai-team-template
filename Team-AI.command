@@ -56,17 +56,7 @@ if command -v gh >/dev/null 2>&1; then
   gh auth setup-git --hostname github.com >/dev/null 2>&1
 fi
 
-# The team page: opens in the browser. Keep this window open while you use it.
-PORT=8501
-uv run --quiet --no-project --python 3.12 --with streamlit==1.41.1 \
-  streamlit run .agents/core/facade/app.py --server.headless true --server.port "$PORT" \
-  --server.address 127.0.0.1 --browser.gatherUsageStats false --client.toolbarMode viewer >/dev/null 2>&1 &
-APP=$!
-for _ in $(seq 1 60); do
-  curl -s "http://127.0.0.1:$PORT/_stcore/health" >/dev/null 2>&1 && break
-  sleep 1
-done
-open "http://127.0.0.1:$PORT"
-echo "The team page is open in your browser. Close this window when you are done."
+# The team page: opens in the browser, at this team's own address (several teams can be open).
+# Keep this window open while you use it.
 echo "Launcher finished."
-wait $APP
+uv run --quiet --no-project --python 3.12 --with streamlit==1.41.1 .agents/core/facade/page.py

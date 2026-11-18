@@ -39,7 +39,9 @@ T = {
         "no_shared": "No shared artifacts yet. Reports, dashboards and small apps the team shares appear here.",
         "ask_report": "Make a report about <topic> and share it with the team.",
         "no_private": "Nothing private on this computer.",
-        "up_to_date": "Up to date", "not_synced": "Not up to date", "menu": "Menu",
+        "up_to_date": "Up to date with the team", "not_synced": "Could not get the team's latest",
+        "unshared": "You have changes not shared with the team", "behind": "The team has newer changes",
+        "menu": "Menu",
         "how_to_ask": "To use it, open Claude or Codex in this folder and paste this (or say it in your own words):",
         "default_ask": "Use the {name} skill.",
         "details": "See the step-by-step instructions the AI follows",
@@ -83,7 +85,9 @@ T = {
         "no_shared": "Todavía no hay artefactos compartidos. Acá aparecen los reportes, tableros y pequeñas apps que comparte el equipo.",
         "ask_report": "Hacé un reporte sobre <tema> y compartilo con el equipo.",
         "no_private": "No hay nada privado en esta computadora.",
-        "up_to_date": "Al día", "not_synced": "No está al día", "menu": "Menú",
+        "up_to_date": "Al día con el equipo", "not_synced": "No se pudo traer lo último del equipo",
+        "unshared": "Tenés cambios sin compartir con el equipo", "behind": "El equipo tiene cambios más nuevos",
+        "menu": "Menú",
         "how_to_ask": "Para usarla, abrí Claude o Codex en esta carpeta y pegá esto (o pedilo con tus palabras):",
         "default_ask": "Usá la skill {name}.",
         "details": "Ver las instrucciones paso a paso que sigue la IA",
@@ -216,6 +220,20 @@ def share(summary, paths):
         st.code(outcome["note_for_champion"], language=None)
 
 
+def sync_status():
+    """One honest line: in step with the team, or what is different."""
+    if not st.session_state.get("synced"):
+        return f":orange-background[{t['not_synced']}]"
+    unsaved = bool(git("status", "--porcelain").stdout.strip())
+    ahead = git("rev-list", "--count", "origin/main..HEAD").stdout.strip() not in ("", "0")
+    behind = git("rev-list", "--count", "HEAD..origin/main").stdout.strip() not in ("", "0")
+    if unsaved or ahead:
+        return f":orange-background[{t['unshared']}]"
+    if behind:
+        return f":orange-background[{t['behind']}]"
+    return f":green-background[{t['up_to_date']}]"
+
+
 def is_champion():
     email = git("config", "user.email").stdout.strip().lower()
     return bool(email) and email == str(team.get("champion", {}).get("email", "")).lower()
@@ -249,11 +267,10 @@ with st.sidebar:
         st.image(str(logo), width=140)
     st.markdown(f"### {team.get('team', 'Team')}")
     st.caption(t["champion"].format(name=champion))
-    status, refresh = st.columns([3, 1], vertical_alignment="center")
-    if "synced" not in st.session_state or refresh.button(":material/refresh:", help=t["sync"]):
+    refresh = st.button(t["sync"], icon=":material/refresh:", use_container_width=True)
+    if refresh or "synced" not in st.session_state:
         st.session_state.synced = git("pull", "--ff-only", "--quiet").returncode == 0
-    status.markdown(f":green-background[{t['up_to_date']}]" if st.session_state.get("synced")
-                    else f":orange-background[{t['not_synced']}]", help=None if st.session_state.get("synced") else t["sync_fail"])
+    st.markdown(sync_status())
     st.divider()
     if st.session_state.get("section") not in SECTIONS:
         st.session_state.section = SECTIONS[0]
