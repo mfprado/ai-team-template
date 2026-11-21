@@ -33,7 +33,7 @@ if ! command -v uv >/dev/null 2>&1; then
 fi
 uv python install 3.12 --quiet >>"$LOG" 2>&1
 
-uv run --quiet --no-project --python 3.12 .agents/core/facade/setup.py || finish 1
+uv run --quiet --no-project --python 3.12 .agents/system/facade/setup.py || finish 1
 echo "Setup finished."
 
 # GitHub's tool: lets the assistant share changes with the team.
@@ -44,7 +44,7 @@ if ! command -v gh >/dev/null 2>&1; then
     if command -v brew >/dev/null 2>&1; then
       brew install gh
     else
-      uv run --quiet --no-project --python 3.12 .agents/core/facade/install_gh.py
+      uv run --quiet --no-project --python 3.12 .agents/system/facade/install_gh.py
     fi
   fi
 fi
@@ -59,4 +59,4 @@ fi
 # The team page: opens in the browser, at this team's own address (several teams can be open).
 # Keep this window open while you use it.
 echo "Launcher finished."
-uv run --quiet --no-project --python 3.12 --with streamlit==1.41.1 .agents/core/facade/page.py
+uv run --quiet --no-project --python 3.12 --with streamlit==1.41.1 .agents/system/facade/page.py

@@ -58,9 +58,8 @@ GitHub for your team and send you a link?"**
   https://github.com/signup, sign up with that email, choose the **Free** plan, confirm the
   email GitHub sends, and tell you when done. The shared folder will live in their own account.
 
-Say in one sentence: by default everyone on the team can save changes for everyone, and the
-team page shows who changed what; if they prefer to approve teammates' changes first, they can
-turn that on later in the team page's Settings.
+Say in one sentence: everyone on the team can save changes for everyone, the team page shows
+who changed what, and any skill can go back to an earlier version there.
 
 Propose the name, and confirm:
 
@@ -99,7 +98,7 @@ The Champion opened you on their Desktop. Still find the real Desktop (it moves 
 OneDrive and language on Windows) and use that path:
 
 ```
-sh TEMPLATE_DIR/.agents/core/bin/py TEMPLATE_DIR/.agents/skills/create-team-repo/scripts/desktop_path.py "<Team>-AI"
+sh TEMPLATE_DIR/.agents/system/bin/py TEMPLATE_DIR/.agents/skills/create-team-repo/scripts/desktop_path.py "<Team>-AI"
 ```
 
 It prints the Desktop path, then `free` or `exists` for `<Desktop>/<Team>-AI`. Do not check
@@ -118,7 +117,7 @@ to GitHub, tell them to follow the window that opens.
 From `TEMPLATE_DIR`:
 
 ```
-sh .agents/core/bin/py .agents/skills/create-team-repo/scripts/configure.py \
+sh .agents/system/bin/py .agents/skills/create-team-repo/scripts/configure.py \
   --target "<Desktop>/<Team>-AI" --company "<company>" --team "<team>" --language <en|es> \
   --champion-name "<full name>" --champion-email "<GitHub account email>" [--champion-github "<username>"]
 ```
@@ -129,7 +128,7 @@ when it can.
 
 It copies the template's files (not its history, and not the template-only skills), writes
 the team settings, creates `documents/` and `artifacts/`, writes the team README, renames the
-launchers and records the core version (date + commit). Nothing in the new repository points
+launchers. Nothing in the new repository points
 back to the template.
 
 ## 6. Make sure commits are in the Champion's name
@@ -161,26 +160,6 @@ git push -u origin main
 The team's checks run on this commit (generated files, secrets, skills). If they stop it,
 explain the message in plain words and fix it. Never commit or push under any other name.
 
-## 6b. Approval (only if the Champion asks for it)
-
-By default everyone updates `main`, so skip this step. If the Champion wants to approve
-teammates' changes, turn it on in the team page's Settings (step 7 opens it). The team's
-checks then enforce it on every computer. If `gh` is available, you may also ask GitHub to
-require a change request for `main` (the owner can still update it directly), after OK:
-
-```
-gh api -X PUT repos/<owner>/<repo-name>/branches/main/protection --input - <<'JSON'
-{"required_status_checks": null, "enforce_admins": false,
- "required_pull_request_reviews": {"required_approving_review_count": 0},
- "restrictions": null}
-JSON
-```
-
-If GitHub answers that the plan does not allow it (private repositories need a paid plan),
-tell the Champion, in two short sentences: the team's checks already prevent mistakes on
-every computer, and with a paid GitHub plan (Pro or Team) the main version can be protected
-for real, so nobody but them can change it. Then continue.
-
 ## 7. Prepare this computer
 
 Ask the Champion to double-click the **`<Team>-AI`** icon in the new folder and tell you when
@@ -208,15 +187,15 @@ You cannot see that window, and never ask the Champion to copy it: read
 
    ```
    ~/.local/bin/uv run --quiet --no-project --python 3.12 --with pillow \
-     .agents/core/scripts/brand.py --primary "<#hex>" [--background "<#hex>"] [--text "<#hex>"] \
+     .agents/system/scripts/brand.py --primary "<#hex>" [--background "<#hex>"] [--text "<#hex>"] \
      [--font sans|serif] [--logo "<logo file>"]
    ```
 
    On Windows, uv is `%USERPROFILE%\.local\bin\uv.exe`. Run it inside the team folder.
 4. Ask the Champion to close the team page window and double-click the icon again: the page
    shows the company colours and logo, and the folder gets the company's icon.
-5. Save it for the whole team (AGENTS.md, "Sharing changes"), with `--paths .agents/local/brand.json
-   .agents/local/brand`.
+5. Save it for the whole team (AGENTS.md, "Sharing changes"), with `--paths .agents/brand.json
+   .agents/brand`.
 
 Reports and dashboards the AI makes from now on use these colours and logo (artifacts rule).
 
@@ -234,6 +213,6 @@ paste or attach a skill, script, instructions or macro they already use.
 
 ## Tools
 
-- Shell: `git`, `gh` (optional), `sh .agents/core/bin/py <script>`
+- Shell: `git`, `gh` (optional), `sh .agents/system/bin/py <script>`
 - Never cherry-pick, merge or push template commits into the team's repository.
 - Scripts: `scripts/desktop_path.py`, `scripts/configure.py`

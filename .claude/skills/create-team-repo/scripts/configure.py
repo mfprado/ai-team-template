@@ -3,7 +3,7 @@
 
 Run from the TEMPLATE folder (a fresh copy of ai-team-template):
 
-  sh .agents/core/bin/py .agents/skills/create-team-repo/scripts/configure.py \
+  sh .agents/system/bin/py .agents/skills/create-team-repo/scripts/configure.py \
       --target "<path to the team's empty repository>" \
       --company "Acme" --team "Sales" --language en \
       --champion-name "Maria Prado" --champion-email "maria@acme.com"
@@ -15,12 +15,11 @@ commit in it is made by the AI Champion. Nothing in it points back to the templa
 (gh) if it is signed in, and left empty otherwise. Only the email is needed by the team checks.
 
 What it does (deterministic, so every team repository starts the same way):
-- copies every file the template tracks, except template-only skills
-- writes .agents/local/team.json (company, team, language, launcher name, AI Champion)
+- copies every file the template tracks, except the template-only skills (TEMPLATE_ONLY)
+- writes .agents/team.json (company, team, language, launcher name, AI Champion)
 - creates the visible folders documents/ and artifacts/
 - writes the team's README
 - renames the launchers Team-AI.* to <Team>-AI.*
-- records the core version (date + commit of the template) in .agents/core/manifest.json
 - regenerates .claude/ and .codex/
 
 Standard library only.
@@ -36,6 +35,8 @@ from pathlib import Path
 
 TEMPLATE = Path(__file__).resolve().parents[4]
 TEMPLATE_LAUNCHER = "Team-AI"
+# Skills that only make sense in the template itself (creating teams, writing improvement emails).
+TEMPLATE_ONLY = ["create-team-repo", "improvement-email"]
 VISIBLE_DIRS = ["documents", "artifacts"]
 IDEAS = {
     "en": "# Team ideas\n\nIdeas for the team's AI workspace. Anyone can add one; the AI Champion updates its status.\n\n",
@@ -130,20 +131,10 @@ def main():
         print("The template copy has unsaved changes; download a fresh copy of the template first.")
         return 1
 
-    manifest = json.loads((TEMPLATE / ".agents/core/manifest.json").read_text(encoding="utf-8"))
-    template_only = manifest.get("template_only_skills", [])
-    copied = copy_skeleton(target, template_only)
-
-    commit, date = git("log", "-1", "--format=%H %cs").split()
-    manifest.pop("template_only_skills", None)
-    manifest["system_skills"] = [s for s in manifest.get("system_skills", []) if s not in template_only]
-    manifest["core_version"] = {"date": date, "commit": commit}
-    (target / ".agents/core/manifest.json").write_text(
-        json.dumps(manifest, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
-
+    copied = copy_skeleton(target, TEMPLATE_ONLY)
     github = args.champion_github if args.champion_github is not None else gh_username()
     launcher = launcher_name(args.team)
-    team_file = target / ".agents/local/team.json"
+    team_file = target / ".agents/team.json"
     team_file.parent.mkdir(parents=True, exist_ok=True)
     team_file.write_text(json.dumps({
         "company": args.company, "team": args.team, "language": args.language, "launcher": launcher,
@@ -163,11 +154,10 @@ def main():
         if src.exists():
             src.rename(target / f"{launcher}{ext}")
 
-    sync = subprocess.run([sys.executable, "-I", str(target / ".agents/core/scripts/sync.py")], cwd=target,
+    sync = subprocess.run([sys.executable, "-I", str(target / ".agents/system/scripts/sync.py")], cwd=target,
                           capture_output=True, text=True)
     print(json.dumps({
-        "launcher": launcher, "files_copied": copied, "core_version": f"{date} ({commit[:7]})",
-        "left_out": template_only, "sync_ok": sync.returncode == 0,
+        "launcher": launcher, "files_copied": copied, "left_out": TEMPLATE_ONLY, "sync_ok": sync.returncode == 0,
     }))
     return 0 if sync.returncode == 0 else 1
 

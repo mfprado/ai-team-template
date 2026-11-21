@@ -43,7 +43,7 @@ if errorlevel 1 (
 )
 uv python install 3.12 --quiet >> "%LOG%" 2>&1
 
-uv run --quiet --no-project --python 3.12 .agents\core\facade\setup.py > "%LOG%.setup" 2>&1
+uv run --quiet --no-project --python 3.12 .agents\system\facade\setup.py > "%LOG%.setup" 2>&1
 set SETUP_ERROR=%errorlevel%
 type "%LOG%.setup"
 type "%LOG%.setup" >> "%LOG%"
@@ -73,7 +73,7 @@ if not errorlevel 1 (
 rem The team page: opens in the browser, at this team's own address (several teams can be open).
 rem Keep this window open while you use it.
 echo Launcher finished.>> "%LOG%"
-uv run --quiet --no-project --python 3.12 --with streamlit==1.41.1 .agents\core\facade\page.py
+uv run --quiet --no-project --python 3.12 --with streamlit==1.41.1 .agents\system\facade\page.py
 exit /b 0
 
 :finish_error

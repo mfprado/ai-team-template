@@ -2,7 +2,7 @@
   "permissions": {
     "ask": [
       "Edit(/.agents/permissions.json)",
-      "Edit(/.agents/core/**)",
+      "Edit(/.agents/system/**)",
       "Edit(/.claude/**)",
       "Edit(/.codex/**)",
       "Edit(/AGENTS.md)",
@@ -16,7 +16,7 @@
       "Bash(git config user.email *)",
       "Bash(git config user.name)",
       "Bash(git config user.name *)",
-      "Edit(/.agents/local/team.json)"
+      "Edit(/.agents/team.json)"
     ],
     "deny": [
       "Bash(git push --force)",
@@ -51,7 +51,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "sh \"$CLAUDE_PROJECT_DIR/.agents/core/hooks/guard.sh\""
+            "command": "sh \"$CLAUDE_PROJECT_DIR/.agents/system/hooks/guard.sh\""
           }
         ]
       }
@@ -61,7 +61,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "sh \"$CLAUDE_PROJECT_DIR/.agents/core/bin/py\" -I \"$CLAUDE_PROJECT_DIR/.agents/core/hooks/session_start.py\""
+            "command": "sh \"$CLAUDE_PROJECT_DIR/.agents/system/bin/py\" -I \"$CLAUDE_PROJECT_DIR/.agents/system/hooks/session_start.py\""
           }
         ]
       }
@@ -71,7 +71,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "sh \"$CLAUDE_PROJECT_DIR/.agents/core/bin/py\" -I \"$CLAUDE_PROJECT_DIR/.agents/core/hooks/review_tick.py\""
+            "command": "sh \"$CLAUDE_PROJECT_DIR/.agents/system/bin/py\" -I \"$CLAUDE_PROJECT_DIR/.agents/system/hooks/review_tick.py\""
           }
         ]
       }

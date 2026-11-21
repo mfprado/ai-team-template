@@ -9,7 +9,7 @@ Anyone on the team may have automations that live only on their own computer. Th
 one of them into a team skill that works for anyone, without that person's setup, memory or
 credentials.
 
-Read `.agents/core/rules/skills.md` and `.agents/core/rules/safety.md` before starting.
+Read `.agents/rules/skills.md` and `.agents/rules/safety.md` before starting.
 Talk to the person in plain words; never ask them to edit files or run commands.
 
 ## 1. Receive the automation
@@ -39,8 +39,8 @@ Check each point and fix it. List what you changed for the summary.
 | Personal paths and data | `/Users/<name>/`, `C:\Users\`, personal emails, personal IDs, a specific machine | Paths relative to the repository; ask for person-specific values at run time |
 | Credentials | Tokens, passwords, API keys in the text or scripts | Remove them; read from an environment variable and name it in `SKILL.md` |
 | Tools and connectors | Connectors (MCP), commands and programs it calls | List them under `## Tools`; compare with `.agents/permissions.json` (step 4) |
-| Hidden context | Things that only worked because of the person's memory, chat history or personal instructions (names, formats, where data lives) | Ask the person; write that context into the skill or propose a team rule in `.agents/local/rules/` |
-| Outputs | Where results go | Follow `.agents/core/rules/artifacts.md`; never send messages, only drafts |
+| Hidden context | Things that only worked because of the person's memory, chat history or personal instructions (names, formats, where data lives) | Ask the person; write that context into the skill or propose a team rule in `.agents/rules/` |
+| Outputs | Where results go | Follow `.agents/rules/artifacts.md`; never send messages, only drafts |
 
 ## 4. Permissions
 
@@ -51,7 +51,7 @@ Compare the tools the skill needs with `.agents/permissions.json`.
 
 ## 5. Sync and hand over
 
-1. Run `sh .agents/core/bin/py .agents/core/scripts/sync.py` so Claude Code and Codex both see the skill.
+1. Run `sh .agents/system/bin/py .agents/system/scripts/sync.py` so Claude Code and Codex both see the skill.
 2. Tell the person, briefly:
    - the skill's name and how to ask for it,
    - what you changed so it works for others (from step 3),
@@ -61,5 +61,5 @@ Compare the tools the skill needs with `.agents/permissions.json`.
 
 ## Tools
 
-- Shell: `sh .agents/core/bin/py .agents/core/scripts/sync.py`
+- Shell: `sh .agents/system/bin/py .agents/system/scripts/sync.py`
 - File read and write inside `.agents/`

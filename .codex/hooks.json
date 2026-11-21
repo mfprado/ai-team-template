@@ -6,7 +6,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "sh \"$(git rev-parse --show-toplevel)\"/.agents/core/hooks/guard.sh"
+            "command": "sh \"$(git rev-parse --show-toplevel)\"/.agents/system/hooks/guard.sh"
           }
         ]
       }
@@ -16,7 +16,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "sh \"$(git rev-parse --show-toplevel)\"/.agents/core/bin/py -I \"$(git rev-parse --show-toplevel)\"/.agents/core/hooks/session_start.py"
+            "command": "sh \"$(git rev-parse --show-toplevel)\"/.agents/system/bin/py -I \"$(git rev-parse --show-toplevel)\"/.agents/system/hooks/session_start.py"
           }
         ]
       }
@@ -26,7 +26,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "sh \"$(git rev-parse --show-toplevel)\"/.agents/core/bin/py -I \"$(git rev-parse --show-toplevel)\"/.agents/core/hooks/review_tick.py"
+            "command": "sh \"$(git rev-parse --show-toplevel)\"/.agents/system/bin/py -I \"$(git rev-parse --show-toplevel)\"/.agents/system/hooks/review_tick.py"
           }
         ]
       }

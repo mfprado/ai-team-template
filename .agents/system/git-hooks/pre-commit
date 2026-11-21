@@ -1,0 +1,4 @@
+#!/bin/sh
+# Activated with: git config core.hooksPath .agents/system/git-hooks (done by setup).
+ROOT="$(git rev-parse --show-toplevel)"
+exec sh "$ROOT/.agents/system/bin/py" -I "$ROOT/.agents/system/scripts/pre_commit.py"

@@ -1,4 +1,0 @@
-#!/bin/sh
-# If the AI Champion asked to approve changes, only they update main; others send a change request.
-ROOT="$(git rev-parse --show-toplevel)"
-exec sh "$ROOT/.agents/core/bin/py" -I "$ROOT/.agents/core/scripts/pre_push.py"

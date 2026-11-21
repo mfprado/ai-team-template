@@ -115,7 +115,7 @@
     },
     {
       "tool": "Edit",
-      "pattern": ".agents/core/**",
+      "pattern": ".agents/system/**",
       "tier": "ask",
       "reason": "Shared system files, identical in every team repository."
     },
@@ -205,7 +205,7 @@
     },
     {
       "tool": "Edit",
-      "pattern": ".agents/local/team.json",
+      "pattern": ".agents/team.json",
       "tier": "ask",
       "reason": "Team settings, including who the AI Champion is."
     }

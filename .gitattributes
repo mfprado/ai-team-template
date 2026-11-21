@@ -3,5 +3,5 @@
 *.command             text eol=lf
 *.sh                  text eol=lf
 *.py                  text eol=lf
-.agents/core/bin/py   text eol=lf
-.agents/core/git-hooks/*  text eol=lf
+.agents/system/bin/py   text eol=lf
+.agents/system/git-hooks/*  text eol=lf
