@@ -269,7 +269,8 @@ with st.sidebar:
     st.caption(t["champion"].format(name=champion))
     refresh = st.button(t["sync"], icon=":material/refresh:", use_container_width=True)
     if refresh or "synced" not in st.session_state:
-        st.session_state.synced = git("pull", "--ff-only", "--quiet").returncode == 0
+        git("fetch", "--quiet")  # then fast-forward, keeping unsaved work (whatever pull.rebase says)
+        st.session_state.synced = git("merge", "--ff-only", "--autostash", "--quiet", "@{upstream}").returncode == 0
     st.markdown(sync_status())
     st.divider()
     if st.session_state.get("section") not in SECTIONS:

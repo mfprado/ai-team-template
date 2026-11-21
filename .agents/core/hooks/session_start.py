@@ -1,7 +1,9 @@
 #!/usr/bin/env python3
 """SessionStart hook: bring the latest team changes before the session starts.
 
-Fast-forward only: never merges, never rewrites, never fails the session.
+Fast-forward only: never merges, never rewrites, never fails the session. Unsaved work on this
+computer is set aside and put back (autostash), and the person's own git settings (such as
+pull.rebase) do not change how this works.
 Standard library only.
 """
 
@@ -20,7 +22,8 @@ def main():
     try:
         if git("rev-parse", "--abbrev-ref", "@{upstream}").returncode != 0:
             return 0  # no remote branch yet
-        result = git("pull", "--ff-only", "--quiet")
+        git("fetch", "--quiet")
+        result = git("merge", "--ff-only", "--autostash", "--quiet", "@{upstream}")
         if result.returncode == 0:
             print("Team workspace is up to date.")
         else:

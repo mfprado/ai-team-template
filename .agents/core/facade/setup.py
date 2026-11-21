@@ -3,10 +3,11 @@
 
 Safe to repeat: each step checks before changing anything.
 1. Turn on the team's git checks (core.hooksPath).
-2. Hide technical files so they don't show in Finder / File Explorer.
-3. Mark the folder as trusted in Codex, so its rules and hooks load (with a notice).
-4. Check the team checks (guard) work; if not, restore .agents/core/ from the last saved version.
-5. Apply the team's brand (.agents/local/brand.json): team page colours and the folder's icon.
+2. Get the team's latest changes (first, so the steps below use them).
+3. Apply the team's brand (.agents/local/brand.json): team page colours and the folder's icon.
+4. Hide technical files so they don't show in Finder / File Explorer.
+5. Mark the folder as trusted in Codex, so its rules and hooks load (with a notice).
+6. Check the team checks (guard) work; if not, restore .agents/core/ from the last saved version.
 
 Standard library only. Messages are plain words for non-technical people.
 """
@@ -85,13 +86,29 @@ def guard_ok():
     return test.returncode == 0
 
 
+def get_latest():
+    """Bring the team's latest changes. Fast-forward only; unsaved work is set aside and put back."""
+    if run("git", "-C", str(ROOT), "rev-parse", "--abbrev-ref", "@{upstream}").returncode != 0:
+        return None  # not on GitHub yet
+    before = run("git", "-C", str(ROOT), "rev-parse", "HEAD").stdout
+    try:
+        subprocess.run(["git", "-C", str(ROOT), "fetch", "--quiet"], capture_output=True, timeout=60, check=False)
+    except subprocess.TimeoutExpired:
+        return "Could not get the team's latest changes right now (no connection?). You can keep working."
+    if run("git", "-C", str(ROOT), "merge", "--ff-only", "--autostash", "--quiet", "@{upstream}").returncode != 0:
+        return "Could not get the team's latest changes right now. You can keep working; ask the AI to help."
+    if run("git", "-C", str(ROOT), "rev-parse", "HEAD").stdout != before:
+        return "Got the team's latest changes."
+    return None
+
+
 def repair_guard():
     if guard_ok():
         return None
     run("git", "-C", str(ROOT), "checkout", "HEAD", "--", ".agents/core")
     if guard_ok():
         return "The team checks were broken on this computer and have been repaired."
-    run("git", "-C", str(ROOT), "pull", "--ff-only", "--quiet")
+    get_latest()
     run("git", "-C", str(ROOT), "checkout", "HEAD", "--", ".agents/core")
     if guard_ok():
         return "The team checks were broken and have been repaired with the team's latest version."
@@ -218,7 +235,7 @@ def main():
     if not (ROOT / ".git").exists():
         print("This folder is not connected to the team yet. Ask your AI Champion for help.")
         return 1
-    notes = [n for n in (git_hooks(), apply_brand(), hide_files(), codex_trust(), repair_guard()) if n]
+    notes = [n for n in (git_hooks(), get_latest(), apply_brand(), hide_files(), codex_trust(), repair_guard()) if n]
     for n in notes:
         print(f"- {n}")
     print("Your team folder is ready.")
