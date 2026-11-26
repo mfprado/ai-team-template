@@ -71,8 +71,8 @@ T = {
                  "rules": "team rules", "system": "system", "other": "other files"},
         "ago": {"now": "just now", "min": "{n} min ago", "h": "{n} h ago", "d": "{n} days ago"},
         "perm_summary": "Permissions: {items}",
-        "reports_intro": "Artifacts are reports, dashboards and small apps made with the AI. Ask the assistant for a new one any time.",
-        "shared_by": "by {who}", "view": "View", "back": "Back to the list",
+        "reports_intro": "Artifacts are reports, presentations, dashboards and small apps made with the AI, each in its own folder. Ask the assistant for a new one any time.",
+        "shared_by": "by {who}", "view": "View", "back": "Back to the list", "about_artifact": "What it is and how to make it again",
         "open_link": "Open it", "link_note": "This one lives in Claude or Codex. It opens in a new browser tab.",
         "share_team": "Share with the team", "share_confirm": "Everyone on the team will be able to see **{title}**. Share it?",
         "share_yes": "Yes, share it", "share_no": "Cancel", "close": "Close", "share_summary": "Shared artifact: {title}",
@@ -123,8 +123,8 @@ T = {
                  "rules": "reglas del equipo", "system": "el sistema", "other": "otros archivos"},
         "ago": {"now": "recién", "min": "hace {n} min", "h": "hace {n} h", "d": "hace {n} días"},
         "perm_summary": "Permisos: {items}",
-        "reports_intro": "Los artefactos son reportes, tableros y pequeñas apps hechos con la IA. Pedile uno nuevo al asistente cuando quieras.",
-        "shared_by": "de {who}", "view": "Ver", "back": "Volver a la lista",
+        "reports_intro": "Los artefactos son reportes, presentaciones, tableros y pequeñas apps hechos con la IA, cada uno en su carpeta. Pedile uno nuevo al asistente cuando quieras.",
+        "shared_by": "de {who}", "view": "Ver", "back": "Volver a la lista", "about_artifact": "Qué es y cómo volver a hacerlo",
         "open_link": "Abrir", "link_note": "Este está en Claude o Codex. Se abre en otra pestaña del navegador.",
         "share_team": "Compartir con el equipo", "share_confirm": "Todo el equipo va a poder ver **{title}**. ¿Lo compartís?",
         "share_yes": "Sí, compartir", "share_no": "Cancelar", "close": "Cerrar", "share_summary": "Artefacto compartido: {title}",
@@ -517,13 +517,33 @@ def report_items():
         for link in load_json(folder / "links.json", []):
             items.append({"kind": "link", "title": link.get("title", link.get("url")), "url": link.get("url"),
                           "who": link.get("by"), "when": link.get("date"), "private": is_private, "key": link.get("url")})
-        if folder.is_dir():
-            for p in folder.rglob("*"):
-                if not p.is_file() or p.name in ("links.json", ".gitkeep", ".DS_Store") or (not is_private and private in p.parents):
-                    continue
+        if not folder.is_dir():
+            continue
+        # One entry per artifact folder (<type>/<date>-<name>/ with index.html or README.md,
+        # new_artifact.py); loose files from before are listed one by one.
+        artifacts = []
+        for p in sorted(folder.rglob("*")):
+            if (not is_private and (p == private or private in p.parents)) or any(a in p.parents for a in artifacts):
+                continue
+            if p.is_dir() and ((p / "index.html").is_file() or (p / "README.md").is_file()):
+                artifacts.append(p)
+                items.append({"kind": "folder", "title": artifact_title(p), "path": p, "type": p.parent.name,
+                              "who": None, "when": ago(int(p.stat().st_mtime), t), "private": is_private, "key": str(p)})
+            elif p.is_file() and p.name not in ("links.json", ".gitkeep", ".DS_Store"):
                 items.append({"kind": "file", "title": p.stem.replace("-", " ").replace("_", " ").capitalize(), "path": p,
                               "who": None, "when": ago(int(p.stat().st_mtime), t), "private": is_private, "key": str(p)})
     return items
+
+
+def artifact_title(folder):
+    """The README's title, else the folder's name without its date."""
+    try:
+        for line in (folder / "README.md").read_text(encoding="utf-8").splitlines():
+            if line.startswith("# "):
+                return line[2:].strip()
+    except OSError:
+        pass
+    return re.sub(r"^\d{4}-\d{2}-\d{2}-", "", folder.name).replace("-", " ").capitalize()
 
 
 def share_report(item):
@@ -541,6 +561,8 @@ def share_report(item):
         target = base / item["path"].relative_to(private)
         while target.exists():
             target = target.with_name(f"{target.stem}-2{target.suffix}")
+        while target.exists():
+            target = target.with_name(f"{target.name}-2")
         target.parent.mkdir(parents=True, exist_ok=True)
         item["path"].rename(target)
     share(t["share_summary"].format(title=item["title"]), [str(target.relative_to(ROOT))])
@@ -570,6 +592,20 @@ def show_report(item):
         st.link_button(t["open_link"], item["url"])
         return
     p = item["path"]
+    if item["kind"] == "folder":
+        entry = p / "index.html"
+        open_col, folder_col, _ = st.columns([1, 1, 3])
+        if entry.is_file() and open_col.button(t["open"], type="primary"):
+            webbrowser.open(entry.as_uri())  # in the browser its assets/ load too
+        if folder_col.button(t["show_folder"]):
+            show_in_folder(entry if entry.is_file() else p)
+        if entry.is_file():
+            page = "<style>html{background:#fff;color:#111}</style>" + entry.read_text(encoding="utf-8", errors="replace")
+            components.html(page, height=720, scrolling=True)
+        if (p / "README.md").is_file():
+            with st.expander(t["about_artifact"]):
+                st.markdown((p / "README.md").read_text(encoding="utf-8", errors="replace"))
+        return
     if p.suffix.lower() in (".html", ".htm"):
         # White by default (reports written without a background are unreadable on a dark page).
         page = "<style>html{background:#fff;color:#111}</style>" + p.read_text(encoding="utf-8", errors="replace")
@@ -603,7 +639,8 @@ if section == t["tab_artifacts"]:
             for item in group:
                 col1, col2 = st.columns([4, 1])
                 meta = " · ".join(x for x in (t["shared_by"].format(who=item["who"]) if item["who"] else "", item["when"] or "") if x)
-                col1.write(f"**{item['title']}**" + (f"  ·  {meta}" if meta else ""))
+                kind = item.get("type", "").capitalize()
+                col1.write(f"**{item['title']}**" + (f"  ·  {kind}" if kind else "") + (f"  ·  {meta}" if meta else ""))
                 if col2.button(t["view"], key=f"view-{item['key']}"):
                     st.session_state.viewing = item["key"]
                     st.rerun()

@@ -65,8 +65,8 @@ The shared AI workspace of the {team} team at {company}.
 | Folder | What goes in it |
 |---|---|
 | `documents/` | The team's documents |
-| `artifacts/` | Reports and dashboards to share with the team |
-| `artifacts/private/` | Reports only for you: they stay on your computer |
+| `artifacts/` | Reports, presentations, dashboards and small apps, each in its own folder by type (`reports/2026-11-26-weekly-sales/`) |
+| `artifacts/private/` | The same, only for you: it stays on your computer |
 | `IDEAS.md` | The team's ideas: tell the assistant "I have an idea", or add it on the team page |
 
 Anything else is organised as the team likes. Questions: ask your AI Champion.
@@ -85,8 +85,8 @@ El espacio de IA compartido del equipo {team} de {company}.
 | Carpeta | Qué va adentro |
 |---|---|
 | `documentos/` | Los documentos del equipo |
-| `artefactos/` | Reportes y tableros para compartir con el equipo |
-| `artefactos/privado/` | Reportes solo para vos: quedan en tu computadora |
+| `artefactos/` | Reportes, presentaciones, tableros y pequeñas apps, cada uno en su carpeta por tipo (`reportes/2026-11-26-ventas-semanales/`) |
+| `artefactos/privado/` | Lo mismo, solo para vos: queda en tu computadora |
 | `IDEAS.md` | Las ideas del equipo: decile al asistente "tengo una idea", o sumala en la página del equipo |
 
 Lo demás se organiza como el equipo prefiera. Dudas: preguntale a tu IA Champion.
