@@ -78,10 +78,9 @@ Ask these one at a time, in this order, each in its own short message:
    (maria@acme.com), the email you use on GitHub. Right?" Ask only for what is missing:
    "Your full name?" / "Which email do you use on GitHub? If you have no account yet, the one
    you'll use."
-4. Optional: "Did they give you your company's design guide (brand manual)? If not, its website
-   or logo works too. I'll use them for the team's page and the reports the AI makes." A design
-   guide is best: it has the exact colours, fonts and logo. Keep what they give for step 7b; if
-   they have nothing, move on.
+4. Optional: "Do you have an official design guide from your company? If not, its website."
+   A design guide is best: it has the exact colours, fonts and logo; from a website, take the
+   logo too. Keep what they give for step 7b; if they have neither, move on.
 5. "Did someone at your company (for example IT) already create a shared folder on GitHub
    for your team and send you a link?"
 
