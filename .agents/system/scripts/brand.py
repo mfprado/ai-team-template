@@ -1,9 +1,7 @@
 #!/usr/bin/env python3
 """Save the company's brand for the team: colours, font and logo.
 
-Needs Pillow (to make the icons), so run it through uv, which the launcher installs:
-
-  uv run --quiet --no-project --python 3.12 --with pillow .agents/system/scripts/brand.py \
+  sh .agents/system/bin/py .agents/system/scripts/brand.py \
       --primary "#0B5FFF" [--background "#FFFFFF"] [--text "#1A1A1A"] [--font sans|serif] \
       [--logo "<image file>"]
 
@@ -13,6 +11,10 @@ Writes, in the team's settings (shared with the team like any other change):
 - .agents/brand/icon.png     a square icon (Mac folder icon)
 - .agents/brand/icon.ico     the same icon for Windows
 
+Making the PNG and the icons needs Pillow. Without it (e.g. while creating the team, before the
+launcher has installed anything), the logo is kept as given in .agents/brand/logo-source.<ext>
+and the next launch makes the rest (setup.py, which runs with Pillow).
+
 Every launch then uses them (setup.py): the team page's colours and the folder's icon.
 Prints what it wrote, as JSON.
 """
@@ -20,6 +22,7 @@ Prints what it wrote, as JSON.
 import argparse
 import json
 import re
+import shutil
 import sys
 from pathlib import Path
 
@@ -39,6 +42,7 @@ def colour(value):
 
 
 def make_icons(logo, background):
+    """logo.png, icon.png and icon.ico from any logo file Pillow reads. Raises ImportError without Pillow."""
     from PIL import Image
 
     image = Image.open(logo).convert("RGBA")
@@ -72,11 +76,18 @@ def main():
         if not logo.is_file():
             print(json.dumps({"error": f"The logo file was not found: {logo}"}))
             return 1
+        icons_later = False
         try:
             make_icons(logo, args.background)
+            for old in FOLDER.glob("logo-source.*"):
+                old.unlink()
         except ImportError:
-            print(json.dumps({"error": "Run this with uv and --with pillow (see the top of this file)."}))
-            return 1
+            # No Pillow here: keep the logo as given; the next launch makes the PNG and the icons.
+            FOLDER.mkdir(parents=True, exist_ok=True)
+            for old in FOLDER.glob("logo-source.*"):
+                old.unlink()
+            shutil.copyfile(logo, FOLDER / f"logo-source{logo.suffix.lower()}")
+            icons_later = True
         except OSError as e:
             print(json.dumps({"error": f"The logo could not be read as an image ({e})."}))
             return 1
@@ -84,7 +95,10 @@ def main():
     BRAND.parent.mkdir(parents=True, exist_ok=True)
     BRAND.write_text(json.dumps(brand, indent=2) + "\n", encoding="utf-8")
     written = [str(BRAND.relative_to(ROOT))] + ([str(FOLDER.relative_to(ROOT))] if args.logo else [])
-    print(json.dumps({"brand": brand, "paths": written}))
+    result = {"brand": brand, "paths": written}
+    if args.logo and icons_later:
+        result["icons"] = "made on the next launch"
+    print(json.dumps(result))
     return 0
 
 

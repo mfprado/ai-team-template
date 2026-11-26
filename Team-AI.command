@@ -33,7 +33,7 @@ if ! command -v uv >/dev/null 2>&1; then
 fi
 uv python install 3.12 --quiet >>"$LOG" 2>&1
 
-uv run --quiet --no-project --python 3.12 .agents/system/facade/setup.py || finish 1
+uv run --quiet --no-project --python 3.12 --with pillow==11.0.0 .agents/system/facade/setup.py || finish 1
 echo "Setup finished."
 
 # GitHub's tool: lets the assistant share changes with the team.

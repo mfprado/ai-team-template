@@ -17,13 +17,13 @@ flowchart TD
     E --> G[Download it to the Desktop]
     F --> G
     G --> H[Copy the template and fill in the team's settings]
-    H --> I{{Are changes saved in the Champion's name?}}
+    H --> M{{Did they share a design guide or website?}}
+    M -- Yes --> N[Apply its colours and logo, after their OK] --> I
+    M -- No --> I{{Are changes saved in the Champion's name?}}
     I -- No --> J[Set their name and email] --> K
     I -- Yes --> K[Save the first version for the team]
     K --> L[The Champion opens the team icon and it sets up the computer]
-    L --> M{{Did they share a brand?}}
-    M -- Yes --> N[Apply colours and logo, after their OK] --> O
-    M -- No --> O[Offer to bring their first automation]
+    L --> O[Offer to bring their first automation]
     O --> P([Clean up and tell them where everything is]):::done
     GH@{ icon: "logos:github-icon", label: "GitHub" }
     F -.- GH
@@ -81,7 +81,7 @@ Ask these one at a time, in this order, each in its own short message:
    you'll use."
 4. Optional: "Do you have an official design guide from your company? If not, its website."
    A design guide is best: it has the exact colours, fonts and logo; from a website, take the
-   logo too. Keep what they give for step 7b; if they have neither, move on.
+   logo too. Keep what they give for step 5b; if they have neither, move on.
 5. "Did someone at your company (for example IT) already create a shared folder on GitHub
    for your team and send you a link?"
 
@@ -168,6 +168,29 @@ the team skills in the team's language, writes the team settings, creates the vi
 and the team README in the team's language, renames the launchers. Nothing in the new repository points
 back to the template.
 
+## 5b. Company brand (if they gave a design guide or website in step 2)
+
+Do this before the first save, so the brand travels in it and the first double-click already
+shows the company's logo on the folder and its icon.
+
+1. Find the brand. From a design guide they attach: read the colours, the font (serif or sans)
+   and the logo from it. From a website: its main colour (buttons, header), background and text
+   colours, and its logo (prefer a square PNG logo; ask before downloading it, saying from
+   where). A guide wins over the website when they differ.
+2. Show it in plain words and wait for OK, for example: "Main colour: dark blue (#0B3D91).
+   Background: white. Logo: the one at the top of your website."
+3. Save it, inside the team folder:
+
+   ```
+   sh .agents/system/bin/py .agents/system/scripts/brand.py --primary "<#hex>" \
+     [--background "<#hex>"] [--text "<#hex>"] [--font sans|serif] [--logo "<logo file>"]
+   ```
+
+   It works on any computer. If it answers `"icons": "made on the next launch"`, this computer
+   cannot make the icons yet: the first launch (step 7) makes them from the logo.
+
+Reports and dashboards the AI makes from now on use these colours and logo (artifacts rule).
+
 ## 6. Make sure commits are in the Champion's name
 
 Every commit must be authored by the Champion. In the new folder, check:
@@ -212,32 +235,15 @@ You cannot see that window, and never ask the Champion to copy it: read
 - No log: the launcher has not run yet. On Mac, if it was blocked, right-click the icon and
   choose **Open**; on Windows, if a blue "Windows protected your PC" box appears, click
   **More info**, then **Run anyway**.
-- `Setup finished.` and `Launcher finished.`: done.
+- `Setup finished.` and `Launcher finished.`: done. If the log says it made the company's icons
+  from its logo, save them straight to the team, without asking (part of creating the folder):
+
+  ```
+  git add .agents/brand
+  git commit -m "Add <company>'s icons"
+  git push
+  ```
 - Anything else: explain the last lines in plain words and help fix them.
-
-## 7b. Company brand (if they gave a website, brand guide or logo in step 2)
-
-1. Find the brand. From a website: its main colour (buttons, header), background and text
-   colours, and its logo (prefer a square or SVG/PNG logo; ask before downloading it, saying
-   from where). From a design guide or logo file they attach: read the colours, the font
-   (serif or sans) and the logo from it; a guide wins over the website when they differ.
-2. Show it in plain words and wait for OK, for example: "Main colour: dark blue (#0B3D91).
-   Background: white. Logo: the one at the top of your website."
-3. Save it (uv is installed by the launcher in step 7):
-
-   ```
-   ~/.local/bin/uv run --quiet --no-project --python 3.12 --with pillow \
-     .agents/system/scripts/brand.py --primary "<#hex>" [--background "<#hex>"] [--text "<#hex>"] \
-     [--font sans|serif] [--logo "<logo file>"]
-   ```
-
-   On Windows, uv is `%USERPROFILE%\.local\bin\uv.exe`. Run it inside the team folder.
-4. Ask the Champion to close the team page window and double-click the icon again: the page
-   shows the company colours and logo, and the folder gets the company's icon.
-5. Save it for the whole team (AGENTS.md, "Sharing changes"), with `--paths .agents/brand.json
-   .agents/brand`.
-
-Reports and dashboards the AI makes from now on use these colours and logo (artifacts rule).
 
 ## 8. First automation
 

@@ -214,6 +214,27 @@ def windows_shortcut(icon_ico):
     return created
 
 
+def make_missing_icons(brand, brand_dir):
+    """The logo was saved without Pillow (while creating the team): make the PNG and icons now.
+
+    The launcher runs setup.py with Pillow. True when they were made (new files to save).
+    """
+    sources = sorted(brand_dir.glob("logo-source.*"))
+    if (brand_dir / "icon.png").exists() or not sources:
+        return False
+    try:
+        import importlib.util
+        spec = importlib.util.spec_from_file_location("brand", ROOT / ".agents/system/scripts/brand.py")
+        module = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(module)
+        module.make_icons(sources[0], brand.get("background"))
+    except Exception:  # no Pillow, or a logo it cannot read (e.g. SVG): keep the default icon
+        return False
+    for source in sources:
+        source.unlink()
+    return True
+
+
 def apply_brand():
     try:
         brand = json.loads((ROOT / ".agents/brand.json").read_text(encoding="utf-8"))
@@ -224,8 +245,11 @@ def apply_brand():
         return None
     page_theme(brand)
     brand_dir = ROOT / ".agents/brand"
+    made = make_missing_icons(brand, brand_dir)
     changed = folder_icon(brand_dir / "icon.png", brand_dir / "icon.ico", team)
     changed = windows_shortcut(brand_dir / "icon.ico") or changed
+    if made:
+        return "Made the company's icons from its logo; the team folder now has them (save them for the team)."
     if changed:
         return "The team folder now has your company's icon."
     return None
