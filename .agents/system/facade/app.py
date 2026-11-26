@@ -165,6 +165,13 @@ def skill_card(name, description):
     return title, summary, asks[0] if asks else None
 
 
+
+def short(text, limit=140):
+    """The first sentence, cut at a word if still long: one line in the closed list."""
+    first = re.split(r"(?<=[.!?])\s", text.strip(), maxsplit=1)[0]
+    return first if len(first) <= limit else first[:limit].rsplit(" ", 1)[0] + "…"
+
+
 FLOW = re.compile(r"```mermaid[ \t]*\n(.*?)\n[ \t]*```[ \t]*\n?", re.S)
 
 
@@ -364,14 +371,28 @@ if section == t["tab_skills"]:
         skills.append((skill_md.parent.name, fields.get("description", ""), body))
     if not skills:
         empty_state(t["no_skills"], t["ask_skill"])
+    # A list: one row per skill (name and what it does). A click opens it: the flow diagram, the
+    # request to paste, the instructions and earlier versions. A second click closes it.
+    st.markdown("<style>[class*='st-key-skill-'] button{justify-content:flex-start;text-align:left}"
+                "[class*='st-key-skill-'] button>div{justify-content:flex-start}"
+                "[class*='st-key-skill-'] button p{font-size:1.05rem;font-weight:600}</style>",
+                unsafe_allow_html=True)
+    opened = st.session_state.get("open_skill")
     for name, description, body in skills:
         title, summary, ask = skill_card(name, description)
         flow, instructions = skill_flow(body)
+        is_open = opened == name
         with st.container(border=True):
-            st.markdown(f"**{title}**")
+            if st.button(title, key=f"skill-{name}", type="tertiary", use_container_width=True,
+                         icon=":material/expand_less:" if is_open else ":material/expand_more:"):
+                st.session_state.open_skill = None if is_open else name
+                st.rerun()
+            if not is_open:
+                st.caption(short(summary))
+                continue
+            st.write(summary)
             if flow:
                 show_flow(name, title, summary, flow)
-            st.write(summary)
             st.caption(t["how_to_ask"])
             st.code(ask or t["default_ask"].format(name=name), language="text")
             if not flow:
