@@ -9,7 +9,7 @@ description: Guide an AI Champion, step by step, to create their team's AI works
 
 ```mermaid
 flowchart TD
-    A([An AI Champion wants a team workspace]):::done --> B[Ask the team's language]
+    A([An AI Champion wants a team workspace]):::done --> B[Take the team's language from their request]
     B --> C[Ask company, team, name and email, and the brand if they have it]
     C --> D{{Did IT already create the shared folder?}}
     D -- Yes --> E[Use the link they send]
@@ -44,16 +44,20 @@ You are probably running from a temporary copy of the template. Call it `TEMPLAT
 
 ## 1. Language
 
-Ask which language the team works in. The language decides the template:
+Do not ask. The team's language is the language the Champion wrote their request in (a
+Spanish request means a Spanish team). It decides the template:
 
 | Language | Template |
 |---|---|
 | English | `https://github.com/mfprado/ai-team-template` |
 | Spanish | `https://github.com/mfprado/ia-team-template` |
 
-If the chosen template is not the one you are running from, explain it and continue with
-that template's own `create-team-repo` skill. If that template is still empty, say the
-Spanish version is not ready yet and offer to continue in English or stop.
+Ask only if the request is in neither language or mixes them. Mention the language in one
+line when you start (e.g. "I'll set up your team in English"), so the Champion can correct it.
+
+If that template is not the one you are running from, explain it and continue with that
+template's own `create-team-repo` skill. If that template is still empty, say the Spanish
+version is not ready yet and offer to continue in English or stop.
 
 ## 2. Company, team and the AI Champion
 
