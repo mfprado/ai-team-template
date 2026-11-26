@@ -3,7 +3,7 @@
 
   ideas.py add --text "An idea"             adds it as new, with today's date and your git name
   ideas.py list                             prints the ideas as JSON
-  ideas.py status --id 3 --to planned       changes an idea's status (AI Champion only)
+  ideas.py status --id 3 --to planned       changes an idea's status (anyone on the team)
 
 One line per idea, readable by people and easy to edit:
   - [New] 2026-11-10 · Juan Perez — Automate the weekly sales report
@@ -26,8 +26,8 @@ STATUSES = {
     "es": {"new": "Nueva", "planned": "En camino", "done": "Hecha"},
 }
 HEADER = {
-    "en": "# Team ideas\n\nIdeas for the team's AI workspace. Anyone can add one; the AI Champion updates its status.\n\n",
-    "es": "# Ideas del equipo\n\nIdeas para el espacio de IA del equipo. Cualquiera puede sumar una; el IA Champion actualiza su estado.\n\n",
+    "en": "# Team ideas\n\nIdeas for the team's AI workspace. Anyone can add one or update its status.\n\n",
+    "es": "# Ideas del equipo\n\nIdeas para el espacio de IA del equipo. Cualquiera puede sumar una o cambiar su estado.\n\n",
 }
 LINE = re.compile(r"^- \[(?P<status>[^\]]+)\] (?P<date>\d{4}-\d{2}-\d{2}) · (?P<who>.+?) — (?P<text>.+)$")
 
@@ -101,10 +101,6 @@ def main():
         write(header, ideas)
         print(json.dumps({"ok": True, "id": len(ideas)}))
         return 0
-    champion = str(team().get("champion", {}).get("email", "")).lower()
-    if not champion or git_config("user.email").lower() != champion:
-        print(json.dumps({"ok": False, "problem": "only the AI Champion changes an idea's status"}))
-        return 1
     if not 1 <= args.id <= len(ideas):
         print(json.dumps({"ok": False, "problem": "no idea with that number"}))
         return 1
