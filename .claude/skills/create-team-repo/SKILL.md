@@ -78,8 +78,10 @@ Ask these one at a time, in this order, each in its own short message:
    (maria@acme.com), the email you use on GitHub. Right?" Ask only for what is missing:
    "Your full name?" / "Which email do you use on GitHub? If you have no account yet, the one
    you'll use."
-4. Optional: "Do you have your company's website or logo? I'll use its colours and logo for
-   the team's page." Keep what they give for step 7b; if they have nothing, move on.
+4. Optional: "Did they give you your company's design guide (brand manual)? If not, its website
+   or logo works too. I'll use them for the team's page and the reports the AI makes." A design
+   guide is best: it has the exact colours, fonts and logo. Keep what they give for step 7b; if
+   they have nothing, move on.
 5. "Did someone at your company (for example IT) already create a shared folder on GitHub
    for your team and send you a link?"
 
@@ -215,7 +217,8 @@ You cannot see that window, and never ask the Champion to copy it: read
 
 1. Find the brand. From a website: its main colour (buttons, header), background and text
    colours, and its logo (prefer a square or SVG/PNG logo; ask before downloading it, saying
-   from where). From a brand guide or logo file they attach: read the colours from it.
+   from where). From a design guide or logo file they attach: read the colours, the font
+   (serif or sans) and the logo from it; a guide wins over the website when they differ.
 2. Show it in plain words and wait for OK, for example: "Main colour: dark blue (#0B3D91).
    Background: white. Logo: the one at the top of your website."
 3. Save it (uv is installed by the launcher in step 7):
