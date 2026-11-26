@@ -32,8 +32,14 @@ flowchart TD
 ```
 
 You are helping an **AI Champion** create their team's shared AI workspace, usually during
-the first workshop. Go **one step at a time**: explain the step in a sentence, ask what you
-need, and **ask before every action** that creates, downloads or publishes anything.
+the first workshop. They do not want to read long texts.
+
+**Interview them, one question per message.** Each message is at most two or three short lines:
+one question, plus a few words of why only when it helps. Wait for the answer before the next
+question. Never list several questions or explain what comes later. Never mention step numbers,
+the guide or what you read ("I downloaded the template and read..."): just ask.
+
+**Ask before every action** that creates, downloads or publishes anything.
 Talk in the Champion's language. Keep it short and friendly; they may not be technical.
 When you ask for OK, say what will happen in plain words (one or two lines). Do not show
 commands, file paths or how scripts work unless they ask; you still read scripts before running them.
@@ -50,8 +56,9 @@ This template serves both; the language decides the team's README, its folder na
 (`documents/` and `artifacts/`, or `documentos/` and `artefactos/`), the team page's language
 and which version of the team skills it gets (`migrate-skill` or `migrar-skill`).
 
-Ask only if the request is in neither language or mixes them. Mention the language in one
-line when you start (e.g. "I'll set up your team in English"), so the Champion can correct it.
+Ask only if the request is in neither language or mixes them. Your first message is one line
+with the language and the first question of step 2, for example: "I'll set up your team in
+English. What's your company called?" The Champion can correct the language there.
 
 ## 2. Company, team and the AI Champion
 
@@ -59,40 +66,37 @@ The Champion is learning: most have never used GitHub. With them, never say "rep
 "owner", "clone" or "launcher". Say **the team's shared folder** (it lives on GitHub and on
 each teammate's computer) and **the icon you double-click to open it**.
 
-Ask only three things:
+Ask these one at a time, in this order, each in its own short message:
 
-1. The **company** name.
-2. The **team** name.
-3. Their **full name** and the **email** they use for GitHub (or will use, if they have no
-   account yet).
+1. "What's your company called?"
+2. "And your team?"
+3. "Your full name?"
+4. "Which email do you use on GitHub? If you have no account yet, the one you'll use."
+5. Optional: "Do you have your company's website or logo? I'll use its colours and logo for
+   the team's page." Keep what they give for step 7b; if they have nothing, move on.
+6. "Did someone at your company (for example IT) already create a shared folder on GitHub
+   for your team and send you a link?"
 
 Do not ask for their GitHub username: you learn it later (step 3 or 5).
+If one answer already gives the next one (e.g. "Maria Prado, maria@acme.com"), skip it.
 
-Also ask, as optional: **"Do you have your company's brand: its website, a brand guide, or a
-logo file? I'll use its colours and logo for your team's page, the folder's icon and the
-reports the AI makes."** Keep what they give for step 7b; if they have nothing, skip it.
-
-Then ask: **"Did someone at your company (for example IT) already create a shared folder on
-GitHub for your team and send you a link?"**
+After question 6:
 
 - **Yes:** ask for the link. It looks like `https://github.com/<owner>/<repo-name>`; take both
   from it and skip creating it in step 3. It must be empty and the Champion must be able to
   manage it; if not, tell them to ask the person who created it.
-- **No:** ask if they already have a GitHub account with that email. If not, guide them: open
+- **No:** ask if they already have a GitHub account with that email. If not, guide them one instruction per message: open
   https://github.com/signup, sign up with that email, choose the **Free** plan, confirm the
   email GitHub sends, and tell you when done. The shared folder will live in their own account.
 
-Say in one sentence: everyone on the team can save changes for everyone, the team page shows
-who changed what, and any skill can go back to an earlier version there.
-
-Propose the name, and confirm:
+Propose the name, and confirm in one short message:
 
 - **Shared folder name:** `<company>-<team>-ai`, lowercase, hyphens (e.g. `acme-sales-ai`).
   This is the repository name on GitHub. Skip it when the folder already exists.
 
-Then just tell them (nothing to choose): on their Desktop they will get a folder called
-`<Team>-AI` (e.g. `Sales-AI`), with an icon of the same name they double-click to open it.
-Internally that is the launcher name, `<Team>-AI`.
+In the same message, one line (nothing to choose): their Desktop will get a folder `<Team>-AI`
+(e.g. `Sales-AI`), with an icon of the same name they double-click to open it. Internally that
+is the launcher name, `<Team>-AI`. Explain how the team shares changes only if they ask.
 
 ## 3. Create the EMPTY shared folder on GitHub
 
@@ -109,7 +113,8 @@ the Champion's GitHub username. Say what you will create, in plain words, and wa
 gh repo create <owner>/<repo-name> --private
 ```
 
-**Otherwise, guide the Champion click by click:**
+**Otherwise, guide the Champion click by click, one instruction per message** (wait for
+"done" before the next):
 1. Open https://github.com/new (sign in if GitHub asks).
 2. Repository name: `<repo-name>`. Visibility: **Private**. Leave the owner as it is.
 3. Leave **everything else empty**: no README, no .gitignore, no license.
