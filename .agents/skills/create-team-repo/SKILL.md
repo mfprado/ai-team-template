@@ -1,6 +1,6 @@
 ---
 name: create-team-repo
-description: Guide an AI Champion, step by step, to create their team's AI workspace (a private GitHub repository) from this template. Use when someone says "create my team's repository", "create a repo for my team from this template", "set up my team's AI workspace", or pastes the workshop prompt that points to ai-team-template.
+description: Guide an AI Champion, step by step, to create their team's AI workspace (a private GitHub repository) from this template. Use when someone says "create my team's repository", "create a repo for my team from this template", "set up my team's AI workspace", "create my team's AI workspace with ai-team-template", "creá el espacio de IA de mi equipo", or pastes the workshop prompt that points to ai-team-template.
 ---
 
 # Create a team's repository
