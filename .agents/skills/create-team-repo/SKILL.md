@@ -70,17 +70,23 @@ Ask these one at a time, in this order, each in its own short message:
 
 1. "What's your company called?"
 2. "And your team?"
-3. "Your full name?"
-4. "Which email do you use on GitHub? If you have no account yet, the one you'll use."
-5. Optional: "Do you have your company's website or logo? I'll use its colours and logo for
+3. Their full name and GitHub email. **Look first, then confirm instead of asking.** Check, in
+   order: what your app already knows about the person (Claude and Codex often know the
+   signed-in account's name and email),
+   `git config --global user.name` and `user.email`, and `gh api user --jq .name,.email` if `gh`
+   is signed in. If you find them, one line: "I'll put you down as Maria Prado
+   (maria@acme.com), the email you use on GitHub. Right?" Ask only for what is missing:
+   "Your full name?" / "Which email do you use on GitHub? If you have no account yet, the one
+   you'll use."
+4. Optional: "Do you have your company's website or logo? I'll use its colours and logo for
    the team's page." Keep what they give for step 7b; if they have nothing, move on.
-6. "Did someone at your company (for example IT) already create a shared folder on GitHub
+5. "Did someone at your company (for example IT) already create a shared folder on GitHub
    for your team and send you a link?"
 
 Do not ask for their GitHub username: you learn it later (step 3 or 5).
 If one answer already gives the next one (e.g. "Maria Prado, maria@acme.com"), skip it.
 
-After question 6:
+After question 5:
 
 - **Yes:** ask for the link. It looks like `https://github.com/<owner>/<repo-name>`; take both
   from it and skip creating it in step 3. It must be empty and the Champion must be able to
