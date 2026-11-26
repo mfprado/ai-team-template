@@ -11,7 +11,6 @@ import platform
 import re
 import subprocess
 import sys
-import tempfile
 import webbrowser
 from pathlib import Path
 
@@ -32,10 +31,10 @@ T = {
         "sync": "Get the team's latest", "synced": "Up to date with the team.",
         "sync_fail": "Could not get the team's latest changes right now.",
         "tab_skills": "Skills", "tab_perms": "Permissions", "tab_artifacts": "Artifacts", "tab_history": "History",
-        "tab_ideas": "Ideas", "ideas_intro": "Ideas for the team's workspace. Anyone can add one; {name} decides what happens with each.",
+        "tab_ideas": "Ideas", "ideas_intro": "Ideas for the team's workspace. Anyone can add one or update its status.",
         "no_ideas": "No ideas yet.", "new_idea": "Your idea", "add_idea": "Add idea",
         "idea_summary": "New idea: {text}", "set_status": "Status", "save_status": "Save status",
-        "status_summary": "Idea {n}: {status}", "waiting": "waiting for {name}",
+        "status_summary": "Idea {n}: {status}",
         "versions": "Earlier versions", "current": "Current version", "go_back": "Go back to this version",
         "go_back_confirm": "**{skill}** will go back to how it was on {date}, for the whole team. You can always come back to a later version here. Go back?",
         "go_back_summary": "Skill {skill}: back to the version from {date}", "no_versions": "No earlier versions yet.",
@@ -50,7 +49,6 @@ T = {
         "menu": "Menu",
         "how_to_ask": "To use it, open Claude or Codex in this folder and paste this (or say it in your own words):",
         "default_ask": "Use the {name} skill.",
-        "open_flow": "Open as a page",
         "no_flow": "No diagram of the steps yet. To add one, paste this in Claude or Codex:",
         "ask_flow": "Add the flow diagram to the {name} skill.",
         "details": "See the step-by-step instructions the AI follows",
@@ -79,10 +77,10 @@ T = {
         "sync": "Traer lo último del equipo", "synced": "Al día con el equipo.",
         "sync_fail": "No se pudieron traer los últimos cambios del equipo ahora.",
         "tab_skills": "Skills", "tab_perms": "Permisos", "tab_artifacts": "Artefactos", "tab_history": "Historial",
-        "tab_ideas": "Ideas", "ideas_intro": "Ideas para el espacio del equipo. Cualquiera puede sumar una; {name} decide qué se hace con cada una.",
+        "tab_ideas": "Ideas", "ideas_intro": "Ideas para el espacio del equipo. Cualquiera puede sumar una o cambiar su estado.",
         "no_ideas": "Todavía no hay ideas.", "new_idea": "Tu idea", "add_idea": "Agregar idea",
         "idea_summary": "Nueva idea: {text}", "set_status": "Estado", "save_status": "Guardar estado",
-        "status_summary": "Idea {n}: {status}", "waiting": "esperando a {name}",
+        "status_summary": "Idea {n}: {status}",
         "versions": "Versiones anteriores", "current": "Versión actual", "go_back": "Volver a esta versión",
         "go_back_confirm": "**{skill}** va a volver a como estaba el {date}, para todo el equipo. Siempre podés volver a una versión más nueva desde acá. ¿Volver?",
         "go_back_summary": "Skill {skill}: vuelve a la versión del {date}", "no_versions": "Todavía no hay versiones anteriores.",
@@ -97,7 +95,6 @@ T = {
         "menu": "Menú",
         "how_to_ask": "Para usarla, abrí Claude o Codex en esta carpeta y pegá esto (o pedilo con tus palabras):",
         "default_ask": "Usá la skill {name}.",
-        "open_flow": "Abrir como página",
         "no_flow": "Todavía no tiene el diagrama de los pasos. Para agregarlo, pegá esto en Claude o Codex:",
         "ask_flow": "Agregá el diagrama de flujo a la skill {name}.",
         "details": "Ver las instrucciones paso a paso que sigue la IA",
@@ -182,20 +179,12 @@ def skill_flow(body):
         return None, body
     return m.group(1).strip(), body[:m.start()] + body[m.end():]
 
-def show_flow(name, title, summary, diagram):
-    """The skill's flow, in the company's design (flow_page.py), and a button to open it as a page."""
+def show_flow(diagram):
+    """The skill's flow, in the company's design (flow_page.py). Clicking a step shows its details."""
     brand = load_json(ROOT / ".agents/brand.json", {})
-    page = flow_page.build(diagram, brand, ROOT / ".agents/brand")
+    page = flow_page.build(diagram, brand, ROOT / ".agents/brand", language=team.get("language", "en"))
     # A first guess at the height; the diagram then sizes its frame to fit.
     components.html(page, height=min(900, 60 * diagram.count("\n")))
-    if st.button(t["open_flow"], icon=":material/open_in_new:", key=f"flow-{name}"):
-        full = flow_page.build(diagram, brand, ROOT / ".agents/brand", title=title, summary=summary,
-                               team=team.get("team", ""), standalone=True)
-        folder = Path(tempfile.gettempdir()) / "team-ai-flows"
-        folder.mkdir(exist_ok=True)
-        path = folder / f"{name}.html"
-        path.write_text(full, encoding="utf-8")
-        webbrowser.open(path.as_uri())
 
 
 def ago(ts, t):
@@ -267,11 +256,6 @@ def sync_status():
     if behind:
         return f":orange-background[{t['behind']}]"
     return f":green-background[{t['up_to_date']}]"
-
-
-def is_champion():
-    email = git("config", "user.email").stdout.strip().lower()
-    return bool(email) and email == str(team.get("champion", {}).get("email", "")).lower()
 
 
 def rule_label(rule):
@@ -392,7 +376,7 @@ if section == t["tab_skills"]:
                 continue
             st.write(summary)
             if flow:
-                show_flow(name, title, summary, flow)
+                show_flow(flow)
             st.caption(t["how_to_ask"])
             st.code(ask or t["default_ask"].format(name=name), language="text")
             if not flow:
@@ -404,9 +388,9 @@ if section == t["tab_skills"]:
             with st.expander(t["versions"]):
                 skill_versions(name, title)
 
-# Ideas: anyone adds; the AI Champion sets the status
+# Ideas: anyone adds one or sets its status
 if section == t["tab_ideas"]:
-    st.write(t["ideas_intro"].format(name=champion))
+    st.write(t["ideas_intro"])
     listed = run(sys.executable, "-I", str(CORE / "scripts/ideas.py"), "list")
     try:
         ideas = json.loads(listed.stdout or "[]")
@@ -414,21 +398,17 @@ if section == t["tab_ideas"]:
         ideas = []
     if not ideas:
         st.caption(t["no_ideas"])
-    champion_here = is_champion()
+    keys = ["new", "planned", "done"]
+    labels = {"en": {"new": "New", "planned": "Planned", "done": "Done"},
+              "es": {"new": "Nueva", "planned": "En camino", "done": "Hecha"}}[team.get("language", "en") if team.get("language") in ("en", "es") else "en"]
     for idea in reversed(ideas):
         col1, col2 = st.columns([4, 1.4])
         col1.write(f"**{idea['text']}**  \n{idea['who']} · {idea['date']}")
-        if champion_here:
-            keys = ["new", "planned", "done"]
-            labels = {"en": {"new": "New", "planned": "Planned", "done": "Done"},
-                      "es": {"new": "Nueva", "planned": "En camino", "done": "Hecha"}}[team.get("language", "en") if team.get("language") in ("en", "es") else "en"]
-            choice = col2.selectbox(t["set_status"], keys, index=keys.index(idea["key"]),
-                                    format_func=labels.get, key=f"idea-{idea['id']}", label_visibility="collapsed")
-            if choice != idea["key"] and col2.button(t["save_status"], key=f"save-{idea['id']}"):
-                run(sys.executable, "-I", str(CORE / "scripts/ideas.py"), "status", "--id", str(idea["id"]), "--to", choice)
-                share(t["status_summary"].format(n=idea["id"], status=labels[choice]), ["IDEAS.md"])
-        else:
-            col2.write(f"`{idea['status']}`")
+        choice = col2.selectbox(t["set_status"], keys, index=keys.index(idea["key"]),
+                                format_func=labels.get, key=f"idea-{idea['id']}", label_visibility="collapsed")
+        if choice != idea["key"] and col2.button(t["save_status"], key=f"save-{idea['id']}"):
+            run(sys.executable, "-I", str(CORE / "scripts/ideas.py"), "status", "--id", str(idea["id"]), "--to", choice)
+            share(t["status_summary"].format(n=idea["id"], status=labels[choice]), ["IDEAS.md"])
     st.divider()
     with st.form("new-idea", clear_on_submit=True):
         text = st.text_area(t["new_idea"], max_chars=500)

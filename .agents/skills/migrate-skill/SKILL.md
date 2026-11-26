@@ -23,6 +23,17 @@ flowchart TD
     CX@{ icon: "logos:codex", label: "Codex" }
     J -.- CL
     J -.- CX
+    %% A: Someone pastes or attaches a personal skill, a script, saved instructions or a macro, or describes an automation they use.
+    %% B: Checks that everything the automation needs is there: scripts it calls, templates, an example of the result.
+    %% C: Asks for exactly what is missing, in plain words, and waits for it.
+    %% D: One short message: what it does, who on the team will use it, what a good result looks like, and how they usually ask for it.
+    %% E: Writes the team skill: a short name, a description in the words the team uses, this diagram, and the fixed steps as scripts.
+    %% F: Looks for anything that only works on that person's computer: their paths, personal emails or IDs, passwords, or context that only lived in their memory.
+    %% G: Uses folder paths that work for anyone, reads passwords from the computer's settings instead of the text, and writes the missing context into the skill.
+    %% H: Compares what the skill needs (connectors, programs) with what the team's permissions allow.
+    %% I: Explains in plain words what would change and the risk. Nothing changes without the person's OK.
+    %% J: Updates the copies that Claude and Codex read, so the skill works in both.
+    %% K: Tells them the skill's name, how to ask for it, what was changed so it works for others, and suggests a teammate tries it.
 ```
 
 Anyone on the team may have automations that live only on their own computer. This skill turns
@@ -48,8 +59,8 @@ Ask, in one message:
 - Pick a short, lowercase, hyphenated name and confirm it with the person.
 - Create `.agents/skills/<name>/SKILL.md` with `name` and `description` front matter.
 - Right after the title, add the `## Flow` diagram: the steps as boxes and every check or
-  question to the person as a hexagon, and the tools it uses joined to their steps, with their
-  logos (`.agents/rules/skills.md`). The team page shows it first.
+  question to the person as a hexagon, the tools it uses joined to their steps, with their
+  logos, and one line of details per step (`.agents/rules/skills.md`). The team page shows it first.
 - Move fixed steps into `scripts/` (deterministic first). Keep reasoning steps as instructions.
 - Never write into `.claude/` or `.codex/`.
 

@@ -23,6 +23,17 @@ flowchart TD
     CX@{ icon: "logos:codex", label: "Codex" }
     J -.- CL
     J -.- CX
+    %% A: Alguien pega o adjunta una skill personal, un script, instrucciones guardadas o una macro, o describe una automatización que usa.
+    %% B: Revisa que esté todo lo que la automatización necesita: scripts que llama, plantillas, un ejemplo del resultado.
+    %% C: Pide exactamente lo que falta, en palabras simples, y lo espera.
+    %% D: Un mensaje corto: qué hace, quién del equipo la va a usar, cómo es un buen resultado y cómo la pide normalmente.
+    %% E: Escribe la skill del equipo: un nombre corto, una descripción con las palabras del equipo, este diagrama y los pasos fijos como scripts.
+    %% F: Busca lo que solo funciona en la computadora de esa persona: sus rutas, emails o IDs personales, contraseñas, o contexto que solo estaba en su memoria.
+    %% G: Usa rutas que funcionan para cualquiera, lee las contraseñas de la configuración de la computadora en lugar del texto y escribe en la skill el contexto que faltaba.
+    %% H: Compara lo que necesita la skill (conectores, programas) con lo que permiten los permisos del equipo.
+    %% I: Explica en palabras simples qué cambiaría y el riesgo. Nada cambia sin el OK de la persona.
+    %% J: Actualiza las copias que leen Claude y Codex, para que la skill funcione en los dos.
+    %% K: Le cuenta el nombre de la skill, cómo pedirla, qué se cambió para que funcione para otros, y sugiere que la pruebe alguien del equipo.
 ```
 
 Cualquiera del equipo puede tener automatizaciones que viven solo en su computadora. Esta skill
@@ -49,8 +60,8 @@ Preguntá, en un solo mensaje:
 - Creá `.agents/skills/<nombre>/SKILL.md` con `name` y `description` en el encabezado, en
   español, el idioma del equipo.
 - Justo después del título, agregá el diagrama `## Flow`: los pasos como cajas, cada control o
-  pregunta a la persona como un hexágono, y las herramientas que usa unidas a sus pasos, con sus
-  logos (`.agents/rules/skills.md`). Las etiquetas del diagrama van en español. La página del
+  pregunta a la persona como un hexágono, las herramientas que usa unidas a sus pasos, con sus
+  logos, y una línea de detalle por paso (`.agents/rules/skills.md`). Las etiquetas del diagrama van en español. La página del
   equipo lo muestra primero.
 - Pasá los pasos fijos a `scripts/` (primero lo determinístico). Dejá como instrucciones solo lo
   que necesita criterio.

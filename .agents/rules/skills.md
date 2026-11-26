@@ -32,6 +32,8 @@ flowchart TD
     DB["Sales database"]:::tool
     B -.- GS
     B -.- DB
+    %% B: Opens this week's sales sheet and reads every region's numbers.
+    %% C: Compares the regions in the sheet with the team's list of regions.
 ```
 ````
 
@@ -53,6 +55,10 @@ flowchart TD
   - Without one (the script returns `null`, or an in-house tool): `DB["Sales database"]:::tool`.
     The page shows the company's logo instead (its initial if the team has no brand yet).
 - Put a label in quotes when it has brackets, parentheses or other symbols: `B["Save (draft)"]`.
+- **Details for each step**, at the end, one comment line per step or check: `%% B: <one or two
+  plain sentences on what happens there>`. Clicking a box on the team page opens these details,
+  with the tools the step uses and, for a check, where each answer leads. Other viewers ignore
+  the comments. Write them for every step and check, in the team's language.
 - **Keep it true.** Whenever the steps or checks change, update the diagram in the same change.
   The team checks refuse to save a skill without it.
 

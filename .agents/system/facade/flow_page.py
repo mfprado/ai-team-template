@@ -1,15 +1,12 @@
-"""A skill's flow diagram as an HTML page in the company's design.
-
-One builder for both places the flow is seen: inside each skill card on the team page
-(embedded) and as a page of its own opened in the browser (standalone, with a header carrying
-the company's logo). Colours, font and logos come from .agents/brand.json and .agents/brand/.
+"""A skill's flow diagram as an HTML page in the company's design, shown in each skill on the
+team page. Clicking a step opens a card with its details, the tools it uses and, for a check,
+where each answer leads. Colours, font and logos come from .agents/brand.json and .agents/brand/.
 
 The page draws the diagram with Mermaid in the browser (loaded from a CDN) and fetches only the
 tool logos the diagram names (Iconify). Without internet, the diagram's text is shown instead.
 """
 
 import base64
-import html
 import io
 import json
 
@@ -20,6 +17,10 @@ import json
 TOOL_LOGO = r'^\s*(\w+)@\{[^}]*?icon:\s*"([\w-]+):([\w-]+)"[^}]*?label:\s*"([^"]*)"[^}]*\}\s*$'
 TOOL_PLAIN = r'^\s*(\w+)\["?([^"\]]+?)"?\]:::tool\s*$'
 TOOL_LINK = r'^\s*(\w+)\s*-\.-\s*(\w+)\s*$'
+# Details for a step, as a Mermaid comment (other viewers ignore it):  %% B: what happens here
+DETAIL = r'^\s*%%\s*(\w+)\s*:\s*(.+)$'
+# An arrow with an answer on it:  C -- Yes --> E
+BRANCH = r'^\s*(\w+)\s*--\s*([^->][^>]*?)\s*-->\s*(\w+)'
 
 FONTS = {"sans": "-apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif",
          "serif": "Georgia, 'Times New Roman', serif"}
@@ -64,61 +65,77 @@ def palette(brand):
         "check": mix(bg, p, 0.14),          # checks: a light tint of the brand colour
         "muted": mix(tx, bg, 0.35),         # secondary text
         "line": mix(bg, tx, 0.14),          # chip and badge borders
+        "border": mix(bg, tx, 0.28),        # step boxes
+        "edge": mix(bg, tx, 0.45),          # arrows
         "font": FONTS["serif" if brand.get("font") == "serif" else "sans"],
     }
 
 
-def build(diagram, brand, brand_dir, title="", summary="", team="", standalone=False):
-    """The full HTML document. `standalone` adds the company header and fills the window."""
+TEXT = {
+    "en": {"uses": "Uses", "then": "Then", "none": "No more details for this step."},
+    "es": {"uses": "Usa", "then": "Después", "none": "Este paso no tiene más detalles."},
+}
+
+
+def build(diagram, brand, brand_dir, language="en"):
+    """The full HTML document."""
     c = palette(brand)
     company_icon = image_data(brand_dir / "icon.png", (64, 64))
-    header_logo = image_data(brand_dir / "logo.png", (360, 96)) if standalone else None
     config = {
         "startOnLoad": False, "securityLevel": "strict", "theme": "base",
-        "flowchart": {"useMaxWidth": False, "htmlLabels": True, "curve": "basis", "wrappingWidth": 200,
-                      "padding": 10, "nodeSpacing": 30, "rankSpacing": 32, "diagramPadding": 14},
+        "flowchart": {"useMaxWidth": False, "htmlLabels": True, "curve": "linear", "wrappingWidth": 190,
+                      "padding": 12, "nodeSpacing": 34, "rankSpacing": 30, "diagramPadding": 14},
         "themeVariables": {
-            "fontFamily": c["font"], "fontSize": "15px",
-            "primaryColor": c["background"], "primaryBorderColor": c["primary"], "primaryTextColor": c["text"],
-            "lineColor": c["primary"], "textColor": c["text"], "edgeLabelBackground": c["background"],
+            "fontFamily": c["font"], "fontSize": "14px",
+            "primaryColor": c["background"], "primaryBorderColor": c["border"], "primaryTextColor": c["text"],
+            "lineColor": c["edge"], "textColor": c["text"], "edgeLabelBackground": c["background"],
         },
-        # Steps: outlined boxes. Checks: hexagons tinted with the brand colour.
-        # Start and end: filled with the brand colour.
-        "themeCSS": (f".node polygon{{fill:{c['check']};stroke:{c['primary']};stroke-width:1.5px}}"
-                     f".node rect{{rx:8px;ry:8px}}"
-                     f".node.done rect,.node.done circle{{fill:{c['primary']};stroke:{c['primary']}}}"
+        # Simple and quiet, in the company's colours, with thin lines. Steps: white boxes with a
+        # fine border. Checks: tinted with the brand colour. Start and end: the brand colour.
+        "themeCSS": (f".node rect{{rx:6px;ry:6px;fill:{c['background']};stroke:{c['border']};stroke-width:1px}}"
+                     f".node polygon{{fill:{c['check']};stroke:{c['primary']};stroke-width:1px}}"
+                     f".node.done rect{{fill:{c['primary']};stroke:{c['primary']}}}"
                      f".node.done .nodeLabel{{color:{c['on_primary']}}}"
-                     f".edgeLabel,.edgeLabel p{{color:{c['muted']}}}"),
+                     f".node .nodeLabel{{line-height:1.35}}"
+                     f".flowchart-link{{stroke:{c['edge']} !important;stroke-width:1px !important}}"
+                     f".marker{{fill:{c['edge']} !important;stroke:{c['edge']} !important}}"
+                     f".edgeLabel,.edgeLabel p{{color:{c['muted']};font-size:12px}}"
+                     f".node{{cursor:pointer}}"
+                     f".node:hover rect,.node:hover polygon{{stroke:{c['primary']};stroke-width:1.5px}}"),
     }
-    header = ""
-    if standalone:
-        logo = f'<img class="logo" src="{header_logo}" alt="">' if header_logo else ""
-        header = (f'<header>{logo}<div><div class="team">{html.escape(team)}</div>'
-                  f'<h1>{html.escape(title)}</h1></div></header>'
-                  + (f'<p class="summary">{html.escape(summary)}</p>' if summary else ""))
     return f"""<!doctype html>
 <html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>{html.escape(title or "Flow")}</title>
+<title>Flow</title>
 <style>
 html,body{{margin:0;background:{c['background']};color:{c['text']};font-family:{c['font']}}}
-main{{{"max-width:960px;margin:0 auto;padding:28px 20px 40px" if standalone else "padding:0"}}}
-header{{display:flex;align-items:center;gap:16px;padding-bottom:14px;margin-bottom:14px;
-  border-bottom:3px solid {c['primary']}}}
-header .logo{{max-height:48px;max-width:180px}}
-header .team{{font-size:13px;color:{c['muted']};text-transform:uppercase;letter-spacing:.06em}}
-header h1{{margin:2px 0 0;font-size:26px;color:{c['text']}}}
-.summary{{margin:0 0 18px;color:{c['muted']};line-height:1.5}}
+main{{padding:0}}
 #tools{{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin:2px 0 6px}}
 .chip{{display:flex;align-items:center;gap:6px;padding:3px 10px 3px 5px;border:1px solid {c['line']};
   border-radius:999px;font-size:13px;background:{c['background']};color:{c['text']}}}
 #flow{{text-align:center}}
 #raw{{display:none;white-space:pre-wrap;font-size:13px;color:{c['muted']}}}
+#shade{{display:none;position:absolute;left:0;top:0;width:100%;background:{c['background']}B3}}
+#card{{display:none;position:absolute;left:50%;transform:translateX(-50%);width:min(420px,calc(100% - 32px));
+  box-sizing:border-box;background:{c['background']};color:{c['text']};border:1px solid {c['border']};
+  border-top:3px solid {c['primary']};border-radius:8px;padding:16px 18px 14px;
+  box-shadow:0 10px 30px rgba(0,0,0,.12);text-align:left}}
+#card h2{{margin:0 28px 8px 0;font-size:17px;line-height:1.3}}
+#card p{{margin:0 0 10px;line-height:1.5;font-size:14px}}
+#card .label{{font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:{c['muted']};margin:10px 0 6px}}
+#card .chips{{display:flex;flex-wrap:wrap;gap:6px}}
+#card ul{{margin:0;padding-left:18px;font-size:14px;line-height:1.6}}
+#card .none{{color:{c['muted']};font-size:13px}}
+#close{{position:absolute;top:10px;right:12px;border:0;background:none;font-size:20px;line-height:1;
+  color:{c['muted']};cursor:pointer}}
 </style></head>
-<body><main>{header}
+<body><main>
 <div id="tools"></div>
 <div id="flow"></div>
 <pre id="raw"></pre>
 </main>
+<div id="shade"></div>
+<div id="card" role="dialog" aria-modal="true"><button id="close" aria-label="Close">&times;</button>
+  <div id="card-body"></div></div>
 <script src="https://cdn.jsdelivr.net/npm/mermaid@11.4.1/dist/mermaid.min.js"
   integrity="sha384-rbtjAdnIQE/aQJGEgXrVUlMibdfTSa4PQju4HDhN3sR2PmaKFzhEafuePsl9H/9I" crossorigin="anonymous"></script>
 <script>
@@ -129,6 +146,11 @@ const TOOL_LINK = new RegExp({json.dumps(TOOL_LINK)});
 const SVGNS = "http://www.w3.org/2000/svg";
 const COMPANY = {json.dumps(company_icon)};
 const C = {json.dumps(c)};
+const T = {json.dumps(TEXT.get(language, TEXT["en"]))};
+// Details for a step, as a Mermaid comment (other viewers ignore it):  %% B: what happens here
+const DETAIL = new RegExp({json.dumps(DETAIL)});
+// An arrow with an answer on it:  C -- Yes --> E
+const BRANCH = new RegExp({json.dumps(BRANCH)});
 
 function fit() {{
   // Inside the team page, Streamlit gives the frame and its wrapper a fixed height: grow both.
@@ -233,6 +255,68 @@ function badge(svg, layer, step, tools) {{
   }});
 }}
 
+function esc(text) {{
+  const d = document.createElement("div"); d.textContent = text; return d.innerHTML;
+}}
+
+function closeCard() {{
+  document.getElementById("card").style.display = "none";
+  document.getElementById("shade").style.display = "none";
+}}
+
+function openCard(node, id, info) {{
+  // The step's details, next to the box that was clicked.
+  const label = node.textContent.trim();
+  const body = document.getElementById("card-body");
+  let out = `<h2>${{esc(label)}}</h2>`;
+  if (info.details[id]) out += `<p>${{esc(info.details[id])}}</p>`;
+  const used = (info.uses[id] || []).map(t => info.tools[t]);
+  if (used.length) out += `<div class="label">${{esc(T.uses)}}</div><div class="chips"></div>`;
+  const branches = info.branches[id] || [];
+  if (branches.length) {{
+    out += `<div class="label">${{esc(T.then)}}</div><ul>` + branches.map(b =>
+      `<li><strong>${{esc(b.answer)}}</strong>: ${{esc(info.label(b.to))}}</li>`).join("") + `</ul>`;
+  }}
+  if (!info.details[id] && !used.length && !branches.length) out += `<p class="none">${{esc(T.none)}}</p>`;
+  body.innerHTML = out;
+  const chips = body.querySelector(".chips");
+  for (const t of used) {{
+    const chip = document.createElement("span"); chip.className = "chip";
+    chip.appendChild(logo(t, 20)); chip.appendChild(document.createTextNode(t.label));
+    chips.appendChild(chip);
+  }}
+  const shade = document.getElementById("shade"), card = document.getElementById("card");
+  shade.style.height = document.documentElement.scrollHeight + "px";
+  shade.style.display = "block"; card.style.display = "block";
+  const box = node.getBoundingClientRect(), page = document.documentElement.scrollHeight;
+  let top = window.scrollY + box.bottom + 8;
+  if (top + card.offsetHeight > page - 8) top = Math.max(8, window.scrollY + box.top - card.offsetHeight - 8);
+  card.style.top = top + "px";
+  document.getElementById("close").focus();
+}}
+
+function clickable(svg, source, tools, uses) {{
+  const details = {{}}, branches = {{}};
+  for (const line of source.split("\\n")) {{
+    let m = line.match(DETAIL);
+    if (m) {{ details[m[1]] = m[2].trim(); continue; }}
+    m = line.match(BRANCH);
+    if (m) (branches[m[1]] ||= []).push({{answer: m[2].trim(), to: m[3]}});
+  }}
+  const nodeOf = id => svg.querySelector(`g.node[id^="flowchart-${{id}}-"]`);
+  const info = {{details, branches, tools, uses, label: id => (nodeOf(id) || {{textContent: id}}).textContent.trim()}};
+  for (const node of svg.querySelectorAll("g.node")) {{
+    const id = (node.id.match(/^flowchart-(\\w+)-\\d+$/) || [])[1];
+    if (!id) continue;
+    node.setAttribute("tabindex", "0"); node.setAttribute("role", "button");
+    node.addEventListener("click", () => openCard(node, id, info));
+    node.addEventListener("keydown", e => {{ if (e.key === "Enter" || e.key === " ") openCard(node, id, info); }});
+  }}
+}}
+document.getElementById("close").addEventListener("click", closeCard);
+document.getElementById("shade").addEventListener("click", closeCard);
+document.addEventListener("keydown", e => {{ if (e.key === "Escape") closeCard(); }});
+
 (async () => {{
   try {{
     const {{tools, uses, diagram}} = splitTools(source);
@@ -250,6 +334,7 @@ function badge(svg, layer, step, tools) {{
     const layer = document.createElementNS(SVGNS, "g");
     svg.appendChild(layer);
     for (const [step, ids] of Object.entries(uses)) badge(svg, layer, step, ids.map(id => tools[id]));
+    clickable(svg, source, tools, uses);
     svg.style.maxWidth = "100%"; svg.style.height = "auto";
     fit();
   }} catch (e) {{ plain(); }}

@@ -27,6 +27,11 @@ flowchart TD
     G -.- GM
     G -.- GS
     J -.- GS
+    %% B: Lists what changed for teams since the last email, grouped as improvements a team would notice.
+    %% D: One prompt per improvement, which the Champion pastes in their own team folder. It names the exact files and asks before changing anything.
+    %% F: Adds the entry at the top of the change log and saves it to the template.
+    %% G: One draft per AI Champion in their language, from the AI Champions sheet. Drafts only: the maintainer sends them.
+    %% J: Once the maintainer confirms the emails were sent, writes the date and the entry's title in the sheet.
 ```
 
 For **maintainers of this template**, never for AI Champions. Everything you write here is for
@@ -109,7 +114,8 @@ For each Champion, **create a draft** (never send) in their `Language`:
 Translate the explanations for Spanish speakers; keep the prompts' file paths as they are, with
 one exception: Spanish teams have `migrar-skill`, not `migrate-skill`. A prompt for them names
 `.agents/skills/migrar-skill/` in their folder and brings it from
-`.agents/skills/create-team-repo/team-skills/es/migrar-skill/` in the template.
+`.agents/skills/create-team-repo/team-skills/es/migrar-skill/` in the template. A new permission rule
+for a Spanish team carries its Spanish reason, from `.agents/skills/create-team-repo/team-skills/es/permission-reasons.json`.
 
 ## 5. Report and wait
 

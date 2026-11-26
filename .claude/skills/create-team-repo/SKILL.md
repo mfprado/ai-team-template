@@ -29,6 +29,19 @@ flowchart TD
     F -.- GH
     G -.- GH
     K -.- GH
+    %% B: Uses the language the Champion wrote in (English or Spanish) and says it in one line, so they can correct it.
+    %% C: One short question per message: company, team, then confirms their name and GitHub email, then asks for a design guide or website.
+    %% D: If IT already created the team's shared folder on GitHub, it uses that one instead of creating a new one.
+    %% F: Creates a private, empty shared folder on GitHub in the Champion's account, after their OK.
+    %% G: Downloads the shared folder to the Champion's Desktop as a folder called <Team>-AI.
+    %% H: Copies the template's files (not its history) and writes the team's settings, README and folders in the team's language.
+    %% M: A design guide wins over the website: it has the exact colours, fonts and logo.
+    %% N: Shows the colours and logo in plain words and saves them after the Champion's OK.
+    %% I: Every change in the team folder must be saved under the Champion's name and GitHub email.
+    %% K: Saves the first version straight to the team, without asking: it is part of creating the folder.
+    %% L: The first double-click installs what is needed, turns on the team checks, hides technical files and opens the team page.
+    %% O: Offers to bring an automation the Champion already uses into the team with the migrate skill.
+    %% P: Deletes the temporary copy of the template and says in three lines where the folder is and how to open it.
 ```
 
 You are helping an **AI Champion** create their team's shared AI workspace, usually during
