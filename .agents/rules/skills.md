@@ -51,7 +51,7 @@ flowchart TD
     `sh .agents/system/bin/py .agents/system/scripts/find_logo.py "Gmail" "Google Sheets"`;
     never guess it.
   - Without one (the script returns `null`, or an in-house tool): `DB["Sales database"]:::tool`.
-    The page shows its initial instead.
+    The page shows the company's logo instead (its initial if the team has no brand yet).
 - Put a label in quotes when it has brackets, parentheses or other symbols: `B["Save (draft)"]`.
 - **Keep it true.** Whenever the steps or checks change, update the diagram in the same change.
   The team checks refuse to save a skill without it.
