@@ -6,11 +6,20 @@ One template for every language: English (`en`) and Spanish (`es`).
 
 ## Create a team repository (AI Champions)
 
-Open Claude or Codex on your Desktop and paste:
+Open Claude or Codex on your Desktop and paste the prompt in your team's language. The language
+you write in is the language your team's workspace is set up in.
+
+**English**
 
 > Create my team's AI workspace from the template https://github.com/mfprado/ai-team-template.
 > Download it to a temporary folder, read `.agents/skills/create-team-repo/SKILL.md` and follow
 > it step by step, asking me before each action.
+
+**Español**
+
+> Creá el espacio de IA de mi equipo a partir del template https://github.com/mfprado/ai-team-template.
+> Descargalo en una carpeta temporal, leé `.agents/skills/create-team-repo/SKILL.md` y seguilo
+> paso a paso, preguntándome antes de cada acción.
 
 The `create-team-repo` skill asks for the company, team and brand, creates an empty private
 repository, copies this template's files into it (never its history) and configures it. Every
