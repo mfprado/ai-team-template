@@ -56,8 +56,11 @@ T = {
         "perms_intro": "What the AI is not allowed to do in this folder, in every conversation and every skill. Switch a rule off only if the team agrees. What each skill may do without asking is in that skill.",
         "skill_perms": "Can do without asking, while this skill runs (only in Claude; the general permissions still apply):",
         "no_skill_perms": "Nothing: it asks before every action.",
-        "remove_perm": "Remove", "remove_perm_confirm": "From now on, **{skill}** will ask before: {perm}. For the whole team. Remove it?",
-        "remove_perm_summary": "Skill {skill}: asks again before {perm}",
+        "perm_off_confirm": "From now on, **{skill}** will ask before: {perm}. This changes it for the whole team and saves it right away. Switch it off?",
+        "perm_on_confirm": "From now on, **{skill}** will do this without asking: {perm}. This changes it for the whole team and saves it right away. Switch it on?",
+        "perm_yes": "Yes, change it for the team",
+        "perm_off_summary": "Skill {skill}: asks again before {perm}",
+        "perm_on_summary": "Skill {skill}: {perm} without asking",
         "add_perm": "To let it do something else without asking, paste this in Claude or Codex:",
         "ask_perm": "Let the {name} skill <what it should do> without asking.",
         "blocked": "Blocked", "asks": "Asks first", "changed": "You changed:", "on": "on", "off": "off",
@@ -108,8 +111,11 @@ T = {
         "perms_intro": "Lo que la IA no puede hacer en esta carpeta, en cualquier conversación y en cualquier skill. Apagá una regla solo si el equipo está de acuerdo. Lo que cada skill puede hacer sin preguntar está en esa skill.",
         "skill_perms": "Puede hacer sin preguntar, mientras corre esta skill (solo en Claude; los permisos generales siguen valiendo):",
         "no_skill_perms": "Nada: pregunta antes de cada acción.",
-        "remove_perm": "Quitar", "remove_perm_confirm": "Desde ahora, **{skill}** va a preguntar antes de: {perm}. Para todo el equipo. ¿Lo quitás?",
-        "remove_perm_summary": "Skill {skill}: vuelve a preguntar antes de {perm}",
+        "perm_off_confirm": "Desde ahora, **{skill}** va a preguntar antes de: {perm}. Cambia para todo el equipo y se guarda enseguida. ¿Lo apagás?",
+        "perm_on_confirm": "Desde ahora, **{skill}** va a hacer esto sin preguntar: {perm}. Cambia para todo el equipo y se guarda enseguida. ¿Lo encendés?",
+        "perm_yes": "Sí, cambiarlo para el equipo",
+        "perm_off_summary": "Skill {skill}: vuelve a preguntar antes de {perm}",
+        "perm_on_summary": "Skill {skill}: {perm} sin preguntar",
         "add_perm": "Para que haga otra cosa sin preguntar, pegá esto en Claude o Codex:",
         "ask_perm": "Dejá que la skill {name} <qué debería hacer> sin preguntar.",
         "blocked": "Bloqueado", "asks": "Pide confirmación", "changed": "Cambiaste:", "on": "activada", "off": "desactivada",
@@ -355,18 +361,21 @@ def skill_permissions(name):
 
 
 @st.dialog(" ")
-def confirm_remove_permission(name, title, perm):
-    st.write(t["remove_perm_confirm"].format(skill=title, perm=perm["plain"]))
+def confirm_skill_permission(name, title, perm, wanted, key):
+    """Switch one of a skill's permissions on or off, for the whole team, after an OK."""
+    st.write(t["perm_on_confirm" if wanted else "perm_off_confirm"].format(skill=title, perm=perm["plain"]))
     yes, no = st.columns(2)
-    if yes.button(t["remove_perm"], type="primary"):
+    if yes.button(t["perm_yes"], type="primary"):
         with st.spinner(t["applying"]):
-            run(sys.executable, "-I", str(CORE / "scripts/skill_permissions.py"), "remove", "--skill", name,
-                "--rule", perm["rule"])
+            run(sys.executable, "-I", str(CORE / "scripts/skill_permissions.py"), "on" if wanted else "off",
+                "--skill", name, "--rule", perm["rule"])
             run(sys.executable, "-I", str(CORE / "scripts/sync.py"))
-            share(t["remove_perm_summary"].format(skill=title, perm=perm["plain"]), [f".agents/skills/{name}"])
+            share(t["perm_on_summary" if wanted else "perm_off_summary"].format(skill=title, perm=perm["plain"]),
+                  [f".agents/skills/{name}"])
         if st.button(t["close"]):
             st.rerun()
     elif no.button(t["share_no"]):
+        st.session_state[f"{key}-undo"] = True  # the switch goes back to how it was
         st.rerun()
 
 
@@ -376,10 +385,12 @@ def show_skill_permissions(name, title):
     if not perms:
         st.write(t["no_skill_perms"])
     for i, perm in enumerate(perms):
-        left, right = st.columns([5, 1])
-        left.markdown(f"{perm['plain']}  ·  `{perm['rule']}`")
-        if right.button(t["remove_perm"], key=f"perm-{name}-{i}"):
-            confirm_remove_permission(name, title, perm)
+        key = f"perm-{name}-{i}"
+        if st.session_state.pop(f"{key}-undo", False):
+            st.session_state[key] = perm["on"]
+        wanted = st.toggle(f"{perm['plain']}  ·  `{perm['rule']}`", value=perm["on"], key=key)
+        if wanted != perm["on"]:
+            confirm_skill_permission(name, title, perm, wanted, key)
     st.caption(t["add_perm"])
     st.code(t["ask_perm"].format(name=name), language="text")
 

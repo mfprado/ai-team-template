@@ -85,7 +85,8 @@ SKILL_PERMS = load_skill_permissions()
 
 
 def skill_rules(skill_md):
-    return SKILL_PERMS.read_rules(skill_md.read_text(encoding="utf-8"))[0]
+    text = skill_md.read_text(encoding="utf-8")
+    return SKILL_PERMS.read_field(text, SKILL_PERMS.FIELD) + SKILL_PERMS.read_field(text, SKILL_PERMS.OFF_FIELD)
 
 
 FLOWCHART = re.compile(r"^```mermaid[ \t]*\n\s*(?:flowchart|graph)\b", re.M)

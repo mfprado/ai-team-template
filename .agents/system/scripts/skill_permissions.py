@@ -10,10 +10,15 @@ They only add to the team's general permissions (.agents/permissions.json) while
 anything blocked for the whole folder stays blocked (the guard hook checks every action).
 Codex ignores them.
 
+A permission switched off on the team page moves to `allowed-tools-off` (the team's own field,
+which Claude does not read), so it can be switched on again without rewriting it.
+
 Usage:
   sh .agents/system/bin/py -I .agents/system/scripts/skill_permissions.py list --skill <name>
   sh .agents/system/bin/py -I .agents/system/scripts/skill_permissions.py add --skill <name> --rule "<rule>"
   sh .agents/system/bin/py -I .agents/system/scripts/skill_permissions.py remove --skill <name> --rule "<rule>"
+  sh .agents/system/bin/py -I .agents/system/scripts/skill_permissions.py off --skill <name> --rule "<rule>"
+  sh .agents/system/bin/py -I .agents/system/scripts/skill_permissions.py on --skill <name> --rule "<rule>"
 
 Prints JSON. Standard library only.
 """
@@ -26,6 +31,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[3]
 FIELD = "allowed-tools"
+OFF_FIELD = "allowed-tools-off"
 # One rule: a tool name, optionally with what it applies to in parentheses (which may hold spaces).
 RULE = re.compile(r"[^\s,()]+(?:\([^()]*\))?")
 TOOL = re.compile(r"^(?:[A-Z][A-Za-z]+|mcp__[\w-]+__[\w*-]+|mcp__[\w-]+__\*)(?:\([^()]+\))?$")
@@ -94,59 +100,71 @@ def skill_file(name):
     return path
 
 
-def read_rules(text):
-    """The rules and where the allowed-tools line is (None if the skill has none)."""
+def read_field(text, field):
+    """The rules in one front-matter field."""
     if not text.startswith("---"):
-        return [], None
-    end = text.find("\n---", 3)
-    lines = text[:end].split("\n")
-    for i, line in enumerate(lines):
-        if line.startswith(f"{FIELD}:"):
-            return parse(line.split(":", 1)[1]), i
-    return [], None
+        return []
+    for line in text[:text.find("\n---", 3)].split("\n"):
+        if line.startswith(f"{field}:"):
+            return parse(line.split(":", 1)[1])
+    return []
 
 
-def write_rules(path, rules):
+def read_rules(text):
+    """The rules the skill has switched on, and the index of their line (kept for callers)."""
+    return read_field(text, FIELD), None
+
+
+def write_rules(path, on, off):
     text = path.read_text(encoding="utf-8")
-    _, index = read_rules(text)
     end = text.find("\n---", 3)
-    head, rest = text[:end].split("\n"), text[end:]
-    if index is not None:
-        del head[index]
-    if rules:
-        head.append(f"{FIELD}: {' '.join(rules)}")
-    path.write_text("\n".join(head) + rest, encoding="utf-8")
+    head = [l for l in text[:end].split("\n") if not l.startswith((f"{FIELD}:", f"{OFF_FIELD}:"))]
+    if on:
+        head.append(f"{FIELD}: {' '.join(on)}")
+    if off:
+        head.append(f"{OFF_FIELD}: {' '.join(off)}")
+    path.write_text("\n".join(head) + text[end:], encoding="utf-8")
 
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
-    parser.add_argument("action", choices=["list", "add", "remove"])
+    parser.add_argument("action", choices=["list", "add", "remove", "on", "off"])
     parser.add_argument("--skill", required=True)
     parser.add_argument("--rule")
     parser.add_argument("--language", default="en")
     args = parser.parse_args()
 
     path = skill_file(args.skill)
-    rules, _ = read_rules(path.read_text(encoding="utf-8"))
+    text = path.read_text(encoding="utf-8")
+    on, off = read_field(text, FIELD), read_field(text, OFF_FIELD)
     if args.action == "list":
-        print(json.dumps([{"rule": r, "plain": describe(r, args.language)} for r in rules], ensure_ascii=False))
+        print(json.dumps([{"rule": r, "plain": describe(r, args.language), "on": r in on} for r in on + off],
+                         ensure_ascii=False))
         return 0
     if not args.rule:
         print(json.dumps({"ok": False, "problem": "say which permission with --rule"}))
         return 1
     rule = args.rule.strip()
-    if args.action == "add":
+    if args.action in ("add", "on"):
+        if args.action == "on" and rule not in off:
+            print(json.dumps({"ok": False, "problem": f"the skill has no switched-off '{rule}'"}))
+            return 1
         why = problem(rule)
         if why:
             print(json.dumps({"ok": False, "problem": why}))
             return 1
-        if rule not in rules:
-            write_rules(path, rules + [rule])
+        on, off = on + ([rule] if rule not in on else []), [r for r in off if r != rule]
+    elif args.action == "off":
+        if rule not in on:
+            print(json.dumps({"ok": False, "problem": f"the skill does not have '{rule}' switched on"}))
+            return 1
+        on, off = [r for r in on if r != rule], off + [rule]
     else:
-        if rule not in rules:
+        if rule not in on + off:
             print(json.dumps({"ok": False, "problem": f"the skill does not have '{rule}'"}))
             return 1
-        write_rules(path, [r for r in rules if r != rule])
+        on, off = [r for r in on if r != rule], [r for r in off if r != rule]
+    write_rules(path, on, off)
     print(json.dumps({"ok": True, "path": str(path.relative_to(ROOT))}))
     return 0
 

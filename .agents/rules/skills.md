@@ -81,7 +81,9 @@ flowchart TD
 
 What a skill may do **without asking**, while it runs, goes in its front matter as
 `allowed-tools` (Claude Code; Codex ignores it): one line of permission rules separated by
-spaces. The team page lists them in plain words in the skill, and anyone can remove one there.
+spaces. The team page lists them in plain words in the skill, each with a switch: switching
+one off (it moves to `allowed-tools-off`, which Claude does not read) or on asks for an OK and
+saves it for the team straight away.
 
 ```
 allowed-tools: Read Bash(git log *) Bash(sh .agents/skills/weekly-report/scripts/build.py *) mcp__Gmail__create_draft
