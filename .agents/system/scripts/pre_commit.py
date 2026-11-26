@@ -4,8 +4,8 @@
 1. Regenerate .claude/ and .codex/ from the staged .agents/ files and add them to the commit.
 2. Block private artifacts (artifacts/private/, artefactos/privado/).
 3. Block likely secrets in staged files.
-4. Check every staged skill has a valid SKILL.md (name + description, name = folder, and a
-   flow diagram the team page draws).
+4. Check every staged skill has a valid SKILL.md (name + description, name = folder, a
+   flow diagram the team page draws, and only narrow permissions in allowed-tools).
 5. Strictly check what programs read: permissions, team settings, brand, team rules and hooks.
 6. Self-test the guard hook: a broken guard is never saved.
 
@@ -72,6 +72,22 @@ def front_matter(text):
     return fields
 
 
+def load_skill_permissions():
+    # Run with -I, so this folder is not importable by name: load it from its path.
+    import importlib.util
+    spec = importlib.util.spec_from_file_location("skill_permissions", Path(__file__).with_name("skill_permissions.py"))
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
+
+
+SKILL_PERMS = load_skill_permissions()
+
+
+def skill_rules(skill_md):
+    return SKILL_PERMS.read_rules(skill_md.read_text(encoding="utf-8"))[0]
+
+
 FLOWCHART = re.compile(r"^```mermaid[ \t]*\n\s*(?:flowchart|graph)\b", re.M)
 
 
@@ -88,6 +104,10 @@ def check_skills(files):
             problems.append(f"The skill '{name}' needs a name and a description at the top of SKILL.md.")
         elif fields["name"] != name:
             problems.append(f"The skill folder '{name}' and its name '{fields['name']}' must be the same.")
+        for rule in skill_rules(skill_md):
+            why = SKILL_PERMS.problem(rule)
+            if why:
+                problems.append(f"The skill '{name}' asks for a permission it cannot have: {why}")
         if not FLOWCHART.search(skill_md.read_text(encoding="utf-8")):
             problems.append(f"The skill '{name}' needs its flow diagram (a Mermaid flowchart under '## Flow', "
                             "right after the title). Ask the AI to add it; it is explained in the skills rule.")

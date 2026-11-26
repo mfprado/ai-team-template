@@ -77,6 +77,32 @@ flowchart TD
 - **Tools it uses are listed.** Name the connectors (MCP) and commands the skill needs at the
   end of `SKILL.md` under `## Tools`, so permissions can be checked.
 
+## The skill's own permissions
+
+What a skill may do **without asking**, while it runs, goes in its front matter as
+`allowed-tools` (Claude Code; Codex ignores it): one line of permission rules separated by
+spaces. The team page lists them in plain words in the skill, and anyone can remove one there.
+
+```
+allowed-tools: Read Bash(git log *) Bash(sh .agents/skills/weekly-report/scripts/build.py *) mcp__Gmail__create_draft
+```
+
+- Only what the skill does often and is safe to do without a question: reading, its own
+  scripts, drafts. Everything else keeps asking.
+- **Narrow:** the exact command (`Bash(git log *)`), folder (`Edit(artifacts/**)`) or connector
+  action (`mcp__Gmail__create_draft`). Never a whole tool such as `Bash`, `Write` or `Edit`.
+- They never override the general permissions (`.agents/permissions.json`): what is blocked for
+  the folder stays blocked.
+- Change them with the script, not by hand. Adding or widening one is a sensitive change
+  (`.agents/rules/changes.md`): explain it and ask first.
+
+  ```
+  sh .agents/system/bin/py -I .agents/system/scripts/skill_permissions.py add --skill <name> --rule "<rule>"
+  sh .agents/system/bin/py -I .agents/system/scripts/skill_permissions.py remove --skill <name> --rule "<rule>"
+  ```
+
+  The team checks refuse a skill whose permissions are too broad or not valid rules.
+
 ## After changing a skill
 
 Run `sh .agents/system/bin/py .agents/system/scripts/sync.py` so Claude Code and Codex both see the change.

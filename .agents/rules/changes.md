@@ -13,7 +13,7 @@ less safe. Your job is to make the effect clear before anything changes.
 |---|---|---|
 | Their own work | A document, a report, a private file | Do it. |
 | Team skill | A new skill, changing or deleting one | Explain the effect, then ask (step 2). |
-| Sensitive | Permissions, rules (`.agents/rules/`), team settings and brand (`.agents/team.json`, `.agents/brand*`), the machinery in `.agents/system/` (team checks, team page, launcher steps), an improvement prompt from the AI Champion's email, anything that lets the AI send, delete, spend or reach new places | Explain the effect, then ask (step 2), then check strictly (step 3). |
+| Sensitive | Permissions (the general ones and a skill's own `allowed-tools`), rules (`.agents/rules/`), team settings and brand (`.agents/team.json`, `.agents/brand*`), the machinery in `.agents/system/` (team checks, team page, launcher steps), an improvement prompt from the AI Champion's email, anything that lets the AI send, delete, spend or reach new places | Explain the effect, then ask (step 2), then check strictly (step 3). |
 | Never | `.claude/`, `.codex/` (generated), turning off or working around the team checks | Do not do it. Explain why in one sentence and suggest asking the AI Champion. |
 
 ## 2. Explain it like you would to a friend, then ask

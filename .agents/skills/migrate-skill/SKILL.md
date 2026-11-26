@@ -1,6 +1,7 @@
 ---
 name: migrate-skill
 description: Bring an automation you already use (a personal skill, a script, saved instructions from a Claude Project or ChatGPT GPT, a macro or a description) into the team folder as a skill everyone on the team can use. Use when someone says "migrate my skill", "bring this automation to the team", "add this to the team", or pastes or attaches an existing skill, script or set of instructions to share.
+allowed-tools: Read Bash(sh .agents/system/bin/py .agents/system/scripts/sync.py) Bash(sh .agents/system/bin/py .agents/system/scripts/find_logo.py *)
 ---
 
 # Migrate a skill to the team
@@ -82,6 +83,9 @@ Compare the tools the skill needs with `.agents/permissions.json`.
 - If the skill needs something that is blocked, explain it in plain words and propose a
   change. Never edit `permissions.json` without the person's agreement.
 - If the skill sends messages, change it to prepare drafts instead.
+- Propose the skill's own permissions: what it may do without asking while it runs (reading,
+  its own scripts, drafts), as narrow rules (`.agents/rules/skills.md`). Explain each in plain
+  words, and add the ones the person agrees to with `skill_permissions.py`.
 
 ## 5. Sync and hand over
 
@@ -95,5 +99,5 @@ Compare the tools the skill needs with `.agents/permissions.json`.
 
 ## Tools
 
-- Shell: `sh .agents/system/bin/py .agents/system/scripts/sync.py`, `sh .agents/system/bin/py .agents/system/scripts/find_logo.py` (logo search on the internet)
+- Shell: `sh .agents/system/bin/py .agents/system/scripts/sync.py`, `sh .agents/system/bin/py .agents/system/scripts/find_logo.py` (logo search on the internet), `sh .agents/system/bin/py -I .agents/system/scripts/skill_permissions.py` (the skill's own permissions)
 - File read and write inside `.agents/`

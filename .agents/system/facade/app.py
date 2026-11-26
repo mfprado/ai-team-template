@@ -30,7 +30,7 @@ T = {
         "title": "{team} AI workspace", "champion": "AI Champion: {name}",
         "sync": "Get the team's latest", "synced": "Up to date with the team.",
         "sync_fail": "Could not get the team's latest changes right now.",
-        "tab_skills": "Skills", "tab_perms": "Permissions", "tab_artifacts": "Artifacts", "tab_history": "History",
+        "tab_skills": "Skills", "tab_perms": "General permissions", "tab_artifacts": "Artifacts", "tab_history": "History",
         "tab_ideas": "Ideas", "ideas_intro": "Ideas for the team's workspace. Anyone can add one or update its status.",
         "no_ideas": "No ideas yet.", "new_idea": "Your idea", "add_idea": "Add idea",
         "idea_summary": "New idea: {text}", "set_status": "Status", "save_status": "Save status",
@@ -53,7 +53,13 @@ T = {
         "ask_flow": "Add the flow diagram to the {name} skill.",
         "details": "See the step-by-step instructions the AI follows",
         "details_intro": "This is what the AI reads when you ask for this. You do not need it to use the skill.",
-        "perms_intro": "What the AI is not allowed to do in this folder. Switch a rule off only if the team agrees.",
+        "perms_intro": "What the AI is not allowed to do in this folder, in every conversation and every skill. Switch a rule off only if the team agrees. What each skill may do without asking is in that skill.",
+        "skill_perms": "Can do without asking, while this skill runs (only in Claude; the general permissions still apply):",
+        "no_skill_perms": "Nothing: it asks before every action.",
+        "remove_perm": "Remove", "remove_perm_confirm": "From now on, **{skill}** will ask before: {perm}. For the whole team. Remove it?",
+        "remove_perm_summary": "Skill {skill}: asks again before {perm}",
+        "add_perm": "To let it do something else without asking, paste this in Claude or Codex:",
+        "ask_perm": "Let the {name} skill <what it should do> without asking.",
         "blocked": "Blocked", "asks": "Asks first", "changed": "You changed:", "on": "on", "off": "off",
         "apply": "Apply for the whole team", "applying": "Sharing the change...",
         "note": "Short message you can send to {name}:",
@@ -76,7 +82,7 @@ T = {
         "title": "Espacio de IA de {team}", "champion": "IA Champion: {name}",
         "sync": "Traer lo último del equipo", "synced": "Al día con el equipo.",
         "sync_fail": "No se pudieron traer los últimos cambios del equipo ahora.",
-        "tab_skills": "Skills", "tab_perms": "Permisos", "tab_artifacts": "Artefactos", "tab_history": "Historial",
+        "tab_skills": "Skills", "tab_perms": "Permisos generales", "tab_artifacts": "Artefactos", "tab_history": "Historial",
         "tab_ideas": "Ideas", "ideas_intro": "Ideas para el espacio del equipo. Cualquiera puede sumar una o cambiar su estado.",
         "no_ideas": "Todavía no hay ideas.", "new_idea": "Tu idea", "add_idea": "Agregar idea",
         "idea_summary": "Nueva idea: {text}", "set_status": "Estado", "save_status": "Guardar estado",
@@ -99,7 +105,13 @@ T = {
         "ask_flow": "Agregá el diagrama de flujo a la skill {name}.",
         "details": "Ver las instrucciones paso a paso que sigue la IA",
         "details_intro": "Esto es lo que lee la IA cuando le pedís esto. No lo necesitás para usar la skill.",
-        "perms_intro": "Lo que la IA no puede hacer en esta carpeta. Apagá una regla solo si el equipo está de acuerdo.",
+        "perms_intro": "Lo que la IA no puede hacer en esta carpeta, en cualquier conversación y en cualquier skill. Apagá una regla solo si el equipo está de acuerdo. Lo que cada skill puede hacer sin preguntar está en esa skill.",
+        "skill_perms": "Puede hacer sin preguntar, mientras corre esta skill (solo en Claude; los permisos generales siguen valiendo):",
+        "no_skill_perms": "Nada: pregunta antes de cada acción.",
+        "remove_perm": "Quitar", "remove_perm_confirm": "Desde ahora, **{skill}** va a preguntar antes de: {perm}. Para todo el equipo. ¿Lo quitás?",
+        "remove_perm_summary": "Skill {skill}: vuelve a preguntar antes de {perm}",
+        "add_perm": "Para que haga otra cosa sin preguntar, pegá esto en Claude o Codex:",
+        "ask_perm": "Dejá que la skill {name} <qué debería hacer> sin preguntar.",
         "blocked": "Bloqueado", "asks": "Pide confirmación", "changed": "Cambiaste:", "on": "activada", "off": "desactivada",
         "apply": "Aplicar para todo el equipo", "applying": "Compartiendo el cambio...",
         "note": "Mensaje corto que podés mandarle a {name}:",
@@ -332,6 +344,46 @@ def confirm_go_back(name, title, commit, date):
         st.rerun()
 
 
+def skill_permissions(name):
+    """What the skill may do without asking (skill_permissions.py), in plain words."""
+    listed = run(sys.executable, "-I", str(CORE / "scripts/skill_permissions.py"), "list", "--skill", name,
+                 "--language", team.get("language", "en"))
+    try:
+        return json.loads(listed.stdout or "[]")
+    except ValueError:
+        return []
+
+
+@st.dialog(" ")
+def confirm_remove_permission(name, title, perm):
+    st.write(t["remove_perm_confirm"].format(skill=title, perm=perm["plain"]))
+    yes, no = st.columns(2)
+    if yes.button(t["remove_perm"], type="primary"):
+        with st.spinner(t["applying"]):
+            run(sys.executable, "-I", str(CORE / "scripts/skill_permissions.py"), "remove", "--skill", name,
+                "--rule", perm["rule"])
+            run(sys.executable, "-I", str(CORE / "scripts/sync.py"))
+            share(t["remove_perm_summary"].format(skill=title, perm=perm["plain"]), [f".agents/skills/{name}"])
+        if st.button(t["close"]):
+            st.rerun()
+    elif no.button(t["share_no"]):
+        st.rerun()
+
+
+def show_skill_permissions(name, title):
+    st.caption(t["skill_perms"])
+    perms = skill_permissions(name)
+    if not perms:
+        st.write(t["no_skill_perms"])
+    for i, perm in enumerate(perms):
+        left, right = st.columns([5, 1])
+        left.markdown(f"{perm['plain']}  ·  `{perm['rule']}`")
+        if right.button(t["remove_perm"], key=f"perm-{name}-{i}"):
+            confirm_remove_permission(name, title, perm)
+    st.caption(t["add_perm"])
+    st.code(t["ask_perm"].format(name=name), language="text")
+
+
 def skill_versions(name, title):
     log = git("log", "--format=%H\x1f%an\x1f%at\x1f%s", "--", f".agents/skills/{name}").stdout.splitlines()
     versions = [l.split("\x1f") for l in log if l.count("\x1f") == 3]
@@ -379,6 +431,7 @@ if section == t["tab_skills"]:
                 show_flow(flow)
             st.caption(t["how_to_ask"])
             st.code(ask or t["default_ask"].format(name=name), language="text")
+            show_skill_permissions(name, title)
             if not flow:
                 st.caption(t["no_flow"])
                 st.code(t["ask_flow"].format(name=name), language="text")

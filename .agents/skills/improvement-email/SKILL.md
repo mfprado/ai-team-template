@@ -1,6 +1,7 @@
 ---
 name: improvement-email
 description: For the template's maintainers only. Suggest improvements to the AI Champions - write the plain-words entry with one prompt per improvement in CHANGES.md and prepare one email draft per AI Champion from the AI Champions sheet. Use when a maintainer says "send the improvements", "announce the new improvements", "email the champions".
+allowed-tools: Read Bash(git log *)
 ---
 
 # Email improvements to the AI Champions

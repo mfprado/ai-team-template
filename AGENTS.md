@@ -14,15 +14,14 @@ Instructions for any AI agent (Codex, Claude Code, others) working in this team 
 
 ## What lives where
 
-| Path | What it is | Who edits it |
-|---|---|---|
 Everything in this folder belongs to the team.
 
 | Path | What it is | Who edits it |
 |---|---|---|
 | `.agents/skills/<skill>/` | The team's skills (`SKILL.md` + optional `scripts/`) | You, when asked |
 | `.agents/rules/` | Rules for the AI, below | You, when asked (sensitive: see `changes.md`) |
-| `.agents/permissions.json` | What the AI may and may not do | You, only after the person agrees to the change |
+| `.agents/permissions.json` | What the AI may and may not do in the whole folder (general permissions) | You, only after the person agrees to the change |
+| A skill's `allowed-tools` | What that skill may do without asking while it runs | You, with `skill_permissions.py`, only after the person agrees |
 | `.agents/team.json`, `.agents/brand.json`, `.agents/brand/` | Team settings and company brand | You, when asked (sensitive) |
 | `.agents/system/` | The machinery: team checks, team page, launcher steps, scripts | Only when the person clearly asks, after explaining the effect (sensitive) |
 | `.claude/`, `.codex/` | **Generated** from `.agents/` on every save | Never edit. Change `.agents/` instead |
