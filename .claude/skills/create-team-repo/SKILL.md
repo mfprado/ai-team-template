@@ -25,6 +25,10 @@ flowchart TD
     M -- Yes --> N[Apply colours and logo, after their OK] --> O
     M -- No --> O[Offer to bring their first automation]
     O --> P([Clean up and tell them where everything is]):::done
+    GH@{ icon: "logos:github-icon", label: "GitHub" }
+    F -.- GH
+    G -.- GH
+    K -.- GH
 ```
 
 You are helping an **AI Champion** create their team's shared AI workspace, usually during

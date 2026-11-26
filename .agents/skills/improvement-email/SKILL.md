@@ -20,6 +20,13 @@ flowchart TD
     G --> H{{Did the maintainer send them?}}
     H -- Not yet --> I([Stop: drafts are ready to review]):::done
     H -- Yes --> J([Note the date in the AI Champions sheet]):::done
+    GM@{ icon: "thesvg-color:gmail", label: "Gmail" }
+    GS@{ icon: "thesvg-color:google-sheets", label: "Google Sheets" }
+    GH@{ icon: "logos:github-icon", label: "GitHub" }
+    F -.- GH
+    G -.- GM
+    G -.- GS
+    J -.- GS
 ```
 
 For **maintainers of this template**, never for AI Champions. Everything you write here is for

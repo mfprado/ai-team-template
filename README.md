@@ -33,8 +33,8 @@ Each team's folder belongs to the team. This template never changes it.
 
 Only their own work: the icon that opens the workspace, this README, and their documents and artifacts folders. Everything technical lives in hidden folders.
 
-The team page (opened by the icon) shows the team's skills, each with a flow diagram of its steps
-and checks, a request to paste and earlier versions to go back to, the artifacts, ideas, permissions and the history of changes.
+The team page (opened by the icon) shows the team's skills, each with a flow diagram of its steps,
+checks and the tools it uses (with their logos), a request to paste and earlier versions to go back to, the artifacts, ideas, permissions and the history of changes.
 
 ## How it works
 

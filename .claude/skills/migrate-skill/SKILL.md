@@ -19,6 +19,10 @@ flowchart TD
     H -- Yes --> I[Explain and propose a permission change] --> J
     H -- No --> J[Make it visible to Claude and Codex]
     J --> K([Tell them how to ask for it and to test it as a teammate]):::done
+    CL@{ icon: "logos:claude-icon", label: "Claude" }
+    CX@{ icon: "logos:codex", label: "Codex" }
+    J -.- CL
+    J -.- CX
 ```
 
 Anyone on the team may have automations that live only on their own computer. This skill turns
@@ -44,7 +48,8 @@ Ask, in one message:
 - Pick a short, lowercase, hyphenated name and confirm it with the person.
 - Create `.agents/skills/<name>/SKILL.md` with `name` and `description` front matter.
 - Right after the title, add the `## Flow` diagram: the steps as boxes and every check or
-  question to the person as a hexagon (`.agents/rules/skills.md`). The team page shows it first.
+  question to the person as a hexagon, and the tools it uses joined to their steps, with their
+  logos (`.agents/rules/skills.md`). The team page shows it first.
 - Move fixed steps into `scripts/` (deterministic first). Keep reasoning steps as instructions.
 - Never write into `.claude/` or `.codex/`.
 
@@ -79,5 +84,5 @@ Compare the tools the skill needs with `.agents/permissions.json`.
 
 ## Tools
 
-- Shell: `sh .agents/system/bin/py .agents/system/scripts/sync.py`
+- Shell: `sh .agents/system/bin/py .agents/system/scripts/sync.py`, `sh .agents/system/bin/py .agents/system/scripts/find_logo.py` (logo search on the internet)
 - File read and write inside `.agents/`

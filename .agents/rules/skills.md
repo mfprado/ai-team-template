@@ -28,16 +28,30 @@ flowchart TD
     E --> F{{Does the person approve it?}}
     F -- No --> G[Adjust what they point out] --> F
     F -- Yes --> H([Report saved in artifacts]):::done
+    GS@{ icon: "thesvg-color:google-sheets", label: "Google Sheets" }
+    DB["Sales database"]:::tool
+    B -.- GS
+    B -.- DB
 ```
 ````
 
 - **Steps are boxes** `[...]`; **checks and questions to the person are hexagons** `{{...?}}`
   (the team page colours them so they stand out),
   with labelled `Yes` / `No` arrows. Start and end are rounded `([...])` with `:::done`.
-- Top to bottom (`flowchart TD`), 5 to 12 shapes. One shape per numbered step or check in the
+- Top to bottom (`flowchart TD`), 5 to 12 steps and checks. One shape per numbered step or check in the
   instructions, in the same order; merge small steps rather than drawing every detail.
 - Short labels in the team's language and in plain words: what happens, not how. No file
-  paths, commands, script names or tool names.
+  paths, commands or script names in the steps.
+- **Tools the skill works with**, after the steps, each on its own line: the apps, connectors
+  and services a teammate would recognise (Gmail, Google Sheets, Excel, Slack, GitHub, the
+  company's CRM), not commands. Draw each one once and join it with a dotted line `-.-` to
+  every step that uses it. The team page shows them as logos: in a row above the diagram and
+  on each of those steps.
+  - With a logo: `GM@{ icon: "<logo>", label: "Gmail" }`. Get `<logo>` from
+    `sh .agents/system/bin/py .agents/system/scripts/find_logo.py "Gmail" "Google Sheets"`;
+    never guess it.
+  - Without one (the script returns `null`, or an in-house tool): `DB["Sales database"]:::tool`.
+    The page shows its initial instead.
 - Put a label in quotes when it has brackets, parentheses or other symbols: `B["Save (draft)"]`.
 - **Keep it true.** Whenever the steps or checks change, update the diagram in the same change.
   The team checks refuse to save a skill without it.

@@ -170,61 +170,184 @@ def skill_flow(body):
         return None, body
     return m.group(1).strip(), body[:m.start()] + body[m.end():]
 
+# Tools in a flow diagram, each on its own line, joined to the steps that use them:
+#   GM@{ icon: "logos:google-gmail", label: "Gmail" }      a tool with a logo
+#   DB["Sales database"]:::tool                            a tool without one
+#   B -.- GM                                               step B uses Gmail
+TOOL_LOGO = r'^\s*(\w+)@\{[^}]*?icon:\s*"([\w-]+):([\w-]+)"[^}]*?label:\s*"([^"]*)"[^}]*\}\s*$'
+TOOL_PLAIN = r'^\s*(\w+)\["?([^"\]]+?)"?\]:::tool\s*$'
+TOOL_LINK = r'^\s*(\w+)\s*-\.-\s*(\w+)\s*$'
+
 
 def show_flow(diagram):
-    """Draw a mermaid flowchart in the team's colours: steps as boxes, checks as hexagons.
+    """Draw a skill's flow diagram in the team's colours.
 
-    Mermaid runs in the browser (loaded once from a CDN). The frame grows to fit the diagram;
-    if it cannot be drawn (offline, a typo), the diagram's text is shown instead.
+    Steps are boxes, checks are hexagons. The tools the skill uses are shown as a row of logos
+    above the diagram and as a small logo on each step that uses them (instead of the tool
+    shapes and dotted lines in SKILL.md, which other viewers still draw as written).
+    Mermaid runs in the browser (loaded from a CDN); only the logos this diagram names are
+    fetched (Iconify). A tool without a logo, or whose logo cannot load, shows its initial.
+    The frame grows to fit; if the diagram cannot be drawn (offline, a typo), its text is shown.
     """
     brand = load_json(ROOT / ".agents/brand.json", {})
     primary = brand.get("primary", "#4F6BED")
     text = brand.get("text", "#1F2937")
     background = brand.get("background", "#FFFFFF")
+    font = "serif" if brand.get("font") == "serif" else "sans-serif"
     config = {
         "startOnLoad": False, "securityLevel": "strict", "theme": "base",
-        "flowchart": {"useMaxWidth": False, "htmlLabels": True, "curve": "basis", "wrappingWidth": 170,
-                      "padding": 10, "nodeSpacing": 30, "rankSpacing": 32, "diagramPadding": 4},
+        "flowchart": {"useMaxWidth": False, "htmlLabels": True, "curve": "basis", "wrappingWidth": 200,
+                      "padding": 10, "nodeSpacing": 30, "rankSpacing": 32, "diagramPadding": 14},
         "themeVariables": {
-            "fontFamily": "serif" if brand.get("font") == "serif" else "sans-serif", "fontSize": "15px",
+            "fontFamily": font, "fontSize": "15px",
             "primaryColor": "#FFFFFF", "primaryBorderColor": primary, "primaryTextColor": "#1F2937",
             "lineColor": primary, "textColor": text, "edgeLabelBackground": background,
         },
         # Checks (hexagons) stand out from steps (boxes); start and end (rounded) are filled.
-        "themeCSS": (f".node polygon{{fill:#FFF4D6;stroke:#D9A400}}"
-                     f".node rect{{rx:8px;ry:8px}}"
+        "themeCSS": (".node polygon{fill:#FFF4D6;stroke:#D9A400}"
+                     ".node rect{rx:8px;ry:8px}"
                      f".node.done rect,.node.done circle{{fill:{primary};stroke:{primary}}}"
-                     f".node.done .nodeLabel{{color:#FFFFFF}}"),
+                     ".node.done .nodeLabel{color:#FFFFFF}"),
     }
-    html = f"""<div id="flow" style="text-align:center"></div>
-<pre id="raw" style="display:none;white-space:pre-wrap;font-size:13px;color:{text}"></pre>
-<script src="https://cdn.jsdelivr.net/npm/mermaid@10.9.1/dist/mermaid.min.js"></script>
+    html = f"""<style>
+body{{margin:0;font-family:{font};color:{text}}}
+#tools{{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin:2px 0 6px}}
+.chip{{display:flex;align-items:center;gap:6px;padding:3px 10px 3px 5px;border:1px solid #E5E7EB;
+  border-radius:999px;font-size:13px;background:#FFFFFF;color:#374151}}
+.chip svg,.chip .initial{{width:20px;height:20px}}
+.initial{{display:inline-flex;align-items:center;justify-content:center;border-radius:50%;
+  background:#E5E7EB;color:#374151;font-size:11px;font-weight:600}}
+</style>
+<div id="tools"></div>
+<div id="flow" style="text-align:center"></div>
+<pre id="raw" style="display:none;white-space:pre-wrap;font-size:13px"></pre>
+<script src="https://cdn.jsdelivr.net/npm/mermaid@11.4.1/dist/mermaid.min.js"></script>
 <script>
 const source = {json.dumps(diagram)};
+const TOOL_LOGO = new RegExp({json.dumps(TOOL_LOGO)});
+const TOOL_PLAIN = new RegExp({json.dumps(TOOL_PLAIN)});
+const TOOL_LINK = new RegExp({json.dumps(TOOL_LINK)});
+const SVGNS = "http://www.w3.org/2000/svg";
+
 function fit() {{
-  const h = Math.ceil(document.getElementById("flow").getBoundingClientRect().height
-                      + document.getElementById("raw").getBoundingClientRect().height) + 20;
-  try {{ window.frameElement.style.height = h + "px"; window.frameElement.height = h; }} catch (e) {{}}
-  window.parent.postMessage({{isStreamlitMessage: true, type: "streamlit:setFrameHeight", height: h}}, "*");
+  const h = Math.ceil(document.body.getBoundingClientRect().height) + 16;
+  try {{
+    // Streamlit gives the frame and its wrapper a fixed height: grow both.
+    window.frameElement.style.height = h + "px";
+    window.frameElement.parentElement.style.height = h + "px";
+  }} catch (e) {{}}
 }}
 window.addEventListener("resize", fit);
 function plain() {{
   const raw = document.getElementById("raw");
   raw.textContent = source; raw.style.display = "block"; fit();
 }}
-try {{
-  mermaid.initialize({json.dumps(config)});
-  mermaid.render("flow-svg", source).then(r => {{
+
+function splitTools(src) {{
+  // Take the tools and their dotted links out of the diagram: they become logos.
+  const tools = {{}}, uses = {{}}, rest = [];
+  const lines = src.split("\\n");
+  for (const line of lines) {{
+    let m = line.match(TOOL_LOGO);
+    if (m) {{ tools[m[1]] = {{label: m[4], set: m[2], name: m[3]}}; continue; }}
+    m = line.match(TOOL_PLAIN);
+    if (m) {{ tools[m[1]] = {{label: m[2]}}; continue; }}
+  }}
+  for (const line of lines) {{
+    if (TOOL_LOGO.test(line) || TOOL_PLAIN.test(line)) continue;
+    const m = line.match(TOOL_LINK);
+    if (m && (tools[m[1]] || tools[m[2]])) {{
+      const [step, tool] = tools[m[2]] ? [m[1], m[2]] : [m[2], m[1]];
+      (uses[step] ||= []).push(tool);
+      continue;
+    }}
+    rest.push(line);
+  }}
+  return {{tools, uses, diagram: rest.join("\\n")}};
+}}
+
+async function loadLogos(tools) {{
+  // One request per logo collection, for only the logos named here.
+  const wanted = {{}};
+  for (const t of Object.values(tools)) if (t.set) (wanted[t.set] ||= new Set()).add(t.name);
+  await Promise.all(Object.entries(wanted).map(async ([set, names]) => {{
+    try {{
+      const r = await fetch(`https://api.iconify.design/${{set}}.json?icons=${{[...names].join(",")}}`);
+      if (!r.ok) return;
+      const pack = await r.json();
+      for (const t of Object.values(tools)) {{
+        if (t.set !== set) continue;
+        let name = t.name, extra = {{}};
+        while (!(pack.icons || {{}})[name] && (pack.aliases || {{}})[name]) {{
+          extra = {{...pack.aliases[name], ...extra}}; name = pack.aliases[name].parent;
+        }}
+        const icon = (pack.icons || {{}})[name];
+        if (icon) t.logo = {{body: icon.body, w: extra.width || icon.width || pack.width || 16,
+                            h: extra.height || icon.height || pack.height || 16}};
+      }}
+    }} catch (e) {{}}
+  }}));
+}}
+
+function logo(t, size) {{
+  // An inline <svg> with the tool's logo, or a grey circle with its initial.
+  const svg = document.createElementNS(SVGNS, "svg");
+  svg.setAttribute("width", size); svg.setAttribute("height", size);
+  if (t.logo) {{
+    svg.setAttribute("viewBox", `0 0 ${{t.logo.w}} ${{t.logo.h}}`);
+    svg.innerHTML = t.logo.body;
+  }} else {{
+    svg.setAttribute("viewBox", "0 0 20 20");
+    svg.innerHTML = `<circle cx="10" cy="10" r="10" fill="#E5E7EB"/><text x="10" y="14" text-anchor="middle"
+      font-size="11" font-weight="600" fill="#374151" font-family="sans-serif"></text>`;
+    svg.querySelector("text").textContent = t.label.trim().charAt(0).toUpperCase();
+  }}
+  return svg;
+}}
+
+function badge(svg, layer, step, tools) {{
+  // Small logos on the top-right corner of the step that uses them. They go in their own
+  // layer, outside the step: Mermaid's styles for steps would repaint the logos.
+  const node = svg.querySelector(`g.node[id^="flowchart-${{step}}-"]`);
+  if (!node) return;
+  const box = node.getBBox(), size = 22, gap = 3;
+  const m = layer.getScreenCTM().inverse().multiply(node.getScreenCTM());
+  const corner = new DOMPoint(box.x + box.width, box.y).matrixTransform(m);
+  tools.forEach((t, i) => {{
+    const g = document.createElementNS(SVGNS, "g");
+    const x = corner.x - (i + 1) * (size + gap) + 6, y = corner.y - size / 2 - 2;
+    g.innerHTML = `<circle cx="${{x + size / 2}}" cy="${{y + size / 2}}" r="${{size / 2 + 2}}" fill="#FFFFFF" stroke="#E5E7EB"/>`;
+    const icon = logo(t, size - 6);
+    icon.setAttribute("x", x + 3); icon.setAttribute("y", y + 3);
+    const title = document.createElementNS(SVGNS, "title"); title.textContent = t.label;
+    g.appendChild(title); g.appendChild(icon); layer.appendChild(g);
+  }});
+}}
+
+(async () => {{
+  try {{
+    const {{tools, uses, diagram}} = splitTools(source);
+    await loadLogos(tools);
+    const row = document.getElementById("tools");
+    for (const t of Object.values(tools)) {{
+      const chip = document.createElement("span"); chip.className = "chip";
+      chip.appendChild(logo(t, 20)); chip.appendChild(document.createTextNode(t.label));
+      row.appendChild(chip);
+    }}
+    mermaid.initialize({json.dumps(config)});
+    const r = await mermaid.render("flow-svg", diagram);
     document.getElementById("flow").innerHTML = r.svg;
     const svg = document.querySelector("#flow svg");
-    if (svg) {{ svg.style.maxWidth = "100%"; svg.style.height = "auto"; }}
+    const layer = document.createElementNS(SVGNS, "g");
+    svg.appendChild(layer);
+    for (const [step, ids] of Object.entries(uses)) badge(svg, layer, step, ids.map(id => tools[id]));
+    svg.style.maxWidth = "100%"; svg.style.height = "auto";
     fit();
-  }}).catch(plain);
-}} catch (e) {{ plain(); }}
+  }} catch (e) {{ plain(); }}
+}})();
 </script>"""
     # A first guess at the height; the diagram then sizes its frame to fit.
     components.html(html, height=min(900, 60 * diagram.count("\n")))
-
 
 def ago(ts, t):
     secs = max(0, int(datetime.datetime.now().timestamp()) - ts)
