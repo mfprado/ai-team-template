@@ -17,6 +17,7 @@ commit in it is made by the AI Champion. Nothing in it points back to the templa
 What it does (deterministic, so every team repository starts the same way):
 - copies every file the template tracks, except the template-only skills (TEMPLATE_ONLY)
 - swaps the team skills that have a version in the team's language (LOCALISED_SKILLS)
+- writes the permissions' reasons in the team's language (team-skills/<language>/permission-reasons.json)
 - writes .agents/team.json (company, team, language, launcher name, AI Champion)
 - creates the visible folders in the team's language (documents/ and artifacts/, or
   documentos/ and artefactos/)
@@ -45,8 +46,8 @@ LOCALISED_SKILLS = {"migrate-skill": {"es": "migrar-skill"}}
 TEAM_SKILLS = TEMPLATE / ".agents/skills/create-team-repo/team-skills"
 VISIBLE_DIRS = {"en": ["documents", "artifacts"], "es": ["documentos", "artefactos"]}
 IDEAS = {
-    "en": "# Team ideas\n\nIdeas for the team's AI workspace. Anyone can add one; the AI Champion updates its status.\n\n",
-    "es": "# Ideas del equipo\n\nIdeas para el espacio de IA del equipo. Cualquiera puede sumar una; el IA Champion actualiza su estado.\n\n",
+    "en": "# Team ideas\n\nIdeas for the team's AI workspace. Anyone can add one or update its status.\n\n",
+    "es": "# Ideas del equipo\n\nIdeas para el espacio de IA del equipo. Cualquiera puede sumar una o cambiar su estado.\n\n",
 }
 
 README = {
@@ -137,6 +138,19 @@ def copy_skeleton(target, template_only, language):
     return copied
 
 
+def localise_permissions(target, language):
+    """The reasons people read on the team page and when the AI is stopped, in the team's language."""
+    reasons = TEAM_SKILLS / language / "permission-reasons.json"
+    if not reasons.is_file():
+        return
+    translated = json.loads(reasons.read_text(encoding="utf-8"))
+    path = target / ".agents/permissions.json"
+    permissions = json.loads(path.read_text(encoding="utf-8"))
+    for rule in permissions.get("rules", []):
+        rule["reason"] = translated.get(rule.get("reason"), rule.get("reason"))
+    path.write_text(json.dumps(permissions, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
+
+
 def gh_username():
     try:
         out = subprocess.run(["gh", "api", "user", "--jq", ".login"], capture_output=True, text=True, timeout=20)
@@ -173,6 +187,8 @@ def main():
         "company": args.company, "team": args.team, "language": args.language, "launcher": launcher,
         "champion": {"name": args.champion_name, "email": args.champion_email, "github": github},
     }, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
+
+    localise_permissions(target, args.language)
 
     for d in VISIBLE_DIRS[args.language]:
         (target / d).mkdir(exist_ok=True)

@@ -1,0 +1,21 @@
+{
+  "Force-pushing rewrites shared history.": "Forzar la subida reescribe el historial compartido.",
+  "Discards work that cannot be recovered.": "Descarta trabajo que no se puede recuperar.",
+  "Rewrites history.": "Reescribe el historial.",
+  "Secrets file.": "Archivo con secretos.",
+  "Private key.": "Clave privada.",
+  "Messages are drafted, never sent by the AI.": "La IA prepara borradores de mensajes, nunca los envía.",
+  "Scheduling a message is sending it.": "Programar un mensaje es enviarlo.",
+  "Sending a draft is sending a message.": "Enviar un borrador es enviar un mensaje.",
+  "Changes what the AI is allowed to do. Approve only if you agreed to this change.": "Cambia lo que la IA tiene permitido hacer. Aprobalo solo si estás de acuerdo con el cambio.",
+  "Shared system files, identical in every team repository.": "Archivos del sistema, iguales en la carpeta de cada equipo.",
+  "Generated tool files: change .agents/ instead.": "Archivos generados para cada herramienta: se cambia .agents/ en su lugar.",
+  "Instructions for every agent in this repository.": "Instrucciones para todos los asistentes de esta carpeta.",
+  "A Python environment in the folder could change how the team checks run.": "Un entorno de Python en la carpeta podría cambiar cómo corren los controles del equipo.",
+  "Pins which Python runs the team checks.": "Fija qué Python corre los controles del equipo.",
+  "Creates a Python environment in the folder, which could change how the team checks run.": "Crea un entorno de Python en la carpeta, que podría cambiar cómo corren los controles del equipo.",
+  "Skips the team checks.": "Saltea los controles del equipo.",
+  "Turns off the team checks.": "Apaga los controles del equipo.",
+  "Changes whose name the team's changes are saved under.": "Cambia a nombre de quién se guardan los cambios del equipo.",
+  "Team settings, including who the AI Champion is.": "Configuración del equipo, incluido quién es el IA Champion."
+}

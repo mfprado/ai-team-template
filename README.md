@@ -39,6 +39,10 @@ in `.agents/skills/`; the others live in `.agents/skills/create-team-repo/team-s
 and replace it when a team is created (`LOCALISED_SKILLS` in `configure.py`). Today that is
 `migrate-skill` / `migrar-skill`. **Change both versions together.**
 
+The permissions' reasons (what people read on the team page and when the AI is stopped) are
+translated the same way: `team-skills/es/permission-reasons.json`. A new rule in
+`.agents/permissions.json` needs its Spanish reason there too.
+
 ## Improvements: suggested by email, applied by each team
 
 Each team's folder belongs to the team. This template never changes it.
