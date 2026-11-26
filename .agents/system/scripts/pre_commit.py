@@ -4,7 +4,8 @@
 1. Regenerate .claude/ and .codex/ from the staged .agents/ files and add them to the commit.
 2. Block private artifacts (artifacts/private/, artefactos/privado/).
 3. Block likely secrets in staged files.
-4. Check every staged skill has a valid SKILL.md (name + description, name = folder).
+4. Check every staged skill has a valid SKILL.md (name + description, name = folder, and a
+   flow diagram the team page draws).
 5. Strictly check what programs read: permissions, team settings, brand, team rules and hooks.
 6. Self-test the guard hook: a broken guard is never saved.
 
@@ -71,6 +72,9 @@ def front_matter(text):
     return fields
 
 
+FLOWCHART = re.compile(r"^```mermaid[ \t]*\n\s*(?:flowchart|graph)\b", re.M)
+
+
 def check_skills(files):
     problems = []
     skills = {Path(f).parts[2] for f in files if f.startswith(".agents/skills/") and len(Path(f).parts) > 3}
@@ -84,6 +88,9 @@ def check_skills(files):
             problems.append(f"The skill '{name}' needs a name and a description at the top of SKILL.md.")
         elif fields["name"] != name:
             problems.append(f"The skill folder '{name}' and its name '{fields['name']}' must be the same.")
+        if not FLOWCHART.search(skill_md.read_text(encoding="utf-8")):
+            problems.append(f"The skill '{name}' needs its flow diagram (a Mermaid flowchart under '## Flow', "
+                            "right after the title). Ask the AI to add it; it is explained in the skills rule.")
     return problems
 
 

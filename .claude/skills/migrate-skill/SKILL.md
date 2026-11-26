@@ -5,6 +5,22 @@ description: Bring an automation you already use (a personal skill, a script, sa
 
 # Migrate a skill to the team
 
+## Flow
+
+```mermaid
+flowchart TD
+    A([Someone shares an automation they use]):::done --> B{{Is anything missing?}}
+    B -- Yes --> C[Ask for the missing parts] --> B
+    B -- No --> D[Ask what it does, who uses it and what a good result looks like]
+    D --> E[Create the team skill, with its flow diagram]
+    E --> F{{Does it work for any teammate?}}
+    F -- No --> G[Remove personal paths, passwords and hidden context] --> F
+    F -- Yes --> H{{Does it need something the team blocks?}}
+    H -- Yes --> I[Explain and propose a permission change] --> J
+    H -- No --> J[Make it visible to Claude and Codex]
+    J --> K([Tell them how to ask for it and to test it as a teammate]):::done
+```
+
 Anyone on the team may have automations that live only on their own computer. This skill turns
 one of them into a team skill that works for anyone, without that person's setup, memory or
 credentials.
@@ -27,6 +43,8 @@ Ask, in one message:
 
 - Pick a short, lowercase, hyphenated name and confirm it with the person.
 - Create `.agents/skills/<name>/SKILL.md` with `name` and `description` front matter.
+- Right after the title, add the `## Flow` diagram: the steps as boxes and every check or
+  question to the person as a hexagon (`.agents/rules/skills.md`). The team page shows it first.
 - Move fixed steps into `scripts/` (deterministic first). Keep reasoning steps as instructions.
 - Never write into `.claude/` or `.codex/`.
 

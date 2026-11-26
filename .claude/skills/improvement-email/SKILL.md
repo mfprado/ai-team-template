@@ -5,6 +5,23 @@ description: For the template's maintainers only. Suggest improvements to the AI
 
 # Email improvements to the AI Champions
 
+## Flow
+
+```mermaid
+flowchart TD
+    A([A maintainer asks to send the improvements]):::done --> B[List what changed for teams since the last email]
+    B --> C{{Does the maintainer confirm the list?}}
+    C -- No --> B
+    C -- Yes --> D[Write one prompt per improvement]
+    D --> E{{Does the maintainer approve the entry?}}
+    E -- No --> D
+    E -- Yes --> F[Save the entry in the change log]
+    F --> G[Prepare one email draft per AI Champion]
+    G --> H{{Did the maintainer send them?}}
+    H -- Not yet --> I([Stop: drafts are ready to review]):::done
+    H -- Yes --> J([Note the date in the AI Champions sheet]):::done
+```
+
 For **maintainers of this template**, never for AI Champions. Everything you write here is for
 **non-technical** people.
 

@@ -47,6 +47,8 @@ T = {
         "menu": "Menu",
         "how_to_ask": "To use it, open Claude or Codex in this folder and paste this (or say it in your own words):",
         "default_ask": "Use the {name} skill.",
+        "no_flow": "No diagram of the steps yet. To add one, paste this in Claude or Codex:",
+        "ask_flow": "Add the flow diagram to the {name} skill.",
         "details": "See the step-by-step instructions the AI follows",
         "details_intro": "This is what the AI reads when you ask for this. You do not need it to use the skill.",
         "perms_intro": "What the AI is not allowed to do in this folder. Switch a rule off only if the team agrees.",
@@ -91,6 +93,8 @@ T = {
         "menu": "Menú",
         "how_to_ask": "Para usarla, abrí Claude o Codex en esta carpeta y pegá esto (o pedilo con tus palabras):",
         "default_ask": "Usá la skill {name}.",
+        "no_flow": "Todavía no tiene el diagrama de los pasos. Para agregarlo, pegá esto en Claude o Codex:",
+        "ask_flow": "Agregá el diagrama de flujo a la skill {name}.",
         "details": "Ver las instrucciones paso a paso que sigue la IA",
         "details_intro": "Esto es lo que lee la IA cuando le pedís esto. No lo necesitás para usar la skill.",
         "perms_intro": "Lo que la IA no puede hacer en esta carpeta. Apagá una regla solo si el equipo está de acuerdo.",
@@ -154,6 +158,72 @@ def skill_card(name, description):
     summary, when = parts[0].strip() or description, parts[1] if len(parts) > 1 else ""
     asks = re.findall(r'["\u201c]([^"\u201d]{3,})["\u201d]', when)
     return title, summary, asks[0] if asks else None
+
+
+FLOW = re.compile(r"```mermaid[ \t]*\n(.*?)\n[ \t]*```[ \t]*\n?", re.S)
+
+
+def skill_flow(body):
+    """A skill's flow diagram (its first mermaid block) and the instructions without it."""
+    m = FLOW.search(body)
+    if not m:
+        return None, body
+    return m.group(1).strip(), body[:m.start()] + body[m.end():]
+
+
+def show_flow(diagram):
+    """Draw a mermaid flowchart in the team's colours: steps as boxes, checks as hexagons.
+
+    Mermaid runs in the browser (loaded once from a CDN). The frame grows to fit the diagram;
+    if it cannot be drawn (offline, a typo), the diagram's text is shown instead.
+    """
+    brand = load_json(ROOT / ".agents/brand.json", {})
+    primary = brand.get("primary", "#4F6BED")
+    text = brand.get("text", "#1F2937")
+    background = brand.get("background", "#FFFFFF")
+    config = {
+        "startOnLoad": False, "securityLevel": "strict", "theme": "base",
+        "flowchart": {"useMaxWidth": False, "htmlLabels": True, "curve": "basis", "wrappingWidth": 170,
+                      "padding": 10, "nodeSpacing": 30, "rankSpacing": 32, "diagramPadding": 4},
+        "themeVariables": {
+            "fontFamily": "serif" if brand.get("font") == "serif" else "sans-serif", "fontSize": "15px",
+            "primaryColor": "#FFFFFF", "primaryBorderColor": primary, "primaryTextColor": "#1F2937",
+            "lineColor": primary, "textColor": text, "edgeLabelBackground": background,
+        },
+        # Checks (hexagons) stand out from steps (boxes); start and end (rounded) are filled.
+        "themeCSS": (f".node polygon{{fill:#FFF4D6;stroke:#D9A400}}"
+                     f".node rect{{rx:8px;ry:8px}}"
+                     f".node.done rect,.node.done circle{{fill:{primary};stroke:{primary}}}"
+                     f".node.done .nodeLabel{{color:#FFFFFF}}"),
+    }
+    html = f"""<div id="flow" style="text-align:center"></div>
+<pre id="raw" style="display:none;white-space:pre-wrap;font-size:13px;color:{text}"></pre>
+<script src="https://cdn.jsdelivr.net/npm/mermaid@10.9.1/dist/mermaid.min.js"></script>
+<script>
+const source = {json.dumps(diagram)};
+function fit() {{
+  const h = Math.ceil(document.getElementById("flow").getBoundingClientRect().height
+                      + document.getElementById("raw").getBoundingClientRect().height) + 20;
+  try {{ window.frameElement.style.height = h + "px"; window.frameElement.height = h; }} catch (e) {{}}
+  window.parent.postMessage({{isStreamlitMessage: true, type: "streamlit:setFrameHeight", height: h}}, "*");
+}}
+window.addEventListener("resize", fit);
+function plain() {{
+  const raw = document.getElementById("raw");
+  raw.textContent = source; raw.style.display = "block"; fit();
+}}
+try {{
+  mermaid.initialize({json.dumps(config)});
+  mermaid.render("flow-svg", source).then(r => {{
+    document.getElementById("flow").innerHTML = r.svg;
+    const svg = document.querySelector("#flow svg");
+    if (svg) {{ svg.style.maxWidth = "100%"; svg.style.height = "auto"; }}
+    fit();
+  }}).catch(plain);
+}} catch (e) {{ plain(); }}
+</script>"""
+    # A first guess at the height; the diagram then sizes its frame to fit.
+    components.html(html, height=min(900, 60 * diagram.count("\n")))
 
 
 def ago(ts, t):
@@ -331,14 +401,20 @@ if section == t["tab_skills"]:
         empty_state(t["no_skills"], t["ask_skill"])
     for name, description, body in skills:
         title, summary, ask = skill_card(name, description)
+        flow, instructions = skill_flow(body)
         with st.container(border=True):
             st.markdown(f"**{title}**")
+            if flow:
+                show_flow(flow)
             st.write(summary)
             st.caption(t["how_to_ask"])
             st.code(ask or t["default_ask"].format(name=name), language="text")
+            if not flow:
+                st.caption(t["no_flow"])
+                st.code(t["ask_flow"].format(name=name), language="text")
             with st.expander(t["details"]):
                 st.caption(t["details_intro"])
-                st.markdown(body)
+                st.markdown(instructions)
             with st.expander(t["versions"]):
                 skill_versions(name, title)
 

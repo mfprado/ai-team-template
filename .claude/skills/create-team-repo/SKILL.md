@@ -5,6 +5,28 @@ description: Guide an AI Champion, step by step, to create their team's AI works
 
 # Create a team's repository
 
+## Flow
+
+```mermaid
+flowchart TD
+    A([An AI Champion wants a team workspace]):::done --> B[Ask the team's language]
+    B --> C[Ask company, team, name and email, and the brand if they have it]
+    C --> D{{Did IT already create the shared folder?}}
+    D -- Yes --> E[Use the link they send]
+    D -- No --> F[Create an empty private shared folder on GitHub]
+    E --> G[Download it to the Desktop]
+    F --> G
+    G --> H[Copy the template and fill in the team's settings]
+    H --> I{{Are changes saved in the Champion's name?}}
+    I -- No --> J[Set their name and email] --> K
+    I -- Yes --> K[Save the first version for the team]
+    K --> L[The Champion opens the team icon and it sets up the computer]
+    L --> M{{Did they share a brand?}}
+    M -- Yes --> N[Apply colours and logo, after their OK] --> O
+    M -- No --> O[Offer to bring their first automation]
+    O --> P([Clean up and tell them where everything is]):::done
+```
+
 You are helping an **AI Champion** create their team's shared AI workspace, usually during
 the first workshop. Go **one step at a time**: explain the step in a sentence, ask what you
 need, and **ask before every action** that creates, downloads or publishes anything.
