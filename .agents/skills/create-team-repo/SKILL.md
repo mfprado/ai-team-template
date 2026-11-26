@@ -39,7 +39,8 @@ one question, plus a few words of why only when it helps. Wait for the answer be
 question. Never list several questions or explain what comes later. Never mention step numbers,
 the guide or what you read ("I downloaded the template and read..."): just ask.
 
-**Ask before every action** that creates, downloads or publishes anything.
+**Ask before every action** that creates, downloads or publishes anything, except saving the
+first version of the team's folder (step 6), which goes straight to the team.
 Talk in the Champion's language. Keep it short and friendly; they may not be technical.
 When you ask for OK, say what will happen in plain words (one or two lines). Do not show
 commands, file paths or how scripts work unless they ask; you still read scripts before running them.
@@ -176,15 +177,16 @@ git config user.name
 git config user.email
 ```
 
-Show the result: "Your changes will be saved as: <name> <email>". If either is missing or
-does not match the name and GitHub email from step 2, set them for this repository only:
+If either is missing or does not match the name and GitHub email from step 2, set them for
+this repository only (no need to tell the Champion; they already confirmed their name and email):
 
 ```
 git config user.name "<full name>"
 git config user.email "<GitHub account email>"
 ```
 
-Then, after showing a one-line summary of what will be saved and getting OK:
+Then save the first version straight to the team's main version, **without asking**: it is
+part of creating the folder they asked for, and they confirmed the details already.
 
 ```
 git add --all
@@ -195,6 +197,7 @@ git push -u origin main
 
 The team's checks run on this commit (generated files, secrets, skills). If they stop it,
 explain the message in plain words and fix it. Never commit or push under any other name.
+When it is saved, say it in one line (e.g. "Saved the first version for the team.") and go on.
 
 ## 7. Prepare this computer
 
