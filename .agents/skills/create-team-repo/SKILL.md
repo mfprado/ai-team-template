@@ -45,19 +45,13 @@ You are probably running from a temporary copy of the template. Call it `TEMPLAT
 ## 1. Language
 
 Do not ask. The team's language is the language the Champion wrote their request in (a
-Spanish request means a Spanish team). It decides the template:
-
-| Language | Template |
-|---|---|
-| English | `https://github.com/mfprado/ai-team-template` |
-| Spanish | `https://github.com/mfprado/ia-team-template` |
+Spanish request means a Spanish team): `en` or `es`. Talk to the Champion in it from now on.
+This template serves both; the language decides the team's README, its folder names
+(`documents/` and `artifacts/`, or `documentos/` and `artefactos/`), the team page's language
+and which version of the team skills it gets (`migrate-skill` or `migrar-skill`).
 
 Ask only if the request is in neither language or mixes them. Mention the language in one
 line when you start (e.g. "I'll set up your team in English"), so the Champion can correct it.
-
-If that template is not the one you are running from, explain it and continue with that
-template's own `create-team-repo` skill. If that template is still empty, say the Spanish
-version is not ready yet and offer to continue in English or stop.
 
 ## 2. Company, team and the AI Champion
 
@@ -156,9 +150,9 @@ Pass `--champion-github` only when you learned the username in step 3 and the sh
 is in the Champion's own account; otherwise leave it out and the script reads it from `gh`
 when it can.
 
-It copies the template's files (not its history, and not the template-only skills), writes
-the team settings, creates `documents/` and `artifacts/`, writes the team README, renames the
-launchers. Nothing in the new repository points
+It copies the template's files (not its history, and not the template-only skills), swaps in
+the team skills in the team's language, writes the team settings, creates the visible folders
+and the team README in the team's language, renames the launchers. Nothing in the new repository points
 back to the template.
 
 ## 6. Make sure commits are in the Champion's name
@@ -231,7 +225,8 @@ Reports and dashboards the AI makes from now on use these colours and logo (arti
 
 ## 8. First automation
 
-Offer to bring their first automation into the team now with **migrate-skill**: they can
+Offer to bring their first automation into the team now with **migrate-skill** (**migrar-skill**
+for a Spanish team): they can
 paste or attach a skill, script, instructions or macro they already use.
 
 ## 9. Clean up and close

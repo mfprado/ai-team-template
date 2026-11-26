@@ -106,8 +106,10 @@ For each Champion, **create a draft** (never send) in their `Language`:
      then choose the folder), paste the prompt, and answer the assistant's questions.
   4. "Reply to this email if anything is unclear."
 
-Translate the explanations for Spanish speakers; keep the prompts' file paths as they are. Use
-the Spanish template URL (`ia-team-template`) in prompts for Spanish teams once it exists.
+Translate the explanations for Spanish speakers; keep the prompts' file paths as they are, with
+one exception: Spanish teams have `migrar-skill`, not `migrate-skill`. A prompt for them names
+`.agents/skills/migrar-skill/` in their folder and brings it from
+`.agents/skills/create-team-repo/team-skills/es/migrar-skill/` in the template.
 
 ## 5. Report and wait
 

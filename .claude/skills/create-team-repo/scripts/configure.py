@@ -16,9 +16,11 @@ commit in it is made by the AI Champion. Nothing in it points back to the templa
 
 What it does (deterministic, so every team repository starts the same way):
 - copies every file the template tracks, except the template-only skills (TEMPLATE_ONLY)
+- swaps the team skills that have a version in the team's language (LOCALISED_SKILLS)
 - writes .agents/team.json (company, team, language, launcher name, AI Champion)
-- creates the visible folders documents/ and artifacts/
-- writes the team's README
+- creates the visible folders in the team's language (documents/ and artifacts/, or
+  documentos/ and artefactos/)
+- writes the team's README.md in the team's language
 - renames the launchers Team-AI.* to <Team>-AI.*
 - regenerates .claude/ and .codex/
 
@@ -37,13 +39,18 @@ TEMPLATE = Path(__file__).resolve().parents[4]
 TEMPLATE_LAUNCHER = "Team-AI"
 # Skills that only make sense in the template itself (creating teams, writing improvement emails).
 TEMPLATE_ONLY = ["create-team-repo", "improvement-email"]
-VISIBLE_DIRS = ["documents", "artifacts"]
+# Team skills with a version per language. English is the live skill in .agents/skills/; other
+# languages are kept in create-team-repo/team-skills/<language>/<name>/ and replace it.
+LOCALISED_SKILLS = {"migrate-skill": {"es": "migrar-skill"}}
+TEAM_SKILLS = TEMPLATE / ".agents/skills/create-team-repo/team-skills"
+VISIBLE_DIRS = {"en": ["documents", "artifacts"], "es": ["documentos", "artefactos"]}
 IDEAS = {
     "en": "# Team ideas\n\nIdeas for the team's AI workspace. Anyone can add one; the AI Champion updates its status.\n\n",
     "es": "# Ideas del equipo\n\nIdeas para el espacio de IA del equipo. Cualquiera puede sumar una; el IA Champion actualiza su estado.\n\n",
 }
 
-README = """# {team} AI workspace
+README = {
+    "en": """# {team} AI workspace
 
 The shared AI workspace of the {team} team at {company}.
 
@@ -62,7 +69,28 @@ The shared AI workspace of the {team} team at {company}.
 | `IDEAS.md` | The team's ideas: tell the assistant "I have an idea", or add it on the team page |
 
 Anything else is organised as the team likes. Questions: ask your AI Champion.
-"""
+""",
+    "es": """# Espacio de IA de {team}
+
+El espacio de IA compartido del equipo {team} de {company}.
+
+## Cómo usarlo
+
+1. Hacé doble clic en **{launcher}** en esta carpeta. La primera vez instala lo necesario.
+2. Abrí Claude o Codex, elegí esta carpeta y pedí lo que necesites con tus palabras.
+
+## Qué hay acá
+
+| Carpeta | Qué va adentro |
+|---|---|
+| `documentos/` | Los documentos del equipo |
+| `artefactos/` | Reportes y tableros para compartir con el equipo |
+| `artefactos/privado/` | Reportes solo para vos: quedan en tu computadora |
+| `IDEAS.md` | Las ideas del equipo: decile al asistente "tengo una idea", o sumala en la página del equipo |
+
+Lo demás se organiza como el equipo prefiera. Dudas: preguntale a tu IA Champion.
+""",
+}
 
 
 def git(*args, cwd=TEMPLATE):
@@ -89,8 +117,10 @@ def target_is_empty_repo(target):
     return not entries and not has_commits
 
 
-def copy_skeleton(target, template_only):
-    skip = tuple(f".agents/skills/{s}/" for s in template_only) + tuple(f".claude/skills/{s}/" for s in template_only)
+def copy_skeleton(target, template_only, language):
+    replaced = [s for s, versions in LOCALISED_SKILLS.items() if language in versions]
+    left_out = template_only + replaced
+    skip = tuple(f".agents/skills/{s}/" for s in left_out) + tuple(f".claude/skills/{s}/" for s in left_out)
     copied = 0
     for rel in git("ls-files", "-z").split("\0"):
         if not rel or rel.startswith(skip):
@@ -101,6 +131,9 @@ def copy_skeleton(target, template_only):
         dst.parent.mkdir(parents=True, exist_ok=True)
         shutil.copy2(src, dst)
         copied += 1
+    for skill in replaced:
+        local = LOCALISED_SKILLS[skill][language]
+        shutil.copytree(TEAM_SKILLS / language / local, target / ".agents/skills" / local)
     return copied
 
 
@@ -131,7 +164,7 @@ def main():
         print("The template copy has unsaved changes; download a fresh copy of the template first.")
         return 1
 
-    copied = copy_skeleton(target, TEMPLATE_ONLY)
+    copied = copy_skeleton(target, TEMPLATE_ONLY, args.language)
     github = args.champion_github if args.champion_github is not None else gh_username()
     launcher = launcher_name(args.team)
     team_file = target / ".agents/team.json"
@@ -141,13 +174,13 @@ def main():
         "champion": {"name": args.champion_name, "email": args.champion_email, "github": github},
     }, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
 
-    for d in VISIBLE_DIRS:
+    for d in VISIBLE_DIRS[args.language]:
         (target / d).mkdir(exist_ok=True)
         (target / d / ".gitkeep").touch()
 
     (target / "IDEAS.md").write_text(IDEAS[args.language], encoding="utf-8")
     (target / "README.md").write_text(
-        README.format(team=args.team, company=args.company, launcher=launcher), encoding="utf-8")
+        README[args.language].format(team=args.team, company=args.company, launcher=launcher), encoding="utf-8")
 
     for ext in (".command", ".bat"):
         src = target / f"{TEMPLATE_LAUNCHER}{ext}"

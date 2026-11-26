@@ -2,7 +2,7 @@
 
 Template for a team's shared AI workspace. Each team gets its own copy: a private folder where the team keeps its AI skills, documents and artifacts, with the technical parts hidden.
 
-> Spanish version: [ia-team-template](https://github.com/mfprado/ia-team-template).
+One template for every language: English (`en`) and Spanish (`es`).
 
 ## Create a team repository (AI Champions)
 
@@ -16,6 +16,19 @@ The `create-team-repo` skill asks for the company, team and brand, creates an em
 repository, copies this template's files into it (never its history) and configures it. Every
 commit in the team's repository is the AI Champion's own; nothing in it points back to this
 template.
+
+## Languages
+
+`create-team-repo` takes the team's language from the AI Champion's request and sets it up
+with `configure.py`: the team page, the team's `README.md` (always that name), the visible
+folders (`documents/` and `artifacts/`, or `documentos/` and `artefactos/`) and the team skills.
+The rules and `AGENTS.md` stay in English: only the AI reads them, and it answers in the team's
+language.
+
+A team skill people see on the team page has one version per language. English is the live one
+in `.agents/skills/`; the others live in `.agents/skills/create-team-repo/team-skills/<language>/`
+and replace it when a team is created (`LOCALISED_SKILLS` in `configure.py`). Today that is
+`migrate-skill` / `migrar-skill`. **Change both versions together.**
 
 ## Improvements: suggested by email, applied by each team
 

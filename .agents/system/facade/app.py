@@ -210,9 +210,9 @@ def describe_paths(paths, t):
             item = t["what"]["skill"].format(x=m.group(1))
         elif p == ".agents/permissions.json":
             item = t["what"]["perms"]
-        elif p.startswith("documents/"):
+        elif p.startswith(("documents/", "documentos/")):
             item = t["what"]["docs"]
-        elif p.startswith("artifacts/"):
+        elif p.startswith(("artifacts/", "artefactos/")):
             item = t["what"]["reports"]
         elif p.startswith((".agents/rules/", ".agents/team.json", ".agents/brand")):
             item = t["what"]["rules"]
