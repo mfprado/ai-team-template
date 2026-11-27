@@ -7,6 +7,7 @@ set large in the page's type on a wash of the brand colour: asking the AI in you
 what the page is about. Everything else stays quiet.
 """
 
+import base64
 import html
 import json
 import os
@@ -45,6 +46,28 @@ def back_link():
         language = "en"
     return (f'<a class="team-back" href="{html.escape(url)}" target="_self">'
             f'{BACK.get(language, BACK["en"])}</a>')
+
+
+def loading_css():
+    """While the page works, Streamlit shows its own running icon (top right). Show the company's
+    logo instead, gently pulsing; without a logo, a dot in the brand colour does the same."""
+    logo = BRAND_DIR / "logo.png"
+    try:
+        picture = f"url(data:image/png;base64,{base64.b64encode(logo.read_bytes()).decode()})"
+        mark = f"background:{picture} center / contain no-repeat;"
+    except OSError:
+        mark = "background:var(--accent); border-radius:50%; transform:scale(.55);"
+    return f"""
+/* Loading: the company's logo instead of Streamlit's running icon */
+[data-testid="stStatusWidget"] img {{ opacity:0 !important; }}
+[data-testid="stStatusWidget"] > div:first-child {{ position:relative; }}
+[data-testid="stStatusWidget"] > div:first-child::before {{ content:""; position:absolute; inset:0; {mark}
+  animation:brand-loading 1.1s ease-in-out infinite; }}
+@keyframes brand-loading {{
+  0%, 100% {{ opacity:.45; transform:scale(.82); }}
+  50% {{ opacity:1; transform:scale(1); }}
+}}
+"""
 
 
 def css(brand):
@@ -180,6 +203,7 @@ button:focus-visible {{ outline:2px solid var(--accent) !important; outline-offs
 [data-testid="stPopoverBody"] {{ background:var(--card) !important; border:1px solid var(--rule) !important; }}
 [data-testid="stPopoverBody"], [data-testid="stPopoverBody"] * {{ color:var(--ink) !important; }}
 
+{loading_css()}
 @media (prefers-reduced-motion: reduce) {{ * {{ transition:none !important; animation:none !important; }} }}
 .team-back {{ display:inline-block; margin:0 0 6px; padding:6px 12px; border:1px solid var(--rule);
   border-radius:4px; color:var(--ink) !important; text-decoration:none !important; font-size:.9rem; }}
