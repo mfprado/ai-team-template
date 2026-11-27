@@ -72,3 +72,21 @@ prefix_rule(
     decision = "prompt",
     justification = "Changes whose name the team's changes are saved under.",
 )
+
+prefix_rule(
+    pattern = ["TEAM_PAGE_NO_BROWSER=1", "uv", "run", "--quiet", "--no-project", "--python", "3.12", "--with", "streamlit==1.41.1", ".agents/system/facade/page.py"],
+    decision = "allow",
+    justification = "Abre la página del equipo dentro del navegador del asistente, sin abrir el navegador de la persona.",
+)
+
+prefix_rule(
+    pattern = ["sh", ".agents/system/bin/py", "-I", ".agents/system/scripts/propose_change.py"],
+    decision = "allow",
+    justification = "Guarda los cambios para todo el equipo (los controles del equipo siguen corriendo).",
+)
+
+prefix_rule(
+    pattern = ["sh", ".agents/system/bin/py", ".agents/system/scripts/sync.py"],
+    decision = "allow",
+    justification = "Regenera las copias de cada asistente de IA.",
+)

@@ -86,6 +86,15 @@ thing: it only brings teammates' changes.
 Before changing how the AI works for the whole team (skills, rules, permissions, hooks,
 settings), read `.agents/rules/changes.md`.
 
+## Opening the team page
+
+Every session started in this folder starts the team page in the background, without opening
+the person's own browser, and its first message gives the address. If you have a built-in
+browser, open that address in it straight away. If someone asks to open the page again, start it
+with `TEAM_PAGE_NO_BROWSER=1 uv run --quiet --no-project --python 3.12 --with streamlit==1.41.1 .agents/system/facade/page.py`
+in the background (never the launcher, which opens their browser), read the address it prints
+and open it in your built-in browser.
+
 ## Always
 
 - **Deterministic first.** Fixed steps belong in scripts inside the skill; you only reason where judgement is needed.
