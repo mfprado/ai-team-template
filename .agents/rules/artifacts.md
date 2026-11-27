@@ -9,18 +9,19 @@ Spanish team), in its own folder with everything it needs. Create that folder wi
 never by hand, so names and places are always the same:
 
 ```
-sh .agents/system/bin/py -I .agents/system/scripts/new_artifact.py --type <report|presentation|dashboard|app> --title "<plain title>" [--private]
+sh .agents/system/bin/py -I .agents/system/scripts/new_artifact.py --type <report|presentation|dashboard|app> --title "<plain title>" [--streamlit]
 ```
 
 It answers with the folder, laid out like this:
 
 ```
 artifacts/                                (artefactos/)
-  reports/2026-11-26-weekly-sales/        (reportes/, presentaciones/, tableros/, aplicaciones/)
-    index.html     what opens: the report, the slides, the app
-    assets/        its images, data, styles and code
-    README.md      what it is, who made it, how to make it again
-  private/                                (privado/) the same layout, only on this computer
+  private/                                (privado/) where every artifact starts, only on this computer
+    reports/2026-11-26-weekly-sales/      (reportes/, presentaciones/, tableros/, aplicaciones/)
+      index.html     what opens: the report, the slides, the app
+      assets/        its images, data, styles and code
+      README.md      what it is, who made it, how to make it again
+  reports/2026-11-20-monthly-close/       once shared: the same layout, for the whole team
 ```
 
 - **Type:** `report` (a document to read), `presentation` (slides), `dashboard` (numbers and
@@ -32,9 +33,12 @@ artifacts/                                (artefactos/)
 - **`assets/`** holds everything else it uses. Data it reads, images, styles, scripts.
 - **`README.md`:** fill in the two short sections the script leaves: what it is, and how to make
   it again (what to ask, or the script that builds it, and where the data comes from).
-- **Team or private:** ask whether it is for the team or only for the person, unless they said.
-  `--private` puts it in the private folder: it is never shared and stays on this computer.
-  A team artifact is a change like any other: save it for the team straight away (AGENTS.md).
+- **It starts private.** Every new artifact is created in the private folder: only on this
+  computer, never saved for the team. Do not ask whether it is for the team. When it is ready,
+  the person shares it with the **Share with the team** button on the team page (it asks them
+  to confirm), or asks you to: then run
+  `sh .agents/system/bin/py -I .agents/system/scripts/share_artifact.py --path "<its folder>"`,
+  which moves it to the team's artifacts folder and saves it for the team. Tell them its message.
 - **A new version** of an artifact the team keeps updating (the weekly report) replaces the files
   in the same folder; git keeps the earlier versions. A different artifact gets a new folder.
 
@@ -108,7 +112,7 @@ there too, then record the link so the team page lists it, and write it in the a
 README:
 
 ```
-sh .agents/system/bin/py -I .agents/system/scripts/artifact_link.py --title "<plain title>" --url "<link>" [--private]
+sh .agents/system/bin/py -I .agents/system/scripts/artifact_link.py --title "<plain title>" --url "<link>"
 ```
 
 The folder in the artifacts folder is still the team's copy.

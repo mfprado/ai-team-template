@@ -2,11 +2,11 @@
 """Create the folder for a new artifact, always with the same name and layout.
 
   sh .agents/system/bin/py -I .agents/system/scripts/new_artifact.py \
-      --type report|presentation|dashboard|app --title "Weekly sales" [--streamlit] [--private]
+      --type report|presentation|dashboard|app --title "Weekly sales" [--streamlit]
 
 Every artifact (an HTML report, a presentation, a dashboard, a small web app) is one folder:
 
-  <artifacts>/<type>/<YYYY-MM-DD>-<short-name>/
+  <artifacts>/private/<type>/<YYYY-MM-DD>-<short-name>/
       index.html     what opens: the report, the slides, the app
       assets/        its images, data, styles and code
       README.md      what it is, who made it, and how to make it again
@@ -18,8 +18,9 @@ the app. The team page's Open button starts it the same way (.agents/system/faca
 Extra Python packages go in requirements.txt next to app.py.
 
 <artifacts> is artifacts/ (artefactos/ for a Spanish team); <type> is reports, presentations,
-dashboards or apps (reportes, presentaciones, tableros, aplicaciones). --private puts it in the
-private subfolder, which stays on this computer. The short name is the title in lowercase,
+dashboards or apps (reportes, presentaciones, tableros, aplicaciones). Every artifact starts in
+the private subfolder (privado/), only on this computer, until the person shares it with the team
+(the team page's Share button, or share_artifact.py). The short name is the title in lowercase,
 without accents, with hyphens. Prints the folder as JSON; the caller writes index.html.
 Standard library only.
 """
@@ -153,7 +154,7 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     parser.add_argument("--type", required=True, choices=sorted(TYPES["en"]))
     parser.add_argument("--title", required=True)
-    parser.add_argument("--private", action="store_true")
+    parser.add_argument("--private", action="store_true", help=argparse.SUPPRESS)  # always private now
     parser.add_argument("--streamlit", action="store_true", help="a Streamlit app (app.py) instead of index.html")
     args = parser.parse_args()
     if args.streamlit and args.type not in ("app", "dashboard"):
@@ -162,7 +163,7 @@ def main():
     lang = language()
     base, private = folders(lang)
     today = datetime.date.today().isoformat()
-    parent = (private if args.private else base) / TYPES[lang][args.type]
+    parent = private / TYPES[lang][args.type]
     folder = parent / f"{today}-{slug(args.title)}"
     n = 2
     while folder.exists():

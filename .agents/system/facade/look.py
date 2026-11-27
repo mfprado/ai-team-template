@@ -81,6 +81,11 @@ hr {{ border-color:var(--rule) !important; }}
 [class*="st-key-change-"] p {{ margin:0; }}
 button p {{ white-space:nowrap; }}
 
+/* Ideas: each a card; its comments indented under it */
+.idea-comment {{ border-left:2px solid var(--rule); padding:.1rem 0 .1rem .8rem; margin:.1rem 0 .35rem .1rem; line-height:1.45; }}
+.idea-comment .who {{ color:var(--muted); font-size:.85rem; margin-top:.1rem; }}
+[class*="st-key-ideacard-"] [data-testid="stForm"] {{ padding:0; margin-top:.2rem; }}
+
 /* Buttons */
 [data-testid="stBaseButton-secondary"] {{ border:1px solid var(--rule) !important; background:var(--card) !important;
   color:var(--ink) !important; border-radius:8px !important; }}

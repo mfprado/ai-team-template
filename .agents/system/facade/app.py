@@ -35,7 +35,8 @@ T = {
         "sync_fail": "Could not get the team's latest changes right now.",
         "tab_skills": "Skills", "tab_perms": "General permissions", "tab_artifacts": "Artifacts", "tab_history": "History",
         "tab_ideas": "Ideas", "ideas_intro": "Ideas for the team's workspace. Anyone can add one or update its status.",
-        "no_ideas": "No ideas yet.", "new_idea": "Your idea", "add_idea": "Add idea",
+        "no_ideas": "No ideas yet.", "comment": "Comment", "comment_hint": "Add a comment", "comment_send": "Comment",
+        "comment_summary": "Comment on idea {n}", "new_idea": "Your idea", "new_idea_hint": "Write your idea for the team…", "add_idea": "Add idea",
         "idea_summary": "New idea: {text}", "set_status": "Status", "save_status": "Save status",
         "status_summary": "Idea {n}: {status}",
         "versions": "Earlier versions", "current": "Current version", "go_back": "Go back to this version",
@@ -44,9 +45,9 @@ T = {
         "no_skills": "Your team has no skills yet. A skill is a task the AI does the same way for everyone, like a weekly report.",
         "try_asking": "To start, open your AI assistant in this folder and paste:",
         "ask_skill": "Help me bring an automation I already use to the team.",
-        "no_shared": "No shared artifacts yet. Reports, dashboards and small apps the team shares appear here.",
+        "no_shared": "Nothing shared yet. Artifacts appear here when someone shares one with the team.",
         "ask_report": "Make a report about <topic> and share it with the team.",
-        "no_private": "Nothing private on this computer.",
+        "no_private": "What you ask the AI to make appears here first, only on your computer. When it is ready, share it with the team.",
         "up_to_date": "Up to date with the team", "not_synced": "Could not get the team's latest",
         "unshared": "You have changes not shared with the team", "behind": "The team has newer changes",
         "menu": "Menu",
@@ -80,8 +81,8 @@ T = {
         "reports_intro": "Artifacts are reports, presentations, dashboards and small apps made with the AI, each in its own folder. Ask the assistant for a new one any time.",
         "shared_by": "by {who}", "view": "View", "back": "Back to the list", "about_artifact": "What it is and how to make it again", "app_opening": "Opening the app in your browser. It can take a few seconds the first time.",
         "open_link": "Open it", "link_note": "This one lives in your AI assistant. It opens in a new browser tab.",
-        "share_team": "Share with the team", "share_confirm": "Everyone on the team will be able to see **{title}**. Share it?",
-        "share_yes": "Yes, share it", "share_no": "Cancel", "close": "Close", "share_summary": "Shared artifact: {title}",
+        "share_team": "Share with the team", "share_confirm": "**{title}** moves to the team's artifacts and is saved for the whole team: everyone will be able to see it and change it.",
+        "share_yes": "Share", "share_no": "Cancel", "close": "Close", "share_summary": "Shared artifact: {title}",
                 "save": "Save for the whole team",
     },
     "es": {
@@ -90,7 +91,8 @@ T = {
         "sync_fail": "No se pudieron traer los últimos cambios del equipo ahora.",
         "tab_skills": "Skills", "tab_perms": "Permisos generales", "tab_artifacts": "Artefactos", "tab_history": "Historial",
         "tab_ideas": "Ideas", "ideas_intro": "Ideas para el espacio del equipo. Cualquiera puede sumar una o cambiar su estado.",
-        "no_ideas": "Todavía no hay ideas.", "new_idea": "Tu idea", "add_idea": "Agregar idea",
+        "no_ideas": "Todavía no hay ideas.", "comment": "Comentario", "comment_hint": "Sumá un comentario", "comment_send": "Comentar",
+        "comment_summary": "Comentario en la idea {n}", "new_idea": "Tu idea", "new_idea_hint": "Escribí tu idea para el equipo…", "add_idea": "Agregar idea",
         "idea_summary": "Nueva idea: {text}", "set_status": "Estado", "save_status": "Guardar estado",
         "status_summary": "Idea {n}: {status}",
         "versions": "Versiones anteriores", "current": "Versión actual", "go_back": "Volver a esta versión",
@@ -99,9 +101,9 @@ T = {
         "no_skills": "Tu equipo todavía no tiene skills. Una skill es una tarea que la IA hace igual para todos, como un reporte semanal.",
         "try_asking": "Para empezar, abrí tu asistente de IA en esta carpeta y pegá:",
         "ask_skill": "Ayudame a traer al equipo una automatización que ya uso.",
-        "no_shared": "Todavía no hay artefactos compartidos. Acá aparecen los reportes, tableros y pequeñas apps que comparte el equipo.",
+        "no_shared": "Todavía no hay nada compartido. Los artefactos aparecen acá cuando alguien comparte uno con el equipo.",
         "ask_report": "Hacé un reporte sobre <tema> y compartilo con el equipo.",
-        "no_private": "No hay nada privado en esta computadora.",
+        "no_private": "Lo que le pidas a la IA aparece primero acá, solo en tu computadora. Cuando esté listo, compartilo con el equipo.",
         "up_to_date": "Al día con el equipo", "not_synced": "No se pudo traer lo último del equipo",
         "unshared": "Tenés cambios sin compartir con el equipo", "behind": "El equipo tiene cambios más nuevos",
         "menu": "Menú",
@@ -135,8 +137,8 @@ T = {
         "reports_intro": "Los artefactos son reportes, presentaciones, tableros y pequeñas apps hechos con la IA, cada uno en su carpeta. Pedile uno nuevo al asistente cuando quieras.",
         "shared_by": "de {who}", "view": "Ver", "back": "Volver a la lista", "about_artifact": "Qué es y cómo volver a hacerlo", "app_opening": "Abriendo la app en tu navegador. La primera vez puede tardar unos segundos.",
         "open_link": "Abrir", "link_note": "Este está en tu asistente de IA. Se abre en otra pestaña del navegador.",
-        "share_team": "Compartir con el equipo", "share_confirm": "Todo el equipo va a poder ver **{title}**. ¿Lo compartís?",
-        "share_yes": "Sí, compartir", "share_no": "Cancelar", "close": "Cerrar", "share_summary": "Artefacto compartido: {title}",
+        "share_team": "Compartir con el equipo", "share_confirm": "**{title}** pasa a los artefactos del equipo y se guarda para todos: cualquiera va a poder verlo y cambiarlo.",
+        "share_yes": "Compartir", "share_no": "Cancelar", "close": "Cerrar", "share_summary": "Artefacto compartido: {title}",
                 "save": "Guardar para todo el equipo",
     },
 }
@@ -256,13 +258,20 @@ def show_in_folder(path):
 
 
 def share(summary, paths):
-    """Share a change with the team (published or change request) and show the outcome."""
+    """Save a change for the team (propose_change.py); its outcome shows at the top of the page."""
     result = run(sys.executable, "-I", str(CORE / "scripts/propose_change.py"), "--summary", summary, "--paths", *paths)
     try:
         outcome = json.loads(result.stdout.strip().splitlines()[-1])
     except (ValueError, IndexError):
         outcome = {"status": "blocked", "message": result.stderr.strip() or result.stdout.strip()}
-    (st.success if outcome.get("status") == "published" else st.warning)(outcome.get("message", ""))
+    flash(outcome.get("status") == "published", outcome.get("message", ""))
+
+
+def flash(ok, message):
+    """A message for the top of the page after the next refresh (windows close on their own)."""
+    st.session_state.flash = (ok, message)
+    if not st.session_state.get("in_dialog"):
+        st.rerun()
 
 
 def sync_status():
@@ -326,6 +335,11 @@ with st.sidebar:
     section = st.session_state.section
 
 st.title(section)
+st.session_state.pop("in_dialog", None)
+if "flash" in st.session_state:
+    ok, message = st.session_state.pop("flash")
+    if message:
+        (st.success if ok else st.warning)(message, icon=":material/check_circle:" if ok else ":material/warning:")
 
 
 def empty_state(text, prompt=None):
@@ -344,12 +358,12 @@ def confirm_go_back(name, title, commit, date):
     yes, no = st.columns(2)
     if yes.button(t["go_back"], type="primary"):
         path = f".agents/skills/{name}"
+        st.session_state.in_dialog = True
         with st.spinner(t["applying"]):
             git("restore", f"--source={commit}", "--staged", "--worktree", "--", path)
             run(sys.executable, "-I", str(CORE / "scripts/sync.py"))
             share(t["go_back_summary"].format(skill=title, date=date), [path])
-        if st.button(t["close"]):
-            st.rerun()
+        st.rerun()
     elif no.button(t["share_no"]):
         st.rerun()
 
@@ -370,14 +384,14 @@ def confirm_skill_permission(name, title, perm, wanted, key):
     st.write(t["perm_on_confirm" if wanted else "perm_off_confirm"].format(skill=title, perm=perm["plain"]))
     yes, no, _ = st.columns([1, 1, 2])
     if yes.button(t["perm_on"] if wanted else t["perm_off"], type="primary", use_container_width=True):
+        st.session_state.in_dialog = True
         with st.spinner(t["applying"]):
             run(sys.executable, "-I", str(CORE / "scripts/skill_permissions.py"), "on" if wanted else "off",
                 "--skill", name, "--rule", perm["rule"])
             run(sys.executable, "-I", str(CORE / "scripts/sync.py"))
             share(t["perm_on_summary" if wanted else "perm_off_summary"].format(skill=title, perm=perm["plain"]),
                   [f".agents/skills/{name}"])
-        if st.button(t["close"]):
-            st.rerun()
+        st.rerun()
     elif no.button(t["share_no"], use_container_width=True):
         st.session_state[f"{key}-undo"] = True  # the switch goes back to how it was
         st.rerun()
@@ -462,26 +476,42 @@ if section == t["tab_ideas"]:
         ideas = json.loads(listed.stdout or "[]")
     except ValueError:
         ideas = []
+    # Saving refreshes the page before a form can clear itself: a new round gives empty fields.
+    round_ = st.session_state.setdefault("ideas_round", 0)
+    with st.form(f"new-idea-{round_}", border=False):
+        text = st.text_area(t["new_idea"], max_chars=500, height=80, placeholder=t["new_idea_hint"],
+                            label_visibility="collapsed")
+        if st.form_submit_button(t["add_idea"], type="primary") and text.strip():
+            st.session_state.ideas_round += 1
+            run(sys.executable, "-I", str(CORE / "scripts/ideas.py"), "add", "--text", text)
+            share(t["idea_summary"].format(text=" ".join(text.split())[:80]), ["IDEAS.md"])  # refreshes the list
     if not ideas:
         st.caption(t["no_ideas"])
     keys = ["new", "planned", "done"]
     labels = {"en": {"new": "New", "planned": "Planned", "done": "Done"},
               "es": {"new": "Nueva", "planned": "En camino", "done": "Hecha"}}[team.get("language", "en") if team.get("language") in ("en", "es") else "en"]
-    for idea in reversed(ideas):
-        col1, col2 = st.columns([4, 1.4])
-        col1.write(f"**{idea['text']}**  \n{idea['who']} · {idea['date']}")
-        choice = col2.selectbox(t["set_status"], keys, index=keys.index(idea["key"]),
-                                format_func=labels.get, key=f"idea-{idea['id']}", label_visibility="collapsed")
-        if choice != idea["key"] and col2.button(t["save_status"], key=f"save-{idea['id']}"):
-            run(sys.executable, "-I", str(CORE / "scripts/ideas.py"), "status", "--id", str(idea["id"]), "--to", choice)
-            share(t["status_summary"].format(n=idea["id"], status=labels[choice]), ["IDEAS.md"])
-    st.divider()
-    with st.form("new-idea", clear_on_submit=True):
-        text = st.text_area(t["new_idea"], max_chars=500)
-        if st.form_submit_button(t["add_idea"], type="primary") and text.strip():
-            run(sys.executable, "-I", str(CORE / "scripts/ideas.py"), "add", "--text", text)
-            share(t["idea_summary"].format(text=" ".join(text.split())[:80]), ["IDEAS.md"])
-            git("fetch", "--quiet", "origin")
+    for idea in reversed(ideas):  # newest first
+        n = str(idea["id"])
+        with st.container(border=True, key=f"ideacard-{n}"):
+            text_col, status_col = st.columns([4, 1.4])
+            text_col.markdown(f"**{html.escape(idea['text'])}**")
+            text_col.caption(f"{idea['who']}, {idea['date']}")
+            choice = status_col.selectbox(t["set_status"], keys, index=keys.index(idea["key"]), format_func=labels.get,
+                                          key=f"idea-{n}", label_visibility="collapsed")
+            if choice != idea["key"]:  # saved straight away, like any change
+                run(sys.executable, "-I", str(CORE / "scripts/ideas.py"), "status", "--id", n, "--to", choice)
+                share(t["status_summary"].format(n=n, status=labels[choice]), ["IDEAS.md"])
+            for c in idea.get("comments", []):
+                st.markdown(f'<div class="idea-comment"><div>{html.escape(c["text"])}</div>'
+                            f'<div class="who">{html.escape(c["who"])}, {c["date"]}</div></div>',
+                            unsafe_allow_html=True)
+            with st.form(f"comment-form-{n}-{round_}", border=False):
+                field, send = st.columns([4, 1.4], vertical_alignment="bottom")
+                comment = field.text_input(t["comment"], placeholder=t["comment_hint"], label_visibility="collapsed")
+                if send.form_submit_button(t["comment_send"], use_container_width=True) and comment.strip():
+                    st.session_state.ideas_round += 1
+                    run(sys.executable, "-I", str(CORE / "scripts/ideas.py"), "comment", "--id", n, "--text", comment)
+                    share(t["comment_summary"].format(n=n), ["IDEAS.md"])
 
 # Permissions: switches; changes are shared via propose_change.py
 if section == t["tab_perms"]:
@@ -571,27 +601,28 @@ def share_report(item):
         (base / "links.json").write_text(json.dumps(team_links, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
         target = base / "links.json"
     else:
-        target = base / item["path"].relative_to(private)
-        while target.exists():
-            target = target.with_name(f"{target.stem}-2{target.suffix}")
-        while target.exists():
-            target = target.with_name(f"{target.name}-2")
-        target.parent.mkdir(parents=True, exist_ok=True)
-        item["path"].rename(target)
+        # Folders and files: the same script the AI uses (moves it, then saves it for the team).
+        result = run(sys.executable, "-I", str(CORE / "scripts/share_artifact.py"), "--path", str(item["path"]))
+        try:
+            outcome = json.loads(result.stdout.strip().splitlines()[-1])
+        except (ValueError, IndexError):
+            outcome = {"ok": False, "message": result.stderr.strip() or result.stdout.strip()}
+        flash(bool(outcome.get("ok")), outcome.get("message") or outcome.get("problem", ""))
+        return
     share(t["share_summary"].format(title=item["title"]), [str(target.relative_to(ROOT))])
 
 
 @st.dialog(" ")
 def confirm_share(item):
     st.write(t["share_confirm"].format(title=item["title"]))
-    yes, no = st.columns(2)
-    if yes.button(t["share_yes"], type="primary"):
+    yes, no, _ = st.columns([1, 1, 2])
+    if yes.button(t["share_yes"], type="primary", use_container_width=True):
+        st.session_state.in_dialog = True
         with st.spinner(t["applying"]):
             share_report(item)
         st.session_state.pop("viewing", None)
-        if st.button(t["close"]):
-            st.rerun()
-    elif no.button(t["share_no"]):
+        st.rerun()
+    elif no.button(t["share_no"], use_container_width=True):
         st.rerun()
 
 
@@ -649,7 +680,10 @@ def show_report(item):
     elif p.suffix.lower() in (".png", ".jpg", ".jpeg", ".gif", ".svg"):
         st.image(str(p))
     elif p.suffix.lower() in (".md", ".txt", ".csv"):
-        st.markdown(p.read_text(encoding="utf-8", errors="replace")) if p.suffix.lower() == ".md" else st.text(p.read_text(encoding="utf-8", errors="replace"))
+        if p.suffix.lower() == ".md":
+            st.markdown(p.read_text(encoding="utf-8", errors="replace"))
+        else:
+            st.text(p.read_text(encoding="utf-8", errors="replace"))
     elif p.suffix.lower() in SAFE_TO_OPEN:
         if st.button(t["open"]):
             webbrowser.open(p.as_uri())
@@ -667,11 +701,15 @@ if section == t["tab_artifacts"]:
         show_report(viewing)
     else:
         st.write(t["reports_intro"])
-        for heading, group in ((t["shared"], [i for i in items if not i["private"]]),
-                               (t["private"], [i for i in items if i["private"]])):
+        # Yours first: everything starts there, only on this computer, until you share it.
+        for heading, group in ((t["private"], [i for i in items if i["private"]]),
+                               (t["shared"], [i for i in items if not i["private"]])):
             st.subheader(heading)
             if not group:
-                empty_state(t["no_private"]) if heading == t["private"] else empty_state(t["no_shared"], t["ask_report"])
+                if heading == t["private"]:
+                    empty_state(t["no_private"], t["ask_report"])
+                else:
+                    empty_state(t["no_shared"])
             for i, item in enumerate(group):
                 with st.container(border=True, key=f"artcard-{heading == t['private']}-{i}"):
                     if st.button(item["title"], key=f"art-{item['key']}", type="tertiary", use_container_width=True,
@@ -682,6 +720,9 @@ if section == t["tab_artifacts"]:
                     meta = ", ".join(x for x in (item.get("type", "").capitalize(), who, item["when"] or "") if x)
                     if meta:
                         st.caption(meta)
+                    if item["private"] and st.button(t["share_team"], key=f"share-{item['key']}",
+                                                     icon=":material/group:"):
+                        confirm_share(item)
 
 # History: who changed what, in plain words
 if section == t["tab_history"]:

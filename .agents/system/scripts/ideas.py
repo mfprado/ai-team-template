@@ -4,9 +4,11 @@
   ideas.py add --text "An idea"             adds it as new, with today's date and your git name
   ideas.py list                             prints the ideas as JSON
   ideas.py status --id 3 --to planned       changes an idea's status (anyone on the team)
+  ideas.py comment --id 3 --text "..."      adds a comment to an idea, with today's date and your git name
 
-One line per idea, readable by people and easy to edit:
+One line per idea, readable by people and easy to edit, with its comments indented under it:
   - [New] 2026-11-10 · Juan Perez — Automate the weekly sales report
+    - 2026-11-12 · Ana Lopez: Let's add the web sales too
 
 Status words follow the team's language (team.json). Standard library only.
 """
@@ -30,6 +32,7 @@ HEADER = {
     "es": "# Ideas del equipo\n\nIdeas para el espacio de IA del equipo. Cualquiera puede sumar una o cambiar su estado.\n\n",
 }
 LINE = re.compile(r"^- \[(?P<status>[^\]]+)\] (?P<date>\d{4}-\d{2}-\d{2}) · (?P<who>.+?) — (?P<text>.+)$")
+COMMENT = re.compile(r"^\s+- (?P<date>\d{4}-\d{2}-\d{2}) · (?P<who>.+?): (?P<text>.+)$")
 
 
 def team():
@@ -58,12 +61,18 @@ def read():
     for l in lines[first:]:
         m = LINE.match(l)
         if m:
-            ideas.append(m.groupdict())
+            ideas.append(dict(m.groupdict(), comments=[]))
+            continue
+        c = COMMENT.match(l)
+        if c and ideas:
+            ideas[-1]["comments"].append(c.groupdict())
     return header, ideas
 
 
 def write(header, ideas):
-    body = "".join(f"- [{i['status']}] {i['date']} · {i['who']} — {i['text']}\n" for i in ideas)
+    body = "".join(f"- [{i['status']}] {i['date']} · {i['who']} — {i['text']}\n"
+                   + "".join(f"  - {c['date']} · {c['who']}: {c['text']}\n" for c in i.get("comments", []))
+                   for i in ideas)
     FILE.write_text(header + body, encoding="utf-8")
 
 
@@ -84,6 +93,9 @@ def main():
     st = sub.add_parser("status")
     st.add_argument("--id", type=int, required=True)
     st.add_argument("--to", required=True, choices=["new", "planned", "done"])
+    cm = sub.add_parser("comment")
+    cm.add_argument("--id", type=int, required=True)
+    cm.add_argument("--text", required=True)
     args = parser.parse_args()
 
     header, ideas = read()
@@ -97,13 +109,23 @@ def main():
             print(json.dumps({"ok": False, "problem": "empty idea"}))
             return 1
         ideas.append({"status": words["new"], "date": datetime.date.today().isoformat(),
-                      "who": git_config("user.name") or "?", "text": text})
+                      "who": git_config("user.name") or "?", "text": text, "comments": []})
         write(header, ideas)
         print(json.dumps({"ok": True, "id": len(ideas)}))
         return 0
     if not 1 <= args.id <= len(ideas):
         print(json.dumps({"ok": False, "problem": "no idea with that number"}))
         return 1
+    if args.cmd == "comment":
+        text = " ".join(args.text.split())
+        if not text:
+            print(json.dumps({"ok": False, "problem": "empty comment"}))
+            return 1
+        ideas[args.id - 1]["comments"].append({"date": datetime.date.today().isoformat(),
+                                               "who": git_config("user.name") or "?", "text": text})
+        write(header, ideas)
+        print(json.dumps({"ok": True}))
+        return 0
     ideas[args.id - 1]["status"] = words[args.to]
     write(header, ideas)
     print(json.dumps({"ok": True}))
