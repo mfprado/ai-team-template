@@ -46,6 +46,7 @@ Read a rule file **only when its situation applies**. The team may add its own r
 | Creating, migrating or editing a skill | `.agents/rules/skills.md` |
 | Producing a report, presentation, dashboard, web app or any HTML output, or bringing in one made in Claude or another AI | `.agents/rules/artifacts.md` |
 | Anything involving credentials, messages to people, or changing permissions | `.agents/rules/safety.md` |
+| The launcher fails, a TEAM CHECKS message appears, or the AI or team page does not work on a computer | `.agents/rules/setup-problems.md` |
 | Changing a skill, rule, permission, hook or team setting, or sharing a change that clashes with someone else's | `.agents/rules/changes.md` |
 | Someone shares an idea for the team, or asks about the team's ideas | `.agents/rules/ideas.md` |
 | The team has no context file yet, or someone wants to set up or update how the team works | `.agents/rules/team-context.md` |

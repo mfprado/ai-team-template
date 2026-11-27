@@ -329,6 +329,13 @@ the same `launch.log`.
 - `Setup finished.` and `Launcher finished.`: done; the team page is open in their browser.
   Check it as above.
 
+**Check the computer before closing.** In the team folder, run
+`sh .agents/system/bin/py -I .agents/system/scripts/doctor.py` and follow
+`.agents/rules/setup-problems.md` (in the team folder) for anything that is not ok, so the folder
+is ready for the team without the Champion having to troubleshoot. On Windows this matters most:
+Codex needs Git's `sh` on the PATH, and Python may be the Store placeholder. Say in one line that
+the computer is ready, or what is left.
+
 Then close. Tell the Champion, in three short lines: where the folder is, how to open it next
 time (the `<Team>-AI.command` on a Mac, or the `<Team>-AI` shortcut on Windows, which replaces
 the `.bat` after the first launch; then choose the folder in their AI assistant), and what comes

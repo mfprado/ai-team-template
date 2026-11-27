@@ -42,7 +42,7 @@ SEARCH_TOOLS = {"grep", "search"}
 READ_ONLY_PROGRAMS = {"cat", "less", "more", "head", "tail", "grep", "rg", "ls", "wc", "diff", "file", "stat"}
 READ_ONLY_GIT = {"diff", "log", "status", "show", "blame"}
 # Team scripts the agent runs as part of normal work: running them is not editing them.
-CORE_SCRIPTS = {PurePosixPath(f".agents/system/scripts/{n}") for n in ("sync.py", "propose_change.py", "selftest.py", "ideas.py")}
+CORE_SCRIPTS = {PurePosixPath(f".agents/system/scripts/{n}") for n in ("sync.py", "propose_change.py", "selftest.py", "ideas.py", "doctor.py")}
 PY_FINDER = ".agents/system/bin/py"
 
 # Used when .agents/permissions.json cannot be read: the critical basics stay enforced.
