@@ -38,6 +38,27 @@ artifacts/                                (artefactos/)
 - **A new version** of an artifact the team keeps updating (the weekly report) replaces the files
   in the same folder; git keeps the earlier versions. A different artifact gets a new folder.
 
+## Apps: HTML or Streamlit
+
+An app (`--type app`) or a dashboard can be built two ways. Choose by what it needs:
+
+- **HTML (`index.html`)**, the default: when the browser is enough. A calculator, a form that
+  does not save anything, a presentation, a dashboard over a fixed data file. It opens anywhere.
+- **Streamlit (`--streamlit`)**: when it needs Python: reading or writing files, a spreadsheet,
+  calling the AI, heavier data work. The script makes the folder with:
+  - `app.py`, already in the company's look (it uses the team page's `look.py`); write the app
+    below the title,
+  - a launcher named after the app, `<App-name>.command` (Mac) and `<App-name>.bat` (Windows):
+    double-click it to open the app in the browser. Do not rename or edit the launchers,
+  - `requirements.txt`, only if it needs Python packages beyond Streamlit (one per line, with
+    its version),
+  - `assets/` and the README, as for any artifact; the README says how to open it.
+
+  The team page's Open button starts it the same way. It runs on the person's computer, while
+  its window is open; anything it saves goes to a file in `assets/` or a team spreadsheet, and
+  the README says where. To use it without the team folder it would need hosting: say so, do not
+  set it up.
+
 ## Dashboards
 
 Build a dashboard (`--type dashboard`) on the pattern of

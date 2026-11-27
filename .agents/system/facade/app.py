@@ -10,6 +10,7 @@ import html
 import json
 import platform
 import re
+import shutil
 import subprocess
 import sys
 import webbrowser
@@ -77,7 +78,7 @@ T = {
         "ago": {"now": "just now", "min": "{n} min ago", "h": "{n} h ago", "d": "{n} days ago"},
         "perm_summary": "Permissions: {items}",
         "reports_intro": "Artifacts are reports, presentations, dashboards and small apps made with the AI, each in its own folder. Ask the assistant for a new one any time.",
-        "shared_by": "by {who}", "view": "View", "back": "Back to the list", "about_artifact": "What it is and how to make it again",
+        "shared_by": "by {who}", "view": "View", "back": "Back to the list", "about_artifact": "What it is and how to make it again", "app_opening": "Opening the app in your browser. It can take a few seconds the first time.",
         "open_link": "Open it", "link_note": "This one lives in Claude or Codex. It opens in a new browser tab.",
         "share_team": "Share with the team", "share_confirm": "Everyone on the team will be able to see **{title}**. Share it?",
         "share_yes": "Yes, share it", "share_no": "Cancel", "close": "Close", "share_summary": "Shared artifact: {title}",
@@ -132,7 +133,7 @@ T = {
         "ago": {"now": "recién", "min": "hace {n} min", "h": "hace {n} h", "d": "hace {n} días"},
         "perm_summary": "Permisos: {items}",
         "reports_intro": "Los artefactos son reportes, presentaciones, tableros y pequeñas apps hechos con la IA, cada uno en su carpeta. Pedile uno nuevo al asistente cuando quieras.",
-        "shared_by": "de {who}", "view": "Ver", "back": "Volver a la lista", "about_artifact": "Qué es y cómo volver a hacerlo",
+        "shared_by": "de {who}", "view": "Ver", "back": "Volver a la lista", "about_artifact": "Qué es y cómo volver a hacerlo", "app_opening": "Abriendo la app en tu navegador. La primera vez puede tardar unos segundos.",
         "open_link": "Abrir", "link_note": "Este está en Claude o Codex. Se abre en otra pestaña del navegador.",
         "share_team": "Compartir con el equipo", "share_confirm": "Todo el equipo va a poder ver **{title}**. ¿Lo compartís?",
         "share_yes": "Sí, compartir", "share_no": "Cancelar", "close": "Cerrar", "share_summary": "Artefacto compartido: {title}",
@@ -591,6 +592,19 @@ def confirm_share(item):
         st.rerun()
 
 
+def start_app(folder):
+    """Start a Streamlit app artifact in the browser (run_app.py), in the background."""
+    runner = [str(CORE / "facade/run_app.py"), str(folder)]
+    uv = shutil.which("uv") or next((str(u) for u in (Path.home() / ".local/bin/uv", Path.home() / ".local/bin/uv.exe")
+                                     if u.is_file()), None)
+    if uv:
+        extra = ["--with-requirements", str(folder / "requirements.txt")] if (folder / "requirements.txt").is_file() else []
+        command = [uv, "run", "--quiet", "--no-project", "--python", "3.12", "--with", "streamlit==1.41.1", *extra, *runner]
+    else:
+        command = [sys.executable, *runner]  # this page already runs with Streamlit
+    subprocess.Popen(command, cwd=ROOT, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, start_new_session=True)
+
+
 def show_report(item):
     head, action = st.columns([3, 2])
     head.subheader(item["title"])
@@ -601,6 +615,16 @@ def show_report(item):
         st.link_button(t["open_link"], item["url"])
         return
     p = item["path"]
+    if item["kind"] == "folder" and (p / "app.py").is_file():
+        open_col, folder_col, _ = st.columns([1, 1, 3])
+        if open_col.button(t["open"], type="primary"):
+            start_app(p)
+            st.caption(t["app_opening"])
+        if folder_col.button(t["show_folder"]):
+            show_in_folder(p / "app.py")
+        if (p / "README.md").is_file():
+            st.markdown((p / "README.md").read_text(encoding="utf-8", errors="replace"))
+        return
     if item["kind"] == "folder":
         entry = p / "index.html"
         open_col, folder_col, _ = st.columns([1, 1, 3])
