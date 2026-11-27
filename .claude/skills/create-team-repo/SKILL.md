@@ -42,7 +42,7 @@ flowchart TD
     %% I: Every change in the team folder must be saved under the Champion's name and GitHub email.
     %% K: Saves the first version straight to the team, without asking: it is part of creating the folder.
     %% L: The AI assistant runs the team icon itself: it installs what is needed, turns on the team checks, hides technical files and opens the team page in its own browser. If it cannot, the Champion double-clicks the icon.
-    %% Q: Asks the Champion, one question at a time, how the team works: structure, rhythm, processes and how it uses each tool. Saves it for the team so the AI assistant always has that context, and proposes the solutions that fit the team best.
+    %% Q: Asks the Champion, one question at a time, how the team works: structure, rhythm, processes, how it uses each tool and where time goes. Saves it for the team so the AI assistant always has that context, and proposes the solutions that fit the team best.
     %% O: Offers to bring an automation the Champion already uses into the team with the migrate skill.
     %% P: Deletes the temporary copy of the template and says in three lines where the folder is and how to open it.
 ```
