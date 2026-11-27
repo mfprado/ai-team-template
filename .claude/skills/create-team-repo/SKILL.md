@@ -260,7 +260,10 @@ You cannot see that window, and never ask the Champion to copy it: read
 - No log: the launcher has not run yet. On a Mac, if it was blocked, right-click the file and
   choose **Open**. On Windows, if a blue "Windows protected your PC" box appears, click
   **More info**, then **Run anyway**. Say only the one for their system.
-- `Setup finished.` and `Launcher finished.`: done. If the log says it made the company's icons
+- `Setup finished.` and `Launcher finished.`: done. The team page is open in the browser, in the
+  company's look: if you can see it (screenshots), look at each section before going on and fix
+  what does not read well on the brand (contrast, logos, buttons on two lines). Otherwise ask the
+  Champion in one line whether it looks right. If the log says it made the company's icons
   from its logo, save them straight to the team, without asking (part of creating the folder):
 
   ```

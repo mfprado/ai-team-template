@@ -153,6 +153,7 @@ def build(diagram, brand, brand_dir, language="en"):
 html,body{{margin:0;background:{c['background']};color:{c['text']};font-family:{c['font']}}}
 main{{padding:0}}
 #tools{{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin:2px 0 6px}}
+.logo-dot{{display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;border-radius:50%;background:#FFFFFF;flex:none}}
 .chip{{display:flex;align-items:center;gap:6px;padding:3px 10px 3px 5px;border:1px solid {c['line']};
   border-radius:999px;font-size:13px;background:{c['background']};color:{c['text']}}}
 #flow{{text-align:center}}
@@ -278,6 +279,12 @@ function logo(t, size) {{
   return svg;
 }}
 
+function logoDot(t) {{
+  // Logos on a small white disc, so dark logos (GitHub, Codex, Notion) show on any background.
+  const dot = document.createElement("span"); dot.className = "logo-dot";
+  dot.appendChild(logo(t, 16)); return dot;
+}}
+
 function badge(svg, layer, step, tools) {{
   // Small logos on the top-right corner of the step that uses them. They go in their own
   // layer, outside the step: Mermaid's styles for steps would repaint the logos.
@@ -290,7 +297,7 @@ function badge(svg, layer, step, tools) {{
     const g = document.createElementNS(SVGNS, "g");
     const x = corner.x - (i + 1) * (size + gap) + 6, y = corner.y - size / 2 - 2;
     g.innerHTML = `<circle cx="${{x + size / 2}}" cy="${{y + size / 2}}" r="${{size / 2 + 2}}"
-      fill="${{C.background}}" stroke="${{C.line}}"/>`;
+      fill="#FFFFFF" stroke="${{C.line}}"/>`;
     const icon = logo(t, size - 6);
     icon.setAttribute("x", x + 3); icon.setAttribute("y", y + 3);
     const title = document.createElementNS(SVGNS, "title"); title.textContent = t.label;
@@ -325,7 +332,7 @@ function openCard(node, id, info) {{
   const chips = body.querySelector(".chips");
   for (const t of used) {{
     const chip = document.createElement("span"); chip.className = "chip";
-    chip.appendChild(logo(t, 20)); chip.appendChild(document.createTextNode(t.label));
+    chip.appendChild(logoDot(t)); chip.appendChild(document.createTextNode(t.label));
     chips.appendChild(chip);
   }}
   const shade = document.getElementById("shade"), card = document.getElementById("card");
@@ -367,7 +374,7 @@ document.addEventListener("keydown", e => {{ if (e.key === "Escape") closeCard()
     const row = document.getElementById("tools");
     for (const t of Object.values(tools)) {{
       const chip = document.createElement("span"); chip.className = "chip";
-      chip.appendChild(logo(t, 20)); chip.appendChild(document.createTextNode(t.label));
+      chip.appendChild(logoDot(t)); chip.appendChild(document.createTextNode(t.label));
       row.appendChild(chip);
     }}
     try {{ await document.fonts.ready; }} catch (e) {{}}  // measure the boxes in the page's type

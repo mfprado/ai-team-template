@@ -21,7 +21,7 @@ def tokens(brand):
         **c,
         "card": "#FFFFFF" if light else mix(c["background"], c["text"], 0.06),
         "panel": mix(c["background"], c["text"], 0.035),
-        "wash": mix(c["background"], c["primary"], 0.12),
+        "wash": mix(c["background"], c["primary"], 0.12 if light else 0.2),
         "rule": mix(c["background"], c["text"], 0.13),
     }
 
@@ -68,6 +68,19 @@ hr {{ border-color:var(--rule) !important; }}
   box-shadow:inset 3px 0 0 var(--accent); }}
 .st-key-menu [data-testid="stBaseButton-primary"] p {{ font-weight:650; }}
 
+/* The logo: an app icon */
+[data-testid="stSidebar"] [data-testid="stImage"] img {{ border-radius:14px; }}
+
+/* Artifacts and history: lists like the skills */
+[class*="st-key-art-"] button {{ justify-content:flex-start; text-align:left; padding:.1rem 0 !important;
+  background:transparent !important; border:0 !important; }}
+[class*="st-key-art-"] button > div {{ justify-content:flex-start; flex-direction:row-reverse; gap:.35rem; }}
+[class*="st-key-art-"] button p {{ font-size:1.1rem !important; font-weight:650; color:var(--ink); }}
+[class*="st-key-art-"] button:hover p {{ color:var(--accent); }}
+[class*="st-key-change-"] {{ padding:.55rem 0 .65rem; border-bottom:1px solid var(--rule); gap:.15rem; }}
+[class*="st-key-change-"] p {{ margin:0; }}
+button p {{ white-space:nowrap; }}
+
 /* Buttons */
 [data-testid="stBaseButton-secondary"] {{ border:1px solid var(--rule) !important; background:var(--card) !important;
   color:var(--ink) !important; border-radius:8px !important; }}
@@ -78,7 +91,6 @@ button:focus-visible {{ outline:2px solid var(--accent) !important; outline-offs
 /* Containers: quiet surfaces, no shadows */
 [data-testid="stVerticalBlockBorderWrapper"]:has(> div > [data-testid="stVerticalBlock"]) {{ border-radius:14px; }}
 [data-testid="stVerticalBlockBorderWrapper"] {{ border-color:var(--rule) !important; }}
-div[data-testid="stVerticalBlockBorderWrapper"][class*="st-key-skillcard"] {{ background:var(--card); }}
 [data-testid="stExpander"] details {{ border:1px solid var(--rule) !important; border-radius:10px !important; background:var(--card); }}
 [data-testid="stExpander"] summary p {{ font-weight:550; }}
 

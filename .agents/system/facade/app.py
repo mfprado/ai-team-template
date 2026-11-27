@@ -59,9 +59,9 @@ T = {
         "perms_intro": "What the AI is not allowed to do in this folder, in every conversation and every skill. Switch a rule off only if the team agrees. What each skill may do without asking is in that skill.",
         "skill_perms": "Can do without asking, while this skill runs (the general permissions still apply):",
         "no_skill_perms": "Nothing: it asks before every action.",
-        "perm_off_confirm": "From now on, **{skill}** will ask before: {perm}. This changes it for the whole team and saves it right away. Switch it off?",
-        "perm_on_confirm": "From now on, **{skill}** will do this without asking: {perm}. This changes it for the whole team and saves it right away. Switch it on?",
-        "perm_yes": "Yes, change it for the team",
+        "perm_off_confirm": "From now on, **{skill}** will ask before: {perm}. This applies to the whole team.",
+        "perm_on_confirm": "From now on, **{skill}** will do this without asking: {perm}. This applies to the whole team.",
+        "perm_on": "Switch on", "perm_off": "Switch off",
         "perm_off_summary": "Skill {skill}: asks again before {perm}",
         "perm_on_summary": "Skill {skill}: {perm} without asking",
         "add_perm": "To let it do something else without asking, paste this in your AI assistant:",
@@ -71,7 +71,7 @@ T = {
         "note": "Short message you can send to {name}:",
         "shared": "Shared with the team", "private": "Only on this computer", "no_files": "Nothing here yet.",
         "open": "Open", "show_folder": "Show in folder", 
-        "recent": "Recent changes",
+        "recent": "Recent changes", "no_history": "Nothing saved for the team yet. Every change shows up here, with who made it.",
         "sensitive": "Changes how the AI works for everyone", "changed_what": "changed",
         "what": {"skill": "skill {x}", "perms": "permissions", "docs": "documents", "reports": "artifacts",
                  "rules": "team rules", "system": "system", "other": "other files"},
@@ -114,9 +114,9 @@ T = {
         "perms_intro": "Lo que la IA no puede hacer en esta carpeta, en cualquier conversación y en cualquier skill. Apagá una regla solo si el equipo está de acuerdo. Lo que cada skill puede hacer sin preguntar está en esa skill.",
         "skill_perms": "Puede hacer sin preguntar, mientras corre esta skill (los permisos generales siguen valiendo):",
         "no_skill_perms": "Nada: pregunta antes de cada acción.",
-        "perm_off_confirm": "Desde ahora, **{skill}** va a preguntar antes de: {perm}. Cambia para todo el equipo y se guarda enseguida. ¿Lo apagás?",
-        "perm_on_confirm": "Desde ahora, **{skill}** va a hacer esto sin preguntar: {perm}. Cambia para todo el equipo y se guarda enseguida. ¿Lo encendés?",
-        "perm_yes": "Sí, cambiarlo para el equipo",
+        "perm_off_confirm": "Desde ahora, **{skill}** va a preguntar antes de: {perm}. Vale para todo el equipo.",
+        "perm_on_confirm": "Desde ahora, **{skill}** va a hacer esto sin preguntar: {perm}. Vale para todo el equipo.",
+        "perm_on": "Encender", "perm_off": "Apagar",
         "perm_off_summary": "Skill {skill}: vuelve a preguntar antes de {perm}",
         "perm_on_summary": "Skill {skill}: {perm} sin preguntar",
         "add_perm": "Para que haga otra cosa sin preguntar, pegá esto en tu asistente de IA:",
@@ -126,7 +126,7 @@ T = {
         "note": "Mensaje corto que podés mandarle a {name}:",
         "shared": "Compartidos con el equipo", "private": "Solo en esta computadora", "no_files": "Todavía no hay nada.",
         "open": "Abrir", "show_folder": "Ver en la carpeta", 
-        "recent": "Cambios recientes", "changed_what": "cambió",
+        "recent": "Cambios recientes", "no_history": "Todavía no hay nada guardado para el equipo. Acá aparece cada cambio, con quién lo hizo.", "changed_what": "cambió",
         "sensitive": "Cambia cómo funciona la IA para todos",
         "what": {"skill": "la skill {x}", "perms": "los permisos", "docs": "documentos", "reports": "artefactos",
                  "rules": "reglas del equipo", "system": "el sistema", "other": "otros archivos"},
@@ -281,7 +281,7 @@ def sync_status():
 
 def rule_label(rule):
     what = rule.get("pattern") or rule.get("tool", "")
-    return f"{rule.get('reason') or what}  ·  `{what}`"
+    return f"{rule.get('reason') or what}\u2003`{what}`"
 
 
 # ---------- page ----------
@@ -302,7 +302,7 @@ ICONS = dict(zip(SECTIONS, [":material/auto_awesome:", ":material/bar_chart:", "
 
 with st.sidebar:
     if logo.exists():
-        st.image(str(logo), width=150)
+        st.image(str(logo), width=60)
     st.markdown(f'<div class="team-name">{html.escape(team.get("team", "Team"))}</div>'
                 f'<div class="champion">{html.escape(t["champion"].format(name=champion))}</div>',
                 unsafe_allow_html=True)
@@ -318,8 +318,10 @@ with st.sidebar:
     for name in SECTIONS:
         current = st.session_state.section == name
         if menu.button(name, icon=ICONS[name], type="primary" if current else "secondary",
-                     use_container_width=True, key=f"menu-{name}") and not current:
+                     use_container_width=True, key=f"menu-{name}"):
+            # A section's own entry takes you back to its start (out of an artifact, a skill).
             st.session_state.section = name
+            st.session_state.pop("viewing", None)
             st.rerun()
     section = st.session_state.section
 
@@ -366,8 +368,8 @@ def skill_permissions(name):
 def confirm_skill_permission(name, title, perm, wanted, key):
     """Switch one of a skill's permissions on or off, for the whole team, after an OK."""
     st.write(t["perm_on_confirm" if wanted else "perm_off_confirm"].format(skill=title, perm=perm["plain"]))
-    yes, no = st.columns(2)
-    if yes.button(t["perm_yes"], type="primary"):
+    yes, no, _ = st.columns([1, 1, 2])
+    if yes.button(t["perm_on"] if wanted else t["perm_off"], type="primary", use_container_width=True):
         with st.spinner(t["applying"]):
             run(sys.executable, "-I", str(CORE / "scripts/skill_permissions.py"), "on" if wanted else "off",
                 "--skill", name, "--rule", perm["rule"])
@@ -376,7 +378,7 @@ def confirm_skill_permission(name, title, perm, wanted, key):
                   [f".agents/skills/{name}"])
         if st.button(t["close"]):
             st.rerun()
-    elif no.button(t["share_no"]):
+    elif no.button(t["share_no"], use_container_width=True):
         st.session_state[f"{key}-undo"] = True  # the switch goes back to how it was
         st.rerun()
 
@@ -388,9 +390,10 @@ def show_skill_permissions(name, title):
         st.write(t["no_skill_perms"])
     for i, perm in enumerate(perms):
         key = f"perm-{name}-{i}"
-        if st.session_state.pop(f"{key}-undo", False):
+        # The switch's value lives in the session only (setting it there and as a default clashes).
+        if key not in st.session_state or st.session_state.pop(f"{key}-undo", False):
             st.session_state[key] = perm["on"]
-        wanted = st.toggle(f"{perm['plain']}  ·  `{perm['rule']}`", value=perm["on"], key=key)
+        wanted = st.toggle(f"{perm['plain']}\u2003`{perm['rule']}`", key=key)
         if wanted != perm["on"]:
             confirm_skill_permission(name, title, perm, wanted, key)
     st.caption(t["add_perm"])
@@ -616,7 +619,7 @@ def show_report(item):
         return
     p = item["path"]
     if item["kind"] == "folder" and (p / "app.py").is_file():
-        open_col, folder_col, _ = st.columns([1, 1, 3])
+        open_col, folder_col, _ = st.columns([0.8, 1.6, 3.6], gap="small")
         if open_col.button(t["open"], type="primary"):
             start_app(p)
             st.caption(t["app_opening"])
@@ -627,7 +630,7 @@ def show_report(item):
         return
     if item["kind"] == "folder":
         entry = p / "index.html"
-        open_col, folder_col, _ = st.columns([1, 1, 3])
+        open_col, folder_col, _ = st.columns([0.8, 1.6, 3.6], gap="small")
         if entry.is_file() and open_col.button(t["open"], type="primary"):
             webbrowser.open(entry.as_uri())  # in the browser its assets/ load too
         if folder_col.button(t["show_folder"]):
@@ -669,23 +672,30 @@ if section == t["tab_artifacts"]:
             st.subheader(heading)
             if not group:
                 empty_state(t["no_private"]) if heading == t["private"] else empty_state(t["no_shared"], t["ask_report"])
-            for item in group:
-                col1, col2 = st.columns([4, 1])
-                meta = " · ".join(x for x in (t["shared_by"].format(who=item["who"]) if item["who"] else "", item["when"] or "") if x)
-                kind = item.get("type", "").capitalize()
-                col1.write(f"**{item['title']}**" + (f"  ·  {kind}" if kind else "") + (f"  ·  {meta}" if meta else ""))
-                if col2.button(t["view"], key=f"view-{item['key']}"):
-                    st.session_state.viewing = item["key"]
-                    st.rerun()
+            for i, item in enumerate(group):
+                with st.container(border=True, key=f"artcard-{heading == t['private']}-{i}"):
+                    if st.button(item["title"], key=f"art-{item['key']}", type="tertiary", use_container_width=True,
+                                 icon=":material/chevron_right:"):
+                        st.session_state.viewing = item["key"]
+                        st.rerun()
+                    who = t["shared_by"].format(who=item["who"]) if item["who"] else ""
+                    meta = ", ".join(x for x in (item.get("type", "").capitalize(), who, item["when"] or "") if x)
+                    if meta:
+                        st.caption(meta)
 
 # History: who changed what, in plain words
 if section == t["tab_history"]:
     st.subheader(t["recent"])
     out = git("log", "-n", "30", "--format=\x1e%an\x1f%at\x1f%s", "--name-only").stdout
+    if not out.strip():
+        empty_state(t["no_history"])
     for record in out.split("\x1e")[1:]:
         lines = [l for l in record.splitlines() if l.strip()]
         author, ts, subject = lines[0].split("\x1f")
         what = describe_paths(lines[1:], t)
         sensitive = any(l == ".agents/permissions.json" or l.startswith((".agents/rules/", ".agents/system/", ".agents/team.json")) for l in lines[1:])
-        flag = f"  \n  :orange[**{t['sensitive']}**]" if sensitive else ""
-        st.write(f"- **{author}** {t['changed_what']} {what or '—'} · {ago(int(ts), t)}  \n  {subject}{flag}")
+        with st.container(key=f"change-{ts}-{abs(hash(subject)) % 10**6}"):
+            st.markdown(f"**{author}** {t['changed_what']} {what or t['what']['other']}")
+            st.caption(f"{subject}\u2003{ago(int(ts), t)}")
+            if sensitive:
+                st.markdown(f":orange[{t['sensitive']}]")

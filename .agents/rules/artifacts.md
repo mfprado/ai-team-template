@@ -83,6 +83,14 @@ https://advanced-dashboard-demo.streamlit.app/, in the company's colours and typ
 - It stays one artifact folder: `index.html` with the charts (a charting library from a CDN is
   fine), the data in `assets/`, and in the README where the data comes from and how to refresh it.
 
+## Look at it before you finish
+
+Open what you made (the `index.html`, or the app with its launcher) and look at every view
+before saying it is done; take screenshots if your tools can. Fix what looks wrong: text that
+is hard to read on the brand's background (dark brands especially), logos that disappear,
+buttons or labels that break onto two lines, cut or overlapping parts, empty views with no
+explanation, warnings or errors on screen. Then say in one line that you checked it.
+
 ## Brand and repeat runs
 
 - **Brand:** if `.agents/brand.json` exists, use its colours, logo (`.agents/brand/logo.png`,
