@@ -171,6 +171,9 @@ def check_brand(files):
     bad = [k for k, v in colours.items() if not re.fullmatch(r"#[0-9A-Fa-f]{6}", str(v))]
     if "primary" not in brand or bad:
         return ["The brand needs a main colour, and every colour written like #0B5FFF."]
+    family = brand.get("font_family")
+    if family is not None and not re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9 \-]{0,60}", str(family)):
+        return ["The brand's typeface must be a plain name like Montserrat or Open Sans."]
     return []
 
 

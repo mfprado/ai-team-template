@@ -9,6 +9,7 @@ tool logos the diagram names (Iconify). Without internet, the diagram's text is 
 import base64
 import io
 import json
+import re
 
 # Tools in a flow diagram, each on its own line, joined to the steps that use them:
 #   GM@{ icon: "logos:google-gmail", label: "Gmail" }      a tool with a logo
@@ -60,6 +61,43 @@ def image_data(path, box):
         return None
 
 
+FAMILY = re.compile(r"^[A-Za-z0-9][A-Za-z0-9 \-]{0,60}$")
+FONT_FILES = {".woff2": "woff2", ".woff": "woff", ".ttf": "truetype", ".otf": "opentype"}
+WEIGHTS = [("thin", 100), ("extralight", 200), ("light", 300), ("medium", 500), ("semibold", 600),
+           ("extrabold", 800), ("bold", 700), ("black", 900)]
+
+
+def company_font(brand, brand_dir):
+    """How to load the company's own typeface, and the font stack that puts it first.
+
+    brand.json's `font_family` names it ("Montserrat"). Its files in .agents/brand/fonts/ are used
+    when there (any typeface the company provides); otherwise it is asked from Google Fonts. Our
+    default type (Bricolage Grotesque, or Newsreader for a serif brand) stays behind it.
+    Returns (CSS that loads the fonts, the font-family value).
+    """
+    kind = "serif" if brand.get("font") == "serif" else "sans"
+    family = str(brand.get("font_family") or "").strip()
+    css = f"@import url('https://fonts.googleapis.com/css2?family={FONT_URLS[kind]}&display=swap');\n"
+    if not FAMILY.match(family):
+        return css, FONTS[kind]
+    files = sorted(f for f in (brand_dir / "fonts").glob("*") if f.suffix.lower() in FONT_FILES) \
+        if (brand_dir / "fonts").is_dir() else []
+    if files:
+        for f in files:
+            name = re.sub(r"[^a-z]", "", f.stem.lower())
+            weight = next((w for key, w in WEIGHTS if key in name), 400)
+            style = "italic" if "italic" in name else "normal"
+            data = base64.b64encode(f.read_bytes()).decode()
+            css += (f"@font-face{{font-family:'{family}';src:url(data:font/{FONT_FILES[f.suffix.lower()]};base64,{data}) "
+                    f"format('{FONT_FILES[f.suffix.lower()]}');font-weight:{weight};font-style:{style};font-display:swap}}\n")
+    else:
+        query = family.replace(" ", "+")
+        # A static family fails if a weight is missing: ask for the usual weights, then the plain family.
+        css = (f"@import url('https://fonts.googleapis.com/css2?family={query}:wght@400;500;600;700&display=swap');\n"
+               f"@import url('https://fonts.googleapis.com/css2?family={query}&display=swap');\n") + css
+    return css, f"'{family}', {FONTS[kind]}"
+
+
 def palette(brand):
     colours = {k: brand.get(k) or v for k, v in DEFAULT.items()}
     p, bg, tx = colours["primary"], colours["background"], colours["text"]
@@ -83,6 +121,7 @@ TEXT = {
 def build(diagram, brand, brand_dir, language="en"):
     """The full HTML document."""
     c = palette(brand)
+    font_css, c["font"] = company_font(brand, brand_dir)
     company_icon = image_data(brand_dir / "icon.png", (64, 64))
     config = {
         "startOnLoad": False, "securityLevel": "strict", "theme": "base",
@@ -109,7 +148,7 @@ def build(diagram, brand, brand_dir, language="en"):
     return f"""<!doctype html>
 <html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Flow</title>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family={FONT_URLS["serif" if brand.get("font") == "serif" else "sans"]}&display=swap">
+<style>{font_css}</style>
 <style>
 html,body{{margin:0;background:{c['background']};color:{c['text']};font-family:{c['font']}}}
 main{{padding:0}}

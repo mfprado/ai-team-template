@@ -85,8 +85,10 @@ https://advanced-dashboard-demo.streamlit.app/, in the company's colours and typ
 
 ## Brand and repeat runs
 
-- **Brand:** if `.agents/brand.json` exists, use its colours, font and logo
-  (`.agents/brand/logo.png`, copied into the artifact's `assets/`).
+- **Brand:** if `.agents/brand.json` exists, use its colours, logo (`.agents/brand/logo.png`,
+  copied into the artifact's `assets/`) and type: its `font_family` first (its files from
+  `.agents/brand/fonts/`, copied into `assets/`, or from Google Fonts), then `font` (sans or
+  serif) as the fallback. A Streamlit app gets all of this from `look.py` already.
 - If an artifact will be rebuilt regularly, build it with a script inside the skill so every
   run looks the same (see the skills rule), and name that script in the README.
 - Follow any team standard in `.agents/rules/` (colours, logo, layout).

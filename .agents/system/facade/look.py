@@ -1,18 +1,17 @@
 """The team page's look, made from the company's brand (.agents/brand.json).
 
-Colours come from the brand (or the default below); type is Bricolage Grotesque, or Newsreader
-when the brand asks for a serif. The one bold element is the request to paste for each skill,
+Colours come from the brand (or flow_page.DEFAULT); type is the company's own typeface when the
+brand names it (font_family, with its files in .agents/brand/fonts/ or from Google Fonts),
+else Bricolage Grotesque, or Newsreader when the brand asks for a serif. The one bold element is the request to paste for each skill,
 set large in the page's type on a wash of the brand colour: asking the AI in your own words is
 what the page is about. Everything else stays quiet.
 """
 
-from flow_page import mix, on, palette
+from pathlib import Path
 
-FONTS = {
-    "sans": ("Bricolage Grotesque", "Bricolage+Grotesque:opsz,wght@12..96,300..800",
-             "-apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif"),
-    "serif": ("Newsreader", "Newsreader:opsz,wght@6..72,300..700", "Georgia, 'Times New Roman', serif"),
-}
+from flow_page import company_font, mix, on, palette
+
+BRAND_DIR = Path(__file__).resolve().parents[2] / "brand"
 
 
 def tokens(brand):
@@ -29,16 +28,16 @@ def tokens(brand):
 
 def css(brand):
     k = tokens(brand)
-    name, query, fallback = FONTS["serif" if brand.get("font") == "serif" else "sans"]
-    font = f"'{name}', {fallback}"
+    font_css, font = company_font(brand, BRAND_DIR)
     return f"""<style>
-@import url('https://fonts.googleapis.com/css2?family={query}&display=swap');
+{font_css}
 :root {{ --ink:{k['text']}; --paper:{k['background']}; --accent:{k['primary']}; --on-accent:{k['on_primary']};
   --wash:{k['wash']}; --rule:{k['rule']}; --muted:{k['muted']}; --card:{k['card']}; --panel:{k['panel']}; }}
 
 /* Type: one family, its optical size doing the work */
 html, body, [data-testid="stApp"], [data-testid="stMarkdownContainer"], button, input, textarea, select,
-[data-testid="stWidgetLabel"], [data-testid="stCaptionContainer"] {{ font-family:{font} !important; }}
+[data-testid="stWidgetLabel"], [data-testid="stCaptionContainer"], h1, h2, h3, h4, h5, h6, [data-testid="stHeading"] *
+{{ font-family:{font} !important; }}
 [data-testid="stApp"] {{ background:var(--paper); color:var(--ink); }}
 [data-testid="stMarkdownContainer"] p {{ line-height:1.55; max-width:68ch; }}
 h1 {{ font-size:2.75rem !important; font-weight:720 !important; letter-spacing:-0.025em; line-height:1.05 !important;

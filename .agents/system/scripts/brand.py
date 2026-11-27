@@ -3,13 +3,18 @@
 
   sh .agents/system/bin/py .agents/system/scripts/brand.py \
       --primary "#0B5FFF" [--background "#FFFFFF"] [--text "#1A1A1A"] [--font sans|serif] \
-      [--logo "<image file>"]
+      [--logo "<image file>"] [--font-family "Montserrat"] [--font-file "<font file>" ...]
 
 Writes, in the team's settings (shared with the team like any other change):
 - .agents/brand.json         colours and font
 - .agents/brand/logo.png     the logo as given (converted to PNG)
 - .agents/brand/icon.png     a square icon (Mac folder icon)
 - .agents/brand/icon.ico     the same icon for Windows
+- .agents/brand/fonts/       the company's font files, when it provides them (.woff2, .woff, .ttf, .otf)
+
+--font-family is the company's own typeface, as its design guide names it. The team page, the
+flow diagrams, the apps and the reports use it: from its files when given, else from Google
+Fonts. --font (sans or serif) is what to fall back to when it cannot load.
 
 Making the PNG and the icons needs Pillow. Without it (e.g. while creating the team, before the
 launcher has installed anything), the logo is kept as given in .agents/brand/logo-source.<ext>
@@ -64,6 +69,8 @@ def main():
     parser.add_argument("--text", type=colour, help="text colour")
     parser.add_argument("--font", choices=["sans", "serif"], default="sans")
     parser.add_argument("--logo", help="logo image file (PNG, JPG, ...)")
+    parser.add_argument("--font-family", help="the company's typeface, as its design guide names it")
+    parser.add_argument("--font-file", action="append", default=[], help="a font file the company provides (repeatable)")
     args = parser.parse_args()
 
     brand = {"primary": args.primary, "font": args.font}
@@ -71,6 +78,20 @@ def main():
         brand["background"] = args.background
     if args.text:
         brand["text"] = args.text
+    if args.font_family:
+        family = args.font_family.strip()
+        if not re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9 \-]{0,60}", family):
+            print(json.dumps({"error": f"'{family}' is not a typeface name like Montserrat or Open Sans."}))
+            return 1
+        brand["font_family"] = family
+    fonts = FOLDER / "fonts"
+    for font_file in args.font_file:
+        source = Path(font_file).expanduser()
+        if not source.is_file() or source.suffix.lower() not in (".woff2", ".woff", ".ttf", ".otf"):
+            print(json.dumps({"error": f"'{source}' is not a font file (.woff2, .woff, .ttf or .otf)."}))
+            return 1
+        fonts.mkdir(parents=True, exist_ok=True)
+        shutil.copyfile(source, fonts / source.name)
     if args.logo:
         logo = Path(args.logo).expanduser()
         if not logo.is_file():
@@ -94,7 +115,7 @@ def main():
         brand["logo"] = ".agents/brand/logo.png"
     BRAND.parent.mkdir(parents=True, exist_ok=True)
     BRAND.write_text(json.dumps(brand, indent=2) + "\n", encoding="utf-8")
-    written = [str(BRAND.relative_to(ROOT))] + ([str(FOLDER.relative_to(ROOT))] if args.logo else [])
+    written = [str(BRAND.relative_to(ROOT))] + ([str(FOLDER.relative_to(ROOT))] if args.logo or args.font_file else [])
     result = {"brand": brand, "paths": written}
     if args.logo and icons_later:
         result["icons"] = "made on the next launch"

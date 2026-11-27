@@ -187,17 +187,19 @@ back to the template.
 Do this before the first save, so the brand travels in it and the first double-click already
 shows the company's logo on the folder and its icon.
 
-1. Find the brand. From a design guide they attach: read the colours, the font (serif or sans)
-   and the logo from it. From a website: its main colour (buttons, header), background and text
-   colours, and its logo (prefer a square PNG logo; ask before downloading it, saying from
-   where). A guide wins over the website when they differ.
+1. Find the brand. From a design guide they attach: read the colours, the typeface's name (and
+   whether it is serif or sans) and the logo from it; if the guide comes with the font files,
+   use them. From a website: its main colour (buttons, header), background and text
+   colours, the typeface its text uses (the first name in its `font-family`), and its logo
+   (prefer a square PNG logo; ask before downloading it, saying from where). A guide wins over the website when they differ.
 2. Show it in plain words and wait for OK, for example: "Main colour: dark blue (#0B3D91).
-   Background: white. Logo: the one at the top of your website."
+   Background: white. Typeface: Montserrat. Logo: the one at the top of your website."
 3. Save it, inside the team folder:
 
    ```
    sh .agents/system/bin/py .agents/system/scripts/brand.py --primary "<#hex>" \
-     [--background "<#hex>"] [--text "<#hex>"] [--font sans|serif] [--logo "<logo file>"]
+     [--background "<#hex>"] [--text "<#hex>"] [--font sans|serif] [--logo "<logo file>"] \
+     [--font-family "<typeface>"] [--font-file "<font file>" ...]
    ```
 
    It works on any computer. If it answers `"icons": "made on the next launch"`, this computer
