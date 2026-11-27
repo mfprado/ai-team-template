@@ -5,7 +5,8 @@ A person can be in several teams, so each team folder gets its own address:
 - First, stop this folder's page if one was left running (only this folder's, never another team's).
 - Then use the address this folder used before (kept in .git/team-page-port), or the first free
   one from 8501, so each team keeps the same address while the others are open too.
-- Open it in the browser and keep running until the window is closed.
+- Open it in the browser and keep running until the window is closed. With TEAM_PAGE_NO_BROWSER=1
+  (set by the AI assistant when it runs the launcher), only print the address.
 
 Run by the launchers with streamlit available (uv run --with streamlit ...).
 Standard library only otherwise.
@@ -127,8 +128,12 @@ def main():
         print("The team page did not start. Close this window and open the team folder again.")
         return 1
     url = f"http://127.0.0.1:{port}"
-    webbrowser.open(url)
-    print(f"The team page is open in your browser ({url}). Close this window when you are done.")
+    if os.environ.get("TEAM_PAGE_NO_BROWSER") == "1":
+        # Started by the AI assistant, which opens the address in its own browser.
+        print(f"The team page is ready at {url}", flush=True)
+    else:
+        webbrowser.open(url)
+        print(f"The team page is open in your browser ({url}). Close this window when you are done.", flush=True)
     try:
         return page.wait()
     except KeyboardInterrupt:
