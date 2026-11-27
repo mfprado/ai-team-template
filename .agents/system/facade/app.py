@@ -86,7 +86,7 @@ T = {
         "shared_by": "by {who}", "view": "View", "back": "Back to the list", "about_artifact": "What it is and how to make it again", "app_opening": "Opening the app in your browser. It can take a few seconds the first time.",
         "open_link": "Open it", "open_browser": "Open in the browser", "what_it_is": "What it is", "link_note": "This one lives in your AI assistant. It opens in a new browser tab.",
         "share_team": "Share with the team", "share_confirm": "**{title}** moves to the team's artifacts and is saved for the whole team: everyone will be able to see it and change it.",
-        "share_yes": "Share", "share_no": "Cancel", "close": "Close", "share_summary": "Shared artifact: {title}",
+        "share_yes": "Share", "share_no": "Cancel", "delete": "Delete", "delete_yes": "Delete it", "delete_confirm": "**{title}** is only on this computer: deleting it cannot be undone.", "deleted": "Deleted: {title}.", "close": "Close", "share_summary": "Shared artifact: {title}",
                 "save": "Save for the whole team",
     },
     "es": {
@@ -146,7 +146,7 @@ T = {
         "shared_by": "de {who}", "view": "Ver", "back": "Volver a la lista", "about_artifact": "Qué es y cómo volver a hacerlo", "app_opening": "Abriendo la app en tu navegador. La primera vez puede tardar unos segundos.",
         "open_link": "Abrir", "open_browser": "Abrir en el navegador", "what_it_is": "Qué es", "link_note": "Este está en tu asistente de IA. Se abre en otra pestaña del navegador.",
         "share_team": "Compartir con el equipo", "share_confirm": "**{title}** pasa a los artefactos del equipo y se guarda para todos: cualquiera va a poder verlo y cambiarlo.",
-        "share_yes": "Compartir", "share_no": "Cancelar", "close": "Cerrar", "share_summary": "Artefacto compartido: {title}",
+        "share_yes": "Compartir", "share_no": "Cancelar", "delete": "Borrar", "delete_yes": "Borrarlo", "delete_confirm": "**{title}** está solo en esta computadora: si lo borrás, no se puede recuperar.", "deleted": "Borrado: {title}.", "close": "Cerrar", "share_summary": "Artefacto compartido: {title}",
                 "save": "Guardar para todo el equipo",
     },
 }
@@ -736,6 +736,37 @@ def confirm_share(item):
         st.rerun()
 
 
+def delete_private(item):
+    """Delete one of your own artifacts. Only inside the private folder, which is never saved for the team."""
+    _, private = artifact_folders()
+    if item["kind"] == "link":
+        mine = [l for l in load_json(private / "links.json", []) if l.get("url") != item["url"]]
+        (private / "links.json").write_text(json.dumps(mine, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
+        return True
+    target = Path(item["path"]).resolve()
+    if private.resolve() not in target.parents:
+        return False  # never outside the private folder
+    if target.is_dir():
+        shutil.rmtree(target)
+    else:
+        target.unlink(missing_ok=True)
+    return True
+
+
+@st.dialog(" ")
+def confirm_delete(item):
+    st.write(t["delete_confirm"].format(title=item["title"]))
+    yes, no, _ = st.columns([1, 1, 2])
+    if yes.button(t["delete_yes"], type="primary", use_container_width=True):
+        st.session_state.in_dialog = True
+        if delete_private(item):
+            flash(True, t["deleted"].format(title=item["title"]))
+        st.session_state.pop("viewing", None)
+        st.rerun()
+    elif no.button(t["share_no"], use_container_width=True):
+        st.rerun()
+
+
 def start_app(folder):
     """Start a Streamlit app artifact in the browser (run_app.py), in the background."""
     runner = [str(CORE / "facade/run_app.py"), str(folder)]
@@ -810,9 +841,9 @@ if section == t["tab_artifacts"]:
         show_report(viewing)
     else:
         st.write(t["reports_intro"])
-        # Yours first: everything starts there, only on this computer, until you share it.
-        for heading, group in ((t["private"], [i for i in items if i["private"]]),
-                               (t["shared"], [i for i in items if not i["private"]])):
+        # The team's first; then yours, only on this computer until you share it.
+        for heading, group in ((t["shared"], [i for i in items if not i["private"]]),
+                               (t["private"], [i for i in items if i["private"]])):
             st.subheader(heading)
             if not group:
                 if heading == t["private"]:
@@ -822,7 +853,7 @@ if section == t["tab_artifacts"]:
             for i, item in enumerate(group):
                 with st.container(border=True, key=f"artrow-{heading == t['private']}-{i}"):
                     about = artifact_about(item)
-                    cols = st.columns([10, 1, 1] if item["private"] else [11, 1], vertical_alignment="center", gap="small")
+                    cols = st.columns([9, 1, 1, 1] if item["private"] else [11, 1], vertical_alignment="center", gap="small")
                     if item["kind"] == "link":
                         cols[0].link_button(item["title"], item["url"], type="tertiary", use_container_width=True,
                                             icon=":material/open_in_new:")
@@ -833,9 +864,12 @@ if section == t["tab_artifacts"]:
                     if about:
                         with cols[1].popover("", icon=":material/info:", help=t["what_it_is"]):
                             st.markdown(about)
-                    if item["private"] and cols[-1].button("", key=f"share-{item['key']}", icon=":material/group:",
-                                                           help=t["share_team"]):
+                    if item["private"] and cols[2].button("", key=f"share-{item['key']}", icon=":material/group:",
+                                                          help=t["share_team"]):
                         confirm_share(item)
+                    if item["private"] and cols[3].button("", key=f"delete-{item['key']}", icon=":material/delete:",
+                                                          help=t["delete"]):
+                        confirm_delete(item)
 
 # History: who changed what, in plain words
 if section == t["tab_history"]:
