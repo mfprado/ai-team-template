@@ -70,7 +70,7 @@ def find_uv():
     return str(local) if local.exists() else None
 
 
-def open_team_page(seconds=40):
+def open_team_page(seconds=15):  # short: the session waits for this, and Windows starts slower
     if os.environ.get("CLAUDE_CODE_REMOTE") or os.environ.get("CI"):
         return  # cloud sessions have no team page
     url = page_ready()
@@ -91,6 +91,10 @@ def open_team_page(seconds=40):
     if url:
         print(f"The team page is running at {url}. If you have a built-in browser, open this address "
               "in it now, without asking and without opening the person's own browser.")
+    elif find_uv():
+        print("The team page is still starting (slower the first time, especially on Windows). Its address "
+              f"will be in {PORT_FILE.relative_to(ROOT).as_posix()} as http://127.0.0.1:<port>; open it in "
+              "your built-in browser once the person needs it. Do not wait for it now.")
 
 
 if __name__ == "__main__":

@@ -15,13 +15,21 @@ uv_python() {
   (cd / && "$1" python find --system 3.12 2>/dev/null)
 }
 
-for uv_bin in "$(command -v uv 2>/dev/null)" "$HOME/.local/bin/uv" "$HOME/.cargo/bin/uv"; do
-  if [ -n "$uv_bin" ] && [ -x "$uv_bin" ] && PY="$(uv_python "$uv_bin")" && [ -n "$PY" ]; then
+# A candidate counts only if it really runs Python: on Windows, "python3" can be the Microsoft
+# Store placeholder, which opens the Store instead.
+works() {
+  "$@" -c "import sys; sys.exit(0 if sys.version_info >= (3, 9) else 1)" >/dev/null 2>&1
+}
+
+# uv.exe on Windows (Git Bash does not always find it without the .exe).
+for uv_bin in "$(command -v uv 2>/dev/null)" "$HOME/.local/bin/uv" "$HOME/.local/bin/uv.exe" \
+              "$HOME/.cargo/bin/uv" "$HOME/.cargo/bin/uv.exe"; do
+  if [ -n "$uv_bin" ] && [ -f "$uv_bin" ] && PY="$(uv_python "$uv_bin")" && [ -n "$PY" ] && works "$PY"; then
     exec "$PY" "$@"
   fi
 done
-if command -v python3 >/dev/null 2>&1; then exec python3 "$@"; fi
-if command -v python >/dev/null 2>&1; then exec python "$@"; fi
-if command -v py >/dev/null 2>&1; then exec py -3 "$@"; fi
+if command -v python3 >/dev/null 2>&1 && works python3; then exec python3 "$@"; fi
+if command -v python >/dev/null 2>&1 && works python; then exec python "$@"; fi
+if command -v py >/dev/null 2>&1 && works py -3; then exec py -3 "$@"; fi
 echo "Python not found. Open the team launcher once so it can install what is needed." >&2
 exit 127
