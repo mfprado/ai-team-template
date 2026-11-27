@@ -364,7 +364,8 @@ ICONS = dict(zip(SECTIONS, [":material/auto_awesome:", ":material/bar_chart:", "
 
 with st.sidebar:
     if logo.exists():
-        st.image(str(logo), width=60)
+        with st.container(key="sidebar-logo"):
+            st.image(str(logo), width=40)
     st.markdown(f'<div class="team-name">{html.escape(team.get("team", "Team"))}</div>'
                 f'<div class="champion">{html.escape(t["champion"].format(name=champion))}</div>',
                 unsafe_allow_html=True)

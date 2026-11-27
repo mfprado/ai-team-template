@@ -113,6 +113,7 @@ hr {{ border-color:var(--rule) !important; }}
 .st-key-menu [data-testid="stBaseButton-primary"] p {{ font-weight:650; }}
 
 /* The logo: an app icon */
+.st-key-sidebar-logo [data-testid="stFullScreenFrame"] {{ display:flex !important; justify-content:center !important; }}
 [data-testid="stSidebar"] [data-testid="stImage"] img {{ border-radius:14px; }}
 
 /* Artifacts and history: lists like the skills */
