@@ -11,6 +11,8 @@ Instructions for any AI agent (Codex, Claude Code, others) working in this team 
   "save it for the whole team", "get the team's latest", "the team's shared folder" (full list
   in `.agents/rules/changes.md`).
 - Never ask them to run commands, edit files by hand or use git. Do it yourself, or explain it in everyday words.
+- Say "the AI assistant" ("el asistente de IA"), not Claude or Codex: each person only knows the one they use,
+  and the team folder works the same with both.
 
 ## What lives where
 

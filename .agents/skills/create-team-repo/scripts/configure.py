@@ -58,7 +58,7 @@ The shared AI workspace of the {team} team at {company}.
 ## How to use it
 
 1. Double-click **{launcher}** in this folder. The first time, it installs what is needed.
-2. Open Claude or Codex, choose this folder, and ask for what you need in your own words.
+2. Open your AI assistant, choose this folder, and ask for what you need in your own words.
 
 ## What is here
 
@@ -78,7 +78,7 @@ El espacio de IA compartido del equipo {team} de {company}.
 ## Cómo usarlo
 
 1. Hacé doble clic en **{launcher}** en esta carpeta. La primera vez instala lo necesario.
-2. Abrí Claude o Codex, elegí esta carpeta y pedí lo que necesites con tus palabras.
+2. Abrí tu asistente de IA, elegí esta carpeta y pedí lo que necesites con tus palabras.
 
 ## Qué hay acá
 

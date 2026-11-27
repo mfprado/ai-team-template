@@ -18,12 +18,8 @@ flowchart TD
     F -- No --> G[Remove personal paths, passwords and hidden context] --> F
     F -- Yes --> H{{Does it need something the team blocks?}}
     H -- Yes --> I[Explain and propose a permission change] --> J
-    H -- No --> J[Make it visible to Claude and Codex]
+    H -- No --> J[Make it ready for everyone's AI assistant]
     J --> K([Tell them how to ask for it and to test it as a teammate]):::done
-    CL@{ icon: "logos:claude-icon", label: "Claude" }
-    CX@{ icon: "logos:codex", label: "Codex" }
-    J -.- CL
-    J -.- CX
     %% A: Someone pastes or attaches a personal skill, a script, saved instructions or a macro, or describes an automation they use.
     %% B: Checks that everything the automation needs is there: scripts it calls, templates, an example of the result.
     %% C: Asks for exactly what is missing, in plain words, and waits for it.
@@ -33,7 +29,7 @@ flowchart TD
     %% G: Uses folder paths that work for anyone, reads passwords from the computer's settings instead of the text, and writes the missing context into the skill.
     %% H: Compares what the skill needs (connectors, programs) with what the team's permissions allow.
     %% I: Explains in plain words what would change and the risk. Nothing changes without the person's OK.
-    %% J: Updates the copies that Claude and Codex read, so the skill works in both.
+    %% J: Updates the team folder so the skill works for everyone, whichever AI assistant they use.
     %% K: Tells them the skill's name, how to ask for it, what was changed so it works for others, and suggests a teammate tries it.
 ```
 

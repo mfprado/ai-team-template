@@ -18,12 +18,8 @@ flowchart TD
     F -- No --> G[Sacar rutas personales, contraseñas y contexto oculto] --> F
     F -- Sí --> H{{¿Necesita algo que el equipo bloquea?}}
     H -- Sí --> I[Explicar y proponer un cambio de permisos] --> J
-    H -- No --> J[Hacerla visible para Claude y Codex]
+    H -- No --> J[Dejarla lista para el asistente de IA de todos]
     J --> K([Contarle cómo pedirla y que la pruebe como un compañero]):::done
-    CL@{ icon: "logos:claude-icon", label: "Claude" }
-    CX@{ icon: "logos:codex", label: "Codex" }
-    J -.- CL
-    J -.- CX
     %% A: Alguien pega o adjunta una skill personal, un script, instrucciones guardadas o una macro, o describe una automatización que usa.
     %% B: Revisa que esté todo lo que la automatización necesita: scripts que llama, plantillas, un ejemplo del resultado.
     %% C: Pide exactamente lo que falta, en palabras simples, y lo espera.
@@ -33,7 +29,7 @@ flowchart TD
     %% G: Usa rutas que funcionan para cualquiera, lee las contraseñas de la configuración de la computadora en lugar del texto y escribe en la skill el contexto que faltaba.
     %% H: Compara lo que necesita la skill (conectores, programas) con lo que permiten los permisos del equipo.
     %% I: Explica en palabras simples qué cambiaría y el riesgo. Nada cambia sin el OK de la persona.
-    %% J: Actualiza las copias que leen Claude y Codex, para que la skill funcione en los dos.
+    %% J: Actualiza la carpeta del equipo para que la skill funcione para todos, use el asistente de IA que use.
     %% K: Le cuenta el nombre de la skill, cómo pedirla, qué se cambió para que funcione para otros, y sugiere que la pruebe alguien del equipo.
 ```
 

@@ -43,7 +43,8 @@ flowchart TD
 - Top to bottom (`flowchart TD`), 5 to 12 steps and checks. One shape per numbered step or check in the
   instructions, in the same order; merge small steps rather than drawing every detail.
 - Short labels in the team's language and in plain words: what happens, not how. No file
-  paths, commands or script names in the steps.
+  paths, commands or script names in the steps. Say "the AI assistant", never which one
+  (Claude, Codex): each teammate only knows their own.
 - **Tools the skill works with**, after the steps, each on its own line: the apps, connectors
   and services a teammate would recognise (Gmail, Google Sheets, Excel, Slack, GitHub, the
   company's CRM), not commands. Draw each one once and join it with a dotted line `-.-` to
