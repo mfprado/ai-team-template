@@ -113,7 +113,10 @@ hr {{ border-color:var(--rule) !important; }}
 .st-key-menu [data-testid="stBaseButton-primary"] p {{ font-weight:650; }}
 
 /* The logo: an app icon */
-.st-key-sidebar-logo [data-testid="stFullScreenFrame"] {{ display:flex !important; justify-content:center !important; }}
+/* Sidebar header: the logo, and the team's name to its right */
+.team-head {{ display:flex; align-items:center; gap:.75rem; margin:.2rem 0 .35rem; }}
+.team-head img {{ width:40px; height:40px; object-fit:contain; flex:none; }}
+.team-head .team-name {{ margin:0; }}
 [data-testid="stSidebar"] [data-testid="stImage"] img {{ border-radius:14px; }}
 
 /* Artifacts and history: lists like the skills */
@@ -210,6 +213,16 @@ button:focus-visible {{ outline:2px solid var(--accent) !important; outline-offs
   border-radius:4px; color:var(--ink) !important; text-decoration:none !important; font-size:.9rem; }}
 .team-back:hover {{ border-color:var(--accent); color:var(--accent) !important; }}
 </style>""" + back_link()
+
+
+def team_header(logo, name, champion):
+    """The logo with the team's name to its right, and the AI Champion underneath."""
+    try:
+        img = f'<img alt="" src="data:image/png;base64,{base64.b64encode(logo.read_bytes()).decode()}">'
+    except OSError:
+        img = ""
+    return (f'<div class="team-head">{img}<div class="team-name">{html.escape(name)}</div></div>'
+            f'<div class="champion">{html.escape(champion)}</div>')
 
 
 def sync_badge(text, ok):

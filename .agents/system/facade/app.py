@@ -363,11 +363,7 @@ ICONS = dict(zip(SECTIONS, [":material/auto_awesome:", ":material/bar_chart:", "
                             ":material/shield:", ":material/history:"]))
 
 with st.sidebar:
-    if logo.exists():
-        with st.container(key="sidebar-logo"):
-            st.image(str(logo), width=40)
-    st.markdown(f'<div class="team-name">{html.escape(team.get("team", "Team"))}</div>'
-                f'<div class="champion">{html.escape(t["champion"].format(name=champion))}</div>',
+    st.markdown(look.team_header(logo, team.get("team", "Team"), t["champion"].format(name=champion)),
                 unsafe_allow_html=True)
     refresh = st.button(t["sync"], icon=":material/refresh:", use_container_width=True)
     if refresh or "synced" not in st.session_state:
