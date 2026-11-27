@@ -107,6 +107,12 @@ button:focus-visible {{ outline:2px solid var(--accent) !important; outline-offs
   font-variation-settings:'opsz' 48; color:var(--ink); }}
 [class*="st-key-skill-"] button:hover p {{ color:var(--accent); }}
 
+/* Examples of what to ask: the page's type, quieter than the skill's own request */
+[class*="st-key-example-"] [data-testid="stCode"] pre {{ background:transparent !important; border:1px dashed var(--rule);
+  border-radius:12px !important; padding:.8rem 3rem .8rem 1.1rem !important; }}
+[class*="st-key-example-"] [data-testid="stCode"] code {{ font-family:{font} !important; background:transparent !important;
+  color:var(--ink) !important; font-size:1rem !important; white-space:pre-wrap !important; }}
+
 /* The request to paste: the page's one loud element */
 [class*="st-key-ask-"] [data-testid="stCode"] pre {{ background:var(--wash) !important; border-radius:14px !important;
   padding:1.1rem 3rem 1.1rem 1.25rem !important; }}

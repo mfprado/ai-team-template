@@ -43,10 +43,10 @@ T = {
         "go_back_confirm": "**{skill}** will go back to how it was on {date}, for the whole team. You can always come back to a later version here. Go back?",
         "go_back_summary": "Skill {skill}: back to the version from {date}", "no_versions": "No earlier versions yet.",
         "no_skills": "Your team has no skills yet. A skill is a task the AI does the same way for everyone, like a weekly report.",
-        "try_asking": "To start, open your AI assistant in this folder and paste:",
+        "try_asking": "To start, ask your AI assistant in this folder, for example:",
         "ask_skill": "Help me bring an automation I already use to the team.",
         "no_shared": "Nothing shared yet. Artifacts appear here when someone shares one with the team.",
-        "ask_report": "Make a report about <topic> and share it with the team.",
+        "ask_report": "Make a report on this month's sales by region.",
         "no_private": "What you ask the AI to make appears here first, only on your computer. When it is ready, share it with the team.",
         "up_to_date": "Up to date with the team", "not_synced": "Could not get the team's latest",
         "unshared": "You have changes not shared with the team",
@@ -69,8 +69,8 @@ T = {
         "perm_on": "Switch on", "perm_off": "Switch off",
         "perm_off_summary": "Skill {skill}: asks again before {perm}",
         "perm_on_summary": "Skill {skill}: {perm} without asking",
-        "add_perm": "To let it do something else without asking, paste this in your AI assistant:",
-        "ask_perm": "Let the {name} skill <what it should do> without asking.",
+        "add_perm": "To let it do something else without asking, ask your AI assistant, for example:",
+        "ask_perm": "Let the {name} skill create Gmail drafts without asking.",
         "blocked": "Blocked", "asks": "Asks first", "changed": "You changed:", "on": "on", "off": "off",
         "apply": "Apply for the whole team", "applying": "Sharing the change...",
         "note": "Short message you can send to {name}:",
@@ -103,10 +103,10 @@ T = {
         "go_back_confirm": "**{skill}** va a volver a como estaba el {date}, para todo el equipo. Siempre podés volver a una versión más nueva desde acá. ¿Volver?",
         "go_back_summary": "Skill {skill}: vuelve a la versión del {date}", "no_versions": "Todavía no hay versiones anteriores.",
         "no_skills": "Tu equipo todavía no tiene skills. Una skill es una tarea que la IA hace igual para todos, como un reporte semanal.",
-        "try_asking": "Para empezar, abrí tu asistente de IA en esta carpeta y pegá:",
+        "try_asking": "Para empezar, pedíselo a tu asistente de IA en esta carpeta, por ejemplo:",
         "ask_skill": "Ayudame a traer al equipo una automatización que ya uso.",
         "no_shared": "Todavía no hay nada compartido. Los artefactos aparecen acá cuando alguien comparte uno con el equipo.",
-        "ask_report": "Hacé un reporte sobre <tema> y compartilo con el equipo.",
+        "ask_report": "Hacé un reporte de las ventas del mes por región.",
         "no_private": "Lo que le pidas a la IA aparece primero acá, solo en tu computadora. Cuando esté listo, compartilo con el equipo.",
         "up_to_date": "Al día con el equipo", "not_synced": "No se pudo traer lo último del equipo",
         "unshared": "Tenés cambios sin compartir con el equipo", "behind": "El equipo tiene cambios más nuevos",
@@ -129,8 +129,8 @@ T = {
         "perm_on": "Encender", "perm_off": "Apagar",
         "perm_off_summary": "Skill {skill}: vuelve a preguntar antes de {perm}",
         "perm_on_summary": "Skill {skill}: {perm} sin preguntar",
-        "add_perm": "Para que haga otra cosa sin preguntar, pegá esto en tu asistente de IA:",
-        "ask_perm": "Dejá que la skill {name} <qué debería hacer> sin preguntar.",
+        "add_perm": "Para que haga otra cosa sin preguntar, pedíselo a tu asistente de IA, por ejemplo:",
+        "ask_perm": "Dejá que la skill {name} cree borradores en Gmail sin preguntar.",
         "blocked": "Bloqueado", "asks": "Pide confirmación", "changed": "Cambiaste:", "on": "activada", "off": "desactivada",
         "apply": "Aplicar para todo el equipo", "applying": "Compartiendo el cambio...",
         "note": "Mensaje corto que podés mandarle a {name}:",
@@ -389,7 +389,8 @@ def empty_state(text, prompt=None):
         st.write(text)
         if prompt:
             st.caption(t["try_asking"])
-            st.code(prompt, language="text")
+            with st.container(key=f"example-{abs(hash(prompt)) % 10**6}"):
+                st.code(prompt, language="text")
 
 
 # Skills: what each does, a request to paste, and earlier versions to go back to
@@ -443,16 +444,30 @@ def show_skill_permissions(name, title):
     perms = skill_permissions(name)
     if not perms:
         st.write(t["no_skill_perms"])
+    stale = asked = False
     for i, perm in enumerate(perms):
         key = f"perm-{name}-{i}"
         # The switch's value lives in the session only (setting it there and as a default clashes).
         if key not in st.session_state or st.session_state.pop(f"{key}-undo", False):
             st.session_state[key] = perm["on"]
-        wanted = st.toggle(f"{perm['plain']}\u2003`{perm['rule']}`", key=key)
-        if wanted != perm["on"]:
+        wanted = st.toggle(f"{perm['plain']}\u2003`{perm['rule']}`", key=key,
+                           on_change=lambda k=key: st.session_state.update(perm_touched=k))
+        if wanted == perm["on"]:
+            continue
+        if st.session_state.get("perm_touched") == key:
+            # Only the switch just touched asks (one window at a time).
+            st.session_state.pop("perm_touched")
+            asked = True
             confirm_skill_permission(name, title, perm, wanted, key)
+        else:
+            # Changed without an answer (window closed, or another switch touched): back to what is saved.
+            st.session_state[f"{key}-undo"] = True
+            stale = True
+    if stale and not asked:  # a window open now stays open; the others go back on the next refresh
+        st.rerun()
     st.caption(t["add_perm"])
-    st.code(t["ask_perm"].format(name=name), language="text")
+    with st.container(key=f"example-perm-{name}"):
+        st.code(t["ask_perm"].format(name=name), language="text")
 
 
 def skill_versions(name, title):
