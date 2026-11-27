@@ -245,17 +245,21 @@ When it is saved, say it in one line (e.g. "Saved the first version for the team
 
 ## 7. Prepare this computer
 
-Ask the Champion to double-click the **`<Team>-AI`** icon in the new folder and tell you when
-a window has opened and stopped moving. The first time it installs what is needed, turns on
+Name the exact file for this computer (check the system: `uname` answers `Darwin` on a Mac;
+Windows has `%OS%` = `Windows_NT`): **`<Team>-AI.command`** on a Mac, **`<Team>-AI.bat`** on
+Windows. Ask the Champion to double-click it, in the `<Team>-AI` folder on their Desktop, and
+to tell you when a window has opened and stopped moving. Mention only their system's file and
+only their system's help below, for example: "Hacé doble clic en AI-Adoption-AI.command, dentro
+de la carpeta AI-Adoption-AI de tu Escritorio." The first time it installs what is needed, turns on
 the team checks, hides technical files and lets Codex use the team rules, then opens the
 team page in the browser (keep the window open while using it).
 
 You cannot see that window, and never ask the Champion to copy it: read
 `<Desktop>/<Team>-AI/.git/launch.log`, where the launcher writes what the window shows.
 
-- No log: the launcher has not run yet. On Mac, if it was blocked, right-click the icon and
-  choose **Open**; on Windows, if a blue "Windows protected your PC" box appears, click
-  **More info**, then **Run anyway**.
+- No log: the launcher has not run yet. On a Mac, if it was blocked, right-click the file and
+  choose **Open**. On Windows, if a blue "Windows protected your PC" box appears, click
+  **More info**, then **Run anyway**. Say only the one for their system.
 - `Setup finished.` and `Launcher finished.`: done. If the log says it made the company's icons
   from its logo, save them straight to the team, without asking (part of creating the folder):
 
@@ -276,7 +280,9 @@ paste or attach a skill, script, instructions or macro they already use.
 
 - Delete `TEMPLATE_DIR` (the temporary copy).
 - Tell the Champion, in three short lines: where the folder is, how to open it (the
-  `<Team>-AI` icon, then choose the folder in Claude or Codex), and what comes next (adding
+  `<Team>-AI.command` on a Mac, or the `<Team>-AI` shortcut on Windows, which replaces the
+  `.bat` after the first launch; then choose the folder in their AI assistant), and what comes
+  next (adding
   teammates is a later step with their facilitator).
 
 ## Tools
