@@ -1,13 +1,20 @@
 #!/usr/bin/env python3
 """Manage the team's ideas in IDEAS.md (used by the agent and the team page).
 
-  ideas.py add --text "An idea"             adds it as new, with today's date and your git name
+  ideas.py add --title "An idea" --text "More detail"
+                                            adds it as new, with today's date and your git name
+                                            (--text, the description, is optional)
   ideas.py list                             prints the ideas as JSON
   ideas.py status --id 3 --to planned       changes an idea's status (anyone on the team)
   ideas.py comment --id 3 --text "..."      adds a comment to an idea, with today's date and your git name
+  ideas.py assign --id 3 [--to "Ana Lopez"] assigns the idea to someone (you, by default)
+  ideas.py assign --id 3 --clear            leaves it unassigned again
 
-One line per idea, readable by people and easy to edit, with its comments indented under it:
+One line per idea (its title), readable by people and easy to edit, with an optional description
+line ("> ..."), who is working on it ("@ ...") and its comments indented under it:
   - [New] 2026-11-10 · Juan Perez — Automate the weekly sales report
+    > Every Monday, from the sales sheet
+    @ Ana Lopez
     - 2026-11-12 · Ana Lopez: Let's add the web sales too
 
 Status words follow the team's language (team.json). Standard library only.
@@ -32,6 +39,8 @@ HEADER = {
     "es": "# Ideas del equipo\n\nIdeas para el espacio de IA del equipo. Cualquiera puede sumar una o cambiar su estado.\n\n",
 }
 LINE = re.compile(r"^- \[(?P<status>[^\]]+)\] (?P<date>\d{4}-\d{2}-\d{2}) · (?P<who>.+?) — (?P<text>.+)$")
+DESCRIPTION = re.compile(r"^\s+> (?P<text>.+)$")
+ASSIGNEE = re.compile(r"^\s+@ (?P<who>.+)$")
 COMMENT = re.compile(r"^\s+- (?P<date>\d{4}-\d{2}-\d{2}) · (?P<who>.+?): (?P<text>.+)$")
 
 
@@ -61,7 +70,15 @@ def read():
     for l in lines[first:]:
         m = LINE.match(l)
         if m:
-            ideas.append(dict(m.groupdict(), comments=[]))
+            ideas.append(dict(m.groupdict(), description="", assignee="", comments=[]))
+            continue
+        d = DESCRIPTION.match(l)
+        if d and ideas and not ideas[-1]["comments"]:
+            ideas[-1]["description"] = d["text"]
+            continue
+        a = ASSIGNEE.match(l)
+        if a and ideas and not ideas[-1]["comments"]:
+            ideas[-1]["assignee"] = a["who"].strip()
             continue
         c = COMMENT.match(l)
         if c and ideas:
@@ -71,6 +88,8 @@ def read():
 
 def write(header, ideas):
     body = "".join(f"- [{i['status']}] {i['date']} · {i['who']} — {i['text']}\n"
+                   + (f"  > {i['description']}\n" if i.get("description") else "")
+                   + (f"  @ {i['assignee']}\n" if i.get("assignee") else "")
                    + "".join(f"  - {c['date']} · {c['who']}: {c['text']}\n" for c in i.get("comments", []))
                    for i in ideas)
     FILE.write_text(header + body, encoding="utf-8")
@@ -88,7 +107,8 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     sub = parser.add_subparsers(dest="cmd", required=True)
     add = sub.add_parser("add")
-    add.add_argument("--text", required=True)
+    add.add_argument("--title", required=True)
+    add.add_argument("--text", default="")
     sub.add_parser("list")
     st = sub.add_parser("status")
     st.add_argument("--id", type=int, required=True)
@@ -96,26 +116,38 @@ def main():
     cm = sub.add_parser("comment")
     cm.add_argument("--id", type=int, required=True)
     cm.add_argument("--text", required=True)
+    asg = sub.add_parser("assign")
+    asg.add_argument("--id", type=int, required=True)
+    asg.add_argument("--to", default="")
+    asg.add_argument("--clear", action="store_true")
     args = parser.parse_args()
 
     header, ideas = read()
     words = STATUSES[lang()]
     if args.cmd == "list":
-        print(json.dumps([dict(i, id=n + 1, key=status_key(i["status"])) for n, i in enumerate(ideas)], ensure_ascii=False))
+        print(json.dumps([dict(i, id=n + 1, me=git_config("user.name"), key=status_key(i["status"])) for n, i in enumerate(ideas)], ensure_ascii=False))
         return 0
     if args.cmd == "add":
-        text = " ".join(args.text.split())
-        if not text:
+        title = " ".join(args.title.split())
+        description = " ".join(args.text.split())
+        if not title:
             print(json.dumps({"ok": False, "problem": "empty idea"}))
             return 1
         ideas.append({"status": words["new"], "date": datetime.date.today().isoformat(),
-                      "who": git_config("user.name") or "?", "text": text, "comments": []})
+                      "who": git_config("user.name") or "?", "text": title,
+                      "description": description, "comments": []})
         write(header, ideas)
         print(json.dumps({"ok": True, "id": len(ideas)}))
         return 0
     if not 1 <= args.id <= len(ideas):
         print(json.dumps({"ok": False, "problem": "no idea with that number"}))
         return 1
+    if args.cmd == "assign":
+        who = "" if args.clear else (" ".join(args.to.split()) or git_config("user.name") or "?")
+        ideas[args.id - 1]["assignee"] = who
+        write(header, ideas)
+        print(json.dumps({"ok": True, "assignee": who}))
+        return 0
     if args.cmd == "comment":
         text = " ".join(args.text.split())
         if not text:

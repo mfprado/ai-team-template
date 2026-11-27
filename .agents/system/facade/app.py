@@ -36,7 +36,7 @@ T = {
         "tab_skills": "Skills", "tab_perms": "General permissions", "tab_artifacts": "Artifacts", "tab_history": "History",
         "tab_ideas": "Ideas", "ideas_intro": "Ideas for the team's workspace. Anyone can add one or update its status.",
         "no_ideas": "No ideas yet.", "comment": "Comment", "comment_hint": "Add a comment", "comment_send": "Comment",
-        "comment_summary": "Comment on idea {n}", "new_idea": "Your idea", "new_idea_hint": "Write your idea for the team…", "add_idea": "Add", "days": ["today", "yesterday", "{n} days ago"],
+        "comment_summary": "Comment on idea {n}", "new_idea": "Title", "new_idea_hint": "Your idea in a few words", "new_idea_text": "Description", "new_idea_text_hint": "Tell the team more: what it would solve, who it helps (optional)", "comments_n": "Comments ({n})", "done_n": "Show done ideas ({n})", "take_idea": "I'll take it", "drop_idea": "Let it go", "taken_by": "{who} is on it", "assign_summary": "Idea {n}: {who} is on it", "unassign_summary": "Idea {n}: free again", "add_idea": "Add", "days": ["today", "yesterday", "{n} days ago"],
         "idea_summary": "New idea: {text}", "set_status": "Status", "save_status": "Save status",
         "status_summary": "Idea {n}: {status}",
         "versions": "Earlier versions", "current": "Current version", "go_back": "Go back to this version",
@@ -96,7 +96,7 @@ T = {
         "tab_skills": "Skills", "tab_perms": "Permisos generales", "tab_artifacts": "Artefactos", "tab_history": "Historial",
         "tab_ideas": "Ideas", "ideas_intro": "Ideas para el espacio del equipo. Cualquiera puede sumar una o cambiar su estado.",
         "no_ideas": "Todavía no hay ideas.", "comment": "Comentario", "comment_hint": "Sumá un comentario", "comment_send": "Comentar",
-        "comment_summary": "Comentario en la idea {n}", "new_idea": "Tu idea", "new_idea_hint": "Escribí tu idea para el equipo…", "add_idea": "Agregar", "days": ["hoy", "ayer", "hace {n} días"],
+        "comment_summary": "Comentario en la idea {n}", "new_idea": "Título", "new_idea_hint": "Tu idea en pocas palabras", "new_idea_text": "Descripción", "new_idea_text_hint": "Contale más al equipo: qué resolvería, a quién ayuda (opcional)", "comments_n": "Comentarios ({n})", "done_n": "Mostrar las hechas ({n})", "take_idea": "Me la asigno", "drop_idea": "Soltarla", "taken_by": "La tiene {who}", "assign_summary": "Idea {n}: la tiene {who}", "unassign_summary": "Idea {n}: quedó libre", "add_idea": "Agregar", "days": ["hoy", "ayer", "hace {n} días"],
         "idea_summary": "Nueva idea: {text}", "set_status": "Estado", "save_status": "Guardar estado",
         "status_summary": "Idea {n}: {status}",
         "versions": "Versiones anteriores", "current": "Versión actual", "go_back": "Volver a esta versión",
@@ -571,10 +571,11 @@ if section == t["tab_ideas"]:
         share(summary, ["IDEAS.md"])
 
     def add_idea():
+        title = st.session_state.get("new-idea-title", "").strip()
         text = st.session_state.get("new-idea-text", "").strip()
-        if text:
-            ideas_script("add", "--text", text)
-            save_from_callback(t["idea_summary"].format(text=" ".join(text.split())[:80]))
+        if title:
+            ideas_script("add", "--title", title, "--text", text)
+            save_from_callback(t["idea_summary"].format(text=" ".join(title.split())[:80]))
 
     def change_status(n, current):
         choice = st.session_state.get(f"idea-{n}")
@@ -584,40 +585,88 @@ if section == t["tab_ideas"]:
             ideas_script("status", "--id", n, "--to", choice)
             save_from_callback(t["status_summary"].format(n=n, status=labels[choice]))
 
+    def assign(n, who):
+        if who:
+            ideas_script("assign", "--id", n)
+            save_from_callback(t["assign_summary"].format(n=n, who=who))
+        else:
+            ideas_script("assign", "--id", n, "--clear")
+            save_from_callback(t["unassign_summary"].format(n=n))
+
     def add_comment(n):
         text = st.session_state.get(f"comment-{n}", "").strip()
         if text:
             ideas_script("comment", "--id", n, "--text", text)
             save_from_callback(t["comment_summary"].format(n=n))
 
-    # A form sends the text and the click together; it clears itself after the callback saves.
+    # A form sends the title, the description and the click together; it clears itself after saving.
+    # A form sends the title, the description and the click together; it clears itself after saving.
     with st.form("new-idea", clear_on_submit=True, border=False):
-        field, send = st.columns([5, 1.2], vertical_alignment="bottom")
-        field.text_input(t["new_idea"], max_chars=500, placeholder=t["new_idea_hint"], key="new-idea-text",
-                         label_visibility="collapsed")
-        send.form_submit_button(t["add_idea"], type="primary", use_container_width=True, on_click=add_idea)
+        st.text_input(t["new_idea"], max_chars=120, placeholder=t["new_idea_hint"], key="new-idea-title",
+                      label_visibility="collapsed")
+        st.text_area(t["new_idea_text"], max_chars=1000, height=110, placeholder=t["new_idea_text_hint"],
+                     key="new-idea-text", label_visibility="collapsed")
+        st.form_submit_button(t["add_idea"], type="primary", on_click=add_idea)
     if not ideas:
         st.caption(t["no_ideas"])
-    for idea in reversed(ideas):  # newest first
+
+    def idea_card(idea):
         n = str(idea["id"])
         with st.container(border=True, key=f"ideacard-{n}"):
-            st.markdown(f'<div class="idea-text">{html.escape(idea["text"])}</div>'
-                        f'<div class="idea-who">{html.escape(idea["who"])}, {nice_date(idea["date"])}</div>',
-                        unsafe_allow_html=True)
-            # The three states at a glance; one click changes it, saved straight away like any change.
+            head, tag = st.columns([5, 1.7], vertical_alignment="top")
+            head.markdown(f'<div class="idea-text">{html.escape(idea["text"])}</div>'
+                          f'<div class="idea-who">{html.escape(idea["who"])}, {nice_date(idea["date"])}</div>',
+                          unsafe_allow_html=True)
+            # The status is a small coloured tag; clicking it opens the three states to pick another.
             if st.session_state.get(f"idea-{n}") != idea["key"]:
                 st.session_state[f"idea-{n}"] = idea["key"]  # follow the file (e.g. after getting the team's latest)
-            st.segmented_control(t["set_status"], keys, format_func=labels.get, key=f"idea-{n}",
-                                 label_visibility="collapsed", on_change=change_status, args=(n, idea["key"]))
-            for c in idea.get("comments", []):
-                st.markdown(f'<div class="idea-comment"><div>{html.escape(c["text"])}</div>'
-                            f'<div class="who">{html.escape(c["who"])}, {nice_date(c["date"])}</div></div>',
+            with tag.container(key=f"ideatag-{idea['key']}-{n}"):
+                with st.popover(labels[idea["key"]], use_container_width=True):
+                    st.segmented_control(t["set_status"], keys, format_func=labels.get, key=f"idea-{n}",
+                                         label_visibility="collapsed", on_change=change_status,
+                                         args=(n, idea["key"]))
+            # One person per idea, so two people don't work on the same thing: who has it, under the
+            # title; the button to take it (or let it go) under the status tag.
+            owner, me = idea.get("assignee", ""), idea.get("me", "")
+            if owner:
+                head.markdown(f'<div class="idea-owner">{html.escape(t["taken_by"].format(who=owner))}</div>',
+                              unsafe_allow_html=True)
+            with tag.container(key=f"ideaassign-{n}"):
+                if owner and owner == me:
+                    st.button(t["drop_idea"], key=f"drop-{n}", use_container_width=True,
+                              on_click=assign, args=(n, ""))
+                elif not owner and idea["key"] != "done":
+                    st.button(t["take_idea"], key=f"take-{n}", use_container_width=True,
+                              on_click=assign, args=(n, me or "?"))
+            if idea.get("description"):
+                st.markdown(f'<div class="idea-description">{html.escape(idea["description"])}</div>',
                             unsafe_allow_html=True)
-            with st.form(f"comment-form-{n}", clear_on_submit=True, border=False):
-                field, send = st.columns([5, 1.2], vertical_alignment="bottom")
-                field.text_input(t["comment"], placeholder=t["comment_hint"], key=f"comment-{n}",
-                                 label_visibility="collapsed")
-                send.form_submit_button(t["comment_send"], use_container_width=True, on_click=add_comment, args=(n,))
+            comments = idea.get("comments", [])
+            with st.expander(t["comments_n"].format(n=len(comments))):
+                for c in comments:
+                    st.markdown(f'<div class="idea-comment"><div>{html.escape(c["text"])}</div>'
+                                f'<div class="who">{html.escape(c["who"])}, {nice_date(c["date"])}</div></div>',
+                                unsafe_allow_html=True)
+                with st.form(f"comment-form-{n}", clear_on_submit=True, border=False):
+                    field, send = st.columns([5, 1.2], vertical_alignment="bottom")
+                    field.text_input(t["comment"], placeholder=t["comment_hint"], key=f"comment-{n}",
+                                     label_visibility="collapsed")
+                    send.form_submit_button(t["comment_send"], use_container_width=True,
+                                            on_click=add_comment, args=(n,))
+
+    # Grouped by status, newest first; done ideas stay folded away at the end.
+    for key in keys:
+        group = [i for i in reversed(ideas) if i["key"] == key]
+        if not group:
+            continue
+        if key == "done":  # a switch, not an expander: comments inside a card already fold
+            if st.toggle(t["done_n"].format(n=len(group)), key="show-done-ideas"):
+                for idea in group:
+                    idea_card(idea)
+        else:
+            st.subheader(f"{labels[key]} · {len(group)}")
+            for idea in group:
+                idea_card(idea)
 
 # Permissions: switches; changes are shared via propose_change.py
 if section == t["tab_perms"]:

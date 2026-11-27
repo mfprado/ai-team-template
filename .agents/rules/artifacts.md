@@ -108,6 +108,29 @@ explanation, warnings or errors on screen. Then say in one line that you checked
   run looks the same (see the skills rule), and name that script in the README.
 - Follow any team standard in `.agents/rules/` (colours, logo, layout).
 
+## Bringing in an artifact made in Claude (or ChatGPT, Gemini...)
+
+Someone may have made an artifact in the Claude app (a page, a dashboard, a small app) and now
+wants it in the team's folder. When they ask ("upload my Claude artifact", "save this artifact
+for the team", "cargá mi artefacto"), guide them one short step at a time:
+
+1. **Ask for it, the easy way first.** Ask them to paste the artifact's link, or, if you cannot
+   open links, to download it: in Claude, open the artifact, use its menu (the three dots or the
+   download button) and choose **Download**; then attach the file here or say where it is
+   (usually Downloads). If there is no download option, ask them to choose **Copy** and paste
+   the code here. Never ask them to log in for you or to share passwords.
+2. **Read it before you keep it.** Look at the whole file. If it sends data somewhere, loads
+   scripts from unknown sites, or contains keys or passwords, tell them in plain words and do
+   not save it until they fix it.
+3. **Create its folder with `new_artifact.py`** as for any artifact (choose the type from what it
+   is), and put the file in as `index.html`. A React or JSX artifact does not open on its own:
+   turn it into a plain `index.html` that loads React from a CDN, and check it works. Move
+   large data or images into `assets/`.
+4. **Fill in the README:** what it is, that it came from Claude, and its link if they have one.
+   If there is a link, also record it with `artifact_link.py` (below) so the team page lists it.
+5. **Open it and look** (see "Look at it before you finish"). It starts private like every
+   artifact; tell them they can share it with the **Share with the team** button, or ask you.
+
 ## Also publishing it in Claude or Codex (optional)
 
 If the person also wants a link to share (a Claude artifact or Codex's equivalent), publish it

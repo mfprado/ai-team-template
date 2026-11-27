@@ -115,6 +115,22 @@ button p {{ white-space:nowrap; }}
 .idea-comment {{ border-left:2px solid var(--rule); padding:.1rem 0 .1rem .8rem; margin:.1rem 0 .35rem .1rem; line-height:1.45; }}
 .idea-comment .who {{ color:var(--muted); font-size:.85rem; margin-top:.1rem; }}
 [class*="st-key-ideacard-"] [data-testid="stForm"] {{ padding:0; margin-top:.2rem; }}
+/* New idea box: in the page's colours, whatever the browser theme */
+[class*="st-key-new-idea"] textarea, .st-key-new-idea-title input {{ background:var(--card) !important; color:var(--ink) !important;
+  border:1px solid var(--rule) !important; border-radius:10px !important; }}
+[class*="st-key-new-idea"] textarea::placeholder, .st-key-new-idea-title input::placeholder {{ color:var(--muted) !important; opacity:1; }}
+[class*="st-key-ideacard-"] [data-testid="stExpander"] details {{ background:transparent !important; }}
+[class*="st-key-ideaassign-"] button {{ min-height:0; padding:.1rem .6rem !important; font-size:.8rem; border-radius:999px;
+  background:transparent !important; color:var(--muted) !important; border:1px dashed var(--rule) !important; white-space:nowrap; }}
+.idea-owner {{ font-size:.85rem; font-weight:600; color:var(--accent); }}
+.idea-description {{ color:var(--ink); opacity:.85; line-height:1.5; margin:.1rem 0 .4rem; white-space:pre-wrap; }}
+[class*="st-key-ideacard-"] [data-testid="stExpander"] details {{ border:none !important; }}
+[class*="st-key-ideacard-"] [data-testid="stExpander"] summary {{ padding:.2rem 0 !important; color:var(--muted); font-size:.9rem; }}
+/* Status tag: a small pill, coloured by status */
+[class*="st-key-ideatag-"] button {{ border-radius:999px; min-height:0; padding:.15rem .8rem !important; font-size:.8rem; font-weight:600; white-space:nowrap; }}
+[class*="st-key-ideatag-new-"] button {{ background:var(--wash) !important; color:var(--accent) !important; border-color:var(--accent) !important; }}
+[class*="st-key-ideatag-planned-"] button {{ background:transparent !important; color:#D9A400 !important; border-color:#D9A400 !important; }}
+[class*="st-key-ideatag-done-"] button {{ background:transparent !important; color:#2E9E5B !important; border-color:#2E9E5B !important; }}
 
 /* Cards that open: the whole card is clickable (an invisible button covers it) */
 [class*="st-key-skillcard-"], [class*="st-key-artcard-"] {{ position:relative; }}

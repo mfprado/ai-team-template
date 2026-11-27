@@ -44,7 +44,7 @@ Read a rule file **only when its situation applies**. The team may add its own r
 | When | Read |
 |---|---|
 | Creating, migrating or editing a skill | `.agents/rules/skills.md` |
-| Producing a report, presentation, dashboard, web app or any HTML output | `.agents/rules/artifacts.md` |
+| Producing a report, presentation, dashboard, web app or any HTML output, or bringing in one made in Claude or another AI | `.agents/rules/artifacts.md` |
 | Anything involving credentials, messages to people, or changing permissions | `.agents/rules/safety.md` |
 | Changing a skill, rule, permission, hook or team setting, or sharing a change that clashes with someone else's | `.agents/rules/changes.md` |
 | Someone shares an idea for the team, or asks about the team's ideas | `.agents/rules/ideas.md` |
