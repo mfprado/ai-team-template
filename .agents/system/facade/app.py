@@ -62,7 +62,7 @@ T = {
         "details": "See the step-by-step instructions the AI follows",
         "details_intro": "This is what the AI reads when you ask for this. You do not need it to use the skill.",
         "perms_intro": "What the AI is not allowed to do in this folder, in every conversation and every skill. Switch a rule off only if the team agrees. What each skill may do without asking is in that skill.",
-        "skill_perms": "Can do without asking, while this skill runs (the general permissions still apply):",
+        "skill_perms": "Can do without asking, while this skill runs:", "general_perms_link": "The general permissions still apply",
         "no_skill_perms": "Nothing: it asks before every action.",
         "perm_off_confirm": "From now on, **{skill}** will ask before: {perm}. This applies to the whole team.",
         "perm_on_confirm": "From now on, **{skill}** will do this without asking: {perm}. This applies to the whole team.",
@@ -122,7 +122,7 @@ T = {
         "details": "Ver las instrucciones paso a paso que sigue la IA",
         "details_intro": "Esto es lo que lee la IA cuando le pedís esto. No lo necesitás para usar la skill.",
         "perms_intro": "Lo que la IA no puede hacer en esta carpeta, en cualquier conversación y en cualquier skill. Apagá una regla solo si el equipo está de acuerdo. Lo que cada skill puede hacer sin preguntar está en esa skill.",
-        "skill_perms": "Puede hacer sin preguntar, mientras corre esta skill (los permisos generales siguen valiendo):",
+        "skill_perms": "Puede hacer sin preguntar, mientras corre esta skill:", "general_perms_link": "Los permisos generales siguen valiendo",
         "no_skill_perms": "Nada: pregunta antes de cada acción.",
         "perm_off_confirm": "Desde ahora, **{skill}** va a preguntar antes de: {perm}. Vale para todo el equipo.",
         "perm_on_confirm": "Desde ahora, **{skill}** va a hacer esto sin preguntar: {perm}. Vale para todo el equipo.",
@@ -489,6 +489,9 @@ def show_skill_permissions(name, title):
             stale = True
     if stale and not asked:  # a window open now stays open; the others go back on the next refresh
         st.rerun()
+    # A link to the general permissions, which apply on top of these.
+    st.button(t["general_perms_link"], key=f"to-perms-{name}", type="tertiary",
+              icon=":material/arrow_forward:", on_click=lambda: st.session_state.update(section=t["tab_perms"]))
     st.caption(t["add_perm"])
     with st.container(key=f"example-perm-{name}"):
         st.code(t["ask_perm"].format(name=name), language="text")

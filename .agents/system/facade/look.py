@@ -125,6 +125,8 @@ hr {{ border-color:var(--rule) !important; }}
 .st-key-menu [data-testid="stBaseButton-primary"] p {{ font-weight:650; }}
 
 /* The logo: an app icon */
+[class*="st-key-to-perms-"] button {{ color:var(--accent) !important; padding:0 !important; min-height:0; font-size:.88rem; }}
+[class*="st-key-to-perms-"] button:hover {{ text-decoration:underline; }}
 /* Sidebar header: the logo, and the team's name to its right */
 .team-head {{ display:flex; align-items:center; gap:.75rem; margin:.2rem 0 .35rem; }}
 .team-head img {{ width:40px; height:40px; object-fit:contain; flex:none; }}
