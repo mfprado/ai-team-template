@@ -67,6 +67,7 @@ checks and the tools it uses (with their logos) in the company's design, which a
 - **One universal source.** Skills, rules and permissions live in `.agents/`, in open formats any agent reads (`AGENTS.md`, Agent Skills `SKILL.md`).
 - **Generated per tool.** On every save, `.agents/system/scripts/sync.py` writes what each tool needs: `.claude/` for Claude Code, `.codex/` for Codex. Nobody edits those by hand.
 - **Everyone saves for the team.** Changes reach the team's main version straight away; History shows who changed what, and a skill can go back to any earlier version.
+- **The team's context.** `create-team-repo` interviews the Champion about how the team works and saves it in `.agents/team-context.md`; the AI reads it before every task (`.agents/rules/team-context.md`).
 - **Guardrails.** `.agents/permissions.json` says what the AI may not do. It is enforced by each tool's native settings and by a guard hook that runs before every tool call. The save checks strictly validate permissions, settings, brand and rules.
 - **What the guard is for.** It prevents mistakes and common tricks by people and agents who
   mean well; it is not a sandbox against a determined attacker.

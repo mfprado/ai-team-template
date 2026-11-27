@@ -3,6 +3,22 @@
 Newest first. Each entry says, in plain words, what improves for the team and whether
 anyone has to do anything. Written for people who are not technical.
 
+## 2026-11-27 — The AI learns how your team works
+
+**What the team gets**
+- A short interview with the AI Champion (about 10 minutes) about how the team works: roles,
+  routines, main processes and how it uses each tool. The AI assistant reads it before every
+  task, so its answers fit the team, and it suggests the solutions that would help the team most.
+- New team folders are always created in the company's GitHub organization, and the AI adoption
+  team can follow them.
+
+**What you need to do**
+- Paste this in your AI assistant, opened in your team folder:
+
+  > Add the team context rule from ai-team-template: create `.agents/rules/team-context.md` as
+  > in the template, add its row to the rules table and the "The team's context" section to
+  > AGENTS.md, save it for the team, and then interview me to set up how my team works.
+
 ## 2026-11-27 — Apps have a way back to the team page
 
 **What the team gets**

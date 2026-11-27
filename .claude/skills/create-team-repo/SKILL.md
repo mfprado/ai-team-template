@@ -14,7 +14,7 @@ flowchart TD
     B --> C[Ask company, team, name and email, and the brand if they have it]
     C --> D{{Did IT already create the shared folder?}}
     D -- Yes --> E[Use the link they send]
-    D -- No --> F[Create an empty private shared folder on GitHub]
+    D -- No --> F[Create an empty private shared folder in the company's GitHub organization]
     E --> G[Download it to the Desktop]
     F --> G
     G --> H[Copy the template and fill in the team's settings]
@@ -23,9 +23,10 @@ flowchart TD
     M -- No --> I{{Are changes saved in the Champion's name?}}
     I -- No --> J[Set their name and email] --> K
     I -- Yes --> K[Save the first version for the team]
-    K --> L[The AI assistant sets up the computer and opens the team page]
-    L --> O[Offer to bring their first automation]
-    O --> P([Clean up and tell them where everything is]):::done
+    K --> Q[Interview the Champion about how the team works]
+    Q --> O[Offer to bring their first automation]
+    O --> R[Clean up the temporary copy]
+    R --> L([The AI assistant sets up the computer, opens the team page and tells them where everything is]):::done
     GH@{ icon: "logos:github-icon", label: "GitHub" }
     F -.- GH
     G -.- GH
@@ -33,16 +34,17 @@ flowchart TD
     %% B: Uses the language the Champion wrote in (English or Spanish) and says it in one line, so they can correct it.
     %% C: One short question per message: company, team, then confirms their name and GitHub email, then asks for a design guide or website.
     %% D: If IT already created the team's shared folder on GitHub, it uses that one instead of creating a new one.
-    %% F: Creates a private, empty shared folder on GitHub in the Champion's account.
+    %% F: Creates a private, empty shared folder in the company's GitHub organization, never in a personal account, and gives the AI adoption team read access if the organization has one.
     %% G: Downloads the shared folder to the Champion's Desktop as a folder called <Team>-AI.
     %% H: Copies the template's files (not its history) and writes the team's settings, README and folders in the team's language.
     %% M: A design guide wins over the website: it has the exact colours, fonts and logo.
     %% N: Saves the colours, typeface and logo straight away and says in one line what it used.
     %% I: Every change in the team folder must be saved under the Champion's name and GitHub email.
     %% K: Saves the first version straight to the team, without asking: it is part of creating the folder.
-    %% L: The AI assistant runs the team icon itself: it installs what is needed, turns on the team checks, hides technical files and opens the team page in its own browser. If it cannot, the Champion double-clicks the icon.
+    %% Q: Asks the Champion, one question at a time, how the team works: structure, rhythm, processes, how it uses each tool and where time goes. Saves it for the team so the AI assistant always has that context, and proposes the solutions that fit the team best.
     %% O: Offers to bring an automation the Champion already uses into the team with the migrate skill.
-    %% P: Deletes the temporary copy of the template and says in three lines where the folder is and how to open it.
+    %% R: Deletes the temporary copy of the template.
+    %% L: The AI assistant runs the team icon itself: it installs what is needed, turns on the team checks, hides technical files and opens the team page in its own browser. If it cannot, the Champion double-clicks the icon. Last, it says in three lines where the folder is and how to open it.
 ```
 
 You are helping an **AI Champion** create their team's shared AI workspace, usually during
@@ -113,7 +115,10 @@ After question 5:
   manage it; if not, tell them to ask the person who created it.
 - **No:** ask if they already have a GitHub account with that email. If not, guide them one instruction per message: open
   https://github.com/signup, sign up with that email, choose the **Free** plan, confirm the
-  email GitHub sends, and tell you when done. The shared folder will live in their own account.
+  email GitHub sends, and tell you when done. The shared folder will live in the **company's
+  GitHub organization** (step 3), never in their own account: their account must be a member of
+  it. If it is not, tell them in one line to ask whoever manages the company's GitHub (often IT)
+  to add them, and wait.
 
 Tell them the name in one short line, without asking (they can ask for another one):
 
@@ -131,21 +136,37 @@ Skip this step when the company already created it (step 2).
 The team's repository must contain only the Champion's own commits, never ours. So it starts
 **empty** and receives the template's files as plain files (no template history).
 
+**Team folders always live in the company's GitHub organization, never in a personal
+account**, so the company keeps them and the team that helps every area adopt AI can see them.
+
 **If you can create it yourself** (`gh auth status` succeeds, or a GitHub connector can create
-repositories): the owner is the signed-in account (`gh api user --jq .login`), which is also
-the Champion's GitHub username. Say in one line that you are creating it, and create it.
+repositories): the Champion's GitHub username is the signed-in account
+(`gh api user --jq .login`). The owner is the company's organization: list the Champion's
+organizations (`gh api user/orgs --jq '.[].login'`). With one, use it and name it in your
+line; with several, ask which one is the company's; with none, stop and ask them to get added
+(step 2). Say in one line that you are creating it, and create it.
 
 ```
-gh repo create <owner>/<repo-name> --private
+gh repo create <organization>/<repo-name> --private
+```
+
+Then, if the organization has a team for AI adoption (list them with
+`gh api orgs/<organization>/teams --jq '.[] | .slug + " " + .name'`; its name or slug says
+AI or IA adoption), give it read access so it can follow the team's skills and ideas, and say so
+in one line. If there is none, skip it without mentioning it.
+
+```
+gh api -X PUT orgs/<organization>/teams/<team-slug>/repos/<organization>/<repo-name> -f permission=pull
 ```
 
 **Otherwise, guide the Champion click by click, one instruction per message** (wait for
 "done" before the next):
 1. Open https://github.com/new (sign in if GitHub asks).
-2. Repository name: `<repo-name>`. Visibility: **Private**. Leave the owner as it is.
+2. Owner: the company's organization (not their own name). Repository name: `<repo-name>`.
+   Visibility: **Private**.
 3. Leave **everything else empty**: no README, no .gitignore, no license.
 4. Click **Create repository**, then paste you the address of the page that opens
-   (`https://github.com/<owner>/<repo-name>`). The owner in it is their GitHub username.
+   (`https://github.com/<organization>/<repo-name>`).
 
 ## 4. Download it to the Desktop
 
@@ -208,7 +229,7 @@ shows the company's logo on the folder and its icon.
    ```
 
 3. It works on any computer. If it answers `"icons": "made on the next launch"`, this computer
-   cannot make the icons yet: the first launch (step 7) makes them from the logo.
+   cannot make the icons yet: the first launch (step 10) makes them from the logo.
 
 Reports and dashboards the AI makes from now on use these colours and logo (artifacts rule).
 
@@ -243,10 +264,29 @@ The team's checks run on this commit (generated files, secrets, skills). If they
 explain the message in plain words and fix it. Never commit or push under any other name.
 When it is saved, say it in one line (e.g. "Saved the first version for the team.") and go on.
 
-## 7. Prepare this computer and open the team page
+## 7. How the team works
 
-Do it yourself; do not ask the Champion to double-click the icon. Say in one line what you are
-doing ("Preparing your computer and opening your team's page...").
+Now interview the Champion about how the team works, following `.agents/rules/team-context.md`
+in the team folder: one question per message, in the team's language. It writes
+`.agents/team-context.md`, which the AI assistant reads before every task for the team, saves
+it for the team, and ends with 2 or 3 ideas that fit the team best. If the Champion has no time
+now, tell them in one line that they can ask for it later ("let's set up how my team works")
+and go on.
+
+## 8. First automation
+
+Offer to bring their first automation into the team now with **migrate-skill** (**migrar-skill**
+for a Spanish team): they can
+paste or attach a skill, script, instructions or macro they already use.
+
+## 9. Clean up
+
+Delete `TEMPLATE_DIR` (the temporary copy). No need to tell the Champion.
+
+## 10. Prepare this computer, open the team page and close
+
+This is the last step. Do it yourself; do not ask the Champion to double-click the icon. Say
+in one line what you are doing ("Preparing your computer and opening your team's page...").
 
 **On a Mac** (`uname` answers `Darwin`), run the team icon from the team folder, in the
 background (it keeps the team page running), with the browser opening turned off and no input:
@@ -269,8 +309,8 @@ show, until it says `Launcher finished.` and a line with the page's address
   Champion. Fall back to the double-click below.
 - **Anything else:** explain the last lines in plain words and help fix them.
 
-The page you started keeps running only while this conversation does. Tell the Champion in one
-line that next time they open it with the `<Team>-AI` icon.
+The page you started keeps running only while this conversation does; the closing message
+tells the Champion how to open it next time.
 
 **On Windows** (`%OS%` = `Windows_NT`), or when the Mac run needs the Champion: ask them to
 double-click **`<Team>-AI.command`** (Mac) or **`<Team>-AI.bat`** (Windows), in the `<Team>-AI`
@@ -285,20 +325,10 @@ the same `launch.log`.
 - `Setup finished.` and `Launcher finished.`: done; the team page is open in their browser.
   Check it as above.
 
-## 8. First automation
-
-Offer to bring their first automation into the team now with **migrate-skill** (**migrar-skill**
-for a Spanish team): they can
-paste or attach a skill, script, instructions or macro they already use.
-
-## 9. Clean up and close
-
-- Delete `TEMPLATE_DIR` (the temporary copy).
-- Tell the Champion, in three short lines: where the folder is, how to open it (the
-  `<Team>-AI.command` on a Mac, or the `<Team>-AI` shortcut on Windows, which replaces the
-  `.bat` after the first launch; then choose the folder in their AI assistant), and what comes
-  next (adding
-  teammates is a later step with their facilitator).
+Then close. Tell the Champion, in three short lines: where the folder is, how to open it next
+time (the `<Team>-AI.command` on a Mac, or the `<Team>-AI` shortcut on Windows, which replaces
+the `.bat` after the first launch; then choose the folder in their AI assistant), and what comes
+next (adding teammates is a later step with their facilitator).
 
 ## Tools
 
