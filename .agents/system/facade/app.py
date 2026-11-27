@@ -84,7 +84,7 @@ T = {
         "perm_summary": "Permissions: {items}",
         "reports_intro": "Artifacts are reports, presentations, dashboards and small apps made with the AI, each in its own folder. Ask the assistant for a new one any time.",
         "shared_by": "by {who}", "view": "View", "back": "Back to the list", "about_artifact": "What it is and how to make it again", "app_opening": "Opening the app in your browser. It can take a few seconds the first time.",
-        "open_link": "Open it", "link_note": "This one lives in your AI assistant. It opens in a new browser tab.",
+        "open_link": "Open it", "open_browser": "Open in the browser", "what_it_is": "What it is", "link_note": "This one lives in your AI assistant. It opens in a new browser tab.",
         "share_team": "Share with the team", "share_confirm": "**{title}** moves to the team's artifacts and is saved for the whole team: everyone will be able to see it and change it.",
         "share_yes": "Share", "share_no": "Cancel", "close": "Close", "share_summary": "Shared artifact: {title}",
                 "save": "Save for the whole team",
@@ -144,7 +144,7 @@ T = {
         "perm_summary": "Permisos: {items}",
         "reports_intro": "Los artefactos son reportes, presentaciones, tableros y pequeñas apps hechos con la IA, cada uno en su carpeta. Pedile uno nuevo al asistente cuando quieras.",
         "shared_by": "de {who}", "view": "Ver", "back": "Volver a la lista", "about_artifact": "Qué es y cómo volver a hacerlo", "app_opening": "Abriendo la app en tu navegador. La primera vez puede tardar unos segundos.",
-        "open_link": "Abrir", "link_note": "Este está en tu asistente de IA. Se abre en otra pestaña del navegador.",
+        "open_link": "Abrir", "open_browser": "Abrir en el navegador", "what_it_is": "Qué es", "link_note": "Este está en tu asistente de IA. Se abre en otra pestaña del navegador.",
         "share_team": "Compartir con el equipo", "share_confirm": "**{title}** pasa a los artefactos del equipo y se guarda para todos: cualquiera va a poder verlo y cambiarlo.",
         "share_yes": "Compartir", "share_no": "Cancelar", "close": "Cerrar", "share_summary": "Artefacto compartido: {title}",
                 "save": "Guardar para todo el equipo",
@@ -749,39 +749,42 @@ def start_app(folder):
     subprocess.Popen(command, cwd=ROOT, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, start_new_session=True)
 
 
+def artifact_about(item):
+    """The 'What it is' section of the artifact's README, for the info button; '' when there is none."""
+    if item["kind"] != "folder" or not (item["path"] / "README.md").is_file():
+        return ""
+    text = (item["path"] / "README.md").read_text(encoding="utf-8", errors="replace")
+    m = re.search(r"^##\s+(What it is|Qué es)\s*$(.*?)(?=^##\s|\Z)", text, re.M | re.S)
+    about = (m.group(2) if m else "").strip()
+    # The placeholder new_artifact.py leaves ("(One or two lines.)") is not an explanation.
+    return "" if not about or re.fullmatch(r"\(.*\)", about) else about
+
+
+def enter_artifact(item):
+    """One click on the artifact's name: apps open in the browser, the rest open inside this page."""
+    if item["kind"] == "folder" and (item["path"] / "app.py").is_file():
+        start_app(item["path"])
+        st.toast(t["app_opening"])
+    elif item["kind"] == "file" and item["path"].suffix.lower() in SAFE_TO_OPEN \
+            and item["path"].suffix.lower() not in (".html", ".htm", ".png", ".jpg", ".jpeg", ".gif", ".svg", ".md", ".txt", ".csv"):
+        webbrowser.open(item["path"].as_uri())
+    else:
+        st.session_state.viewing = item["key"]
+
+
 def show_report(item):
     head, action = st.columns([3, 2])
     head.subheader(item["title"])
     if item["private"] and action.button(t["share_team"], type="primary", use_container_width=True):
         confirm_share(item)
-    if item["kind"] == "link":
-        st.caption(t["link_note"])
-        st.link_button(t["open_link"], item["url"])
-        return
     p = item["path"]
-    if item["kind"] == "folder" and (p / "app.py").is_file():
-        open_col, folder_col, _ = st.columns([0.8, 1.6, 3.6], gap="small")
-        if open_col.button(t["open"], type="primary"):
-            start_app(p)
-            st.caption(t["app_opening"])
-        if folder_col.button(t["show_folder"]):
-            show_in_folder(p / "app.py")
-        if (p / "README.md").is_file():
-            st.markdown((p / "README.md").read_text(encoding="utf-8", errors="replace"))
-        return
     if item["kind"] == "folder":
         entry = p / "index.html"
-        open_col, folder_col, _ = st.columns([0.8, 1.6, 3.6], gap="small")
-        if entry.is_file() and open_col.button(t["open"], type="primary"):
-            webbrowser.open(entry.as_uri())  # in the browser its assets/ load too
-        if folder_col.button(t["show_folder"]):
-            show_in_folder(entry if entry.is_file() else p)
         if entry.is_file():
+            if st.button(t["open_browser"], icon=":material/open_in_new:"):
+                webbrowser.open(entry.as_uri())  # in the browser its assets/ load too
             page = "<style>html{background:#fff;color:#111}</style>" + entry.read_text(encoding="utf-8", errors="replace")
             components.html(page, height=720, scrolling=True)
-        if (p / "README.md").is_file():
-            with st.expander(t["about_artifact"]):
-                st.markdown((p / "README.md").read_text(encoding="utf-8", errors="replace"))
         return
     if p.suffix.lower() in (".html", ".htm"):
         # White by default (reports written without a background are unreadable on a dark page).
@@ -789,15 +792,11 @@ def show_report(item):
         components.html(page, height=720, scrolling=True)
     elif p.suffix.lower() in (".png", ".jpg", ".jpeg", ".gif", ".svg"):
         st.image(str(p))
-    elif p.suffix.lower() in (".md", ".txt", ".csv"):
-        if p.suffix.lower() == ".md":
-            st.markdown(p.read_text(encoding="utf-8", errors="replace"))
-        else:
-            st.text(p.read_text(encoding="utf-8", errors="replace"))
-    elif p.suffix.lower() in SAFE_TO_OPEN:
-        if st.button(t["open"]):
-            webbrowser.open(p.as_uri())
-    elif st.button(t["show_folder"]):
+    elif p.suffix.lower() == ".md":
+        st.markdown(p.read_text(encoding="utf-8", errors="replace"))
+    elif p.suffix.lower() in (".txt", ".csv"):
+        st.text(p.read_text(encoding="utf-8", errors="replace"))
+    elif st.button(t["show_folder"]):  # a file the page cannot show or open
         show_in_folder(p)
 
 
@@ -821,18 +820,21 @@ if section == t["tab_artifacts"]:
                 else:
                     empty_state(t["no_shared"])
             for i, item in enumerate(group):
-                with st.container(border=True, key=f"artcard-{heading == t['private']}-{i}"):
-                    if st.button(item["title"], key=f"art-{item['key']}", type="tertiary", use_container_width=True,
-                                 icon=":material/chevron_right:"):
-                        st.session_state.viewing = item["key"]
+                with st.container(border=True, key=f"artrow-{heading == t['private']}-{i}"):
+                    about = artifact_about(item)
+                    cols = st.columns([10, 1, 1] if item["private"] else [11, 1], vertical_alignment="center", gap="small")
+                    if item["kind"] == "link":
+                        cols[0].link_button(item["title"], item["url"], type="tertiary", use_container_width=True,
+                                            icon=":material/open_in_new:")
+                    elif cols[0].button(item["title"], key=f"art-{item['key']}", type="tertiary", use_container_width=True,
+                                        icon=":material/chevron_right:"):
+                        enter_artifact(item)
                         st.rerun()
-                    who = t["shared_by"].format(who=item["who"]) if item["who"] else ""
-                    meta = ", ".join(x for x in (item.get("type", "").capitalize(), who, item["when"] or "") if x)
-                    if meta:
-                        st.caption(meta)
-                    card_hit(f"art-{item['key']}", lambda k=item["key"]: st.session_state.update(viewing=k))
-                    if item["private"] and st.button(t["share_team"], key=f"share-{item['key']}",
-                                                     icon=":material/group:"):
+                    if about:
+                        with cols[1].popover("", icon=":material/info:", help=t["what_it_is"]):
+                            st.markdown(about)
+                    if item["private"] and cols[-1].button("", key=f"share-{item['key']}", icon=":material/group:",
+                                                           help=t["share_team"]):
                         confirm_share(item)
 
 # History: who changed what, in plain words
