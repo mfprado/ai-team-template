@@ -36,7 +36,7 @@ T = {
         "tab_skills": "Skills", "tab_perms": "General permissions", "tab_artifacts": "Artifacts", "tab_history": "History",
         "tab_ideas": "Ideas", "ideas_intro": "Ideas for the team's workspace. Anyone can add one or update its status.",
         "no_ideas": "No ideas yet.", "comment": "Comment", "comment_hint": "Add a comment", "comment_send": "Comment",
-        "comment_summary": "Comment on idea {n}", "new_idea": "Title", "new_idea_hint": "Your idea in a few words", "new_idea_text": "Description", "new_idea_text_hint": "Tell the team more: what it would solve, who it helps (optional)", "comments_n": "Comments ({n})", "done_n": "Show done ideas ({n})", "take_idea": "I'll take it", "drop_idea": "Let it go", "taken_by": "{who} is on it", "assign_summary": "Idea {n}: {who} is on it", "unassign_summary": "Idea {n}: free again", "add_idea": "Add", "days": ["today", "yesterday", "{n} days ago"],
+        "comment_summary": "Comment on idea {n}", "new_idea": "Title", "new_idea_hint": "Your idea in a few words", "new_idea_text": "Description", "new_idea_text_hint": "Tell the team more: what it would solve, who it helps (optional)", "comments_n": "Comments ({n})", "done_n": "Show done ideas ({n})", "archived_n": "Show archived ideas ({n})", "take_idea": "I'll take it", "drop_idea": "Let it go", "taken_by": "{who} is on it", "assign_summary": "Idea {n}: {who} is on it", "unassign_summary": "Idea {n}: free again", "add_idea": "Add", "days": ["today", "yesterday", "{n} days ago"],
         "idea_summary": "New idea: {text}", "set_status": "Status", "save_status": "Save status",
         "status_summary": "Idea {n}: {status}",
         "versions": "Earlier versions", "current": "Current version", "go_back": "Go back to this version",
@@ -96,7 +96,7 @@ T = {
         "tab_skills": "Skills", "tab_perms": "Permisos generales", "tab_artifacts": "Artefactos", "tab_history": "Historial",
         "tab_ideas": "Ideas", "ideas_intro": "Ideas para el espacio del equipo. Cualquiera puede sumar una o cambiar su estado.",
         "no_ideas": "Todavía no hay ideas.", "comment": "Comentario", "comment_hint": "Sumá un comentario", "comment_send": "Comentar",
-        "comment_summary": "Comentario en la idea {n}", "new_idea": "Título", "new_idea_hint": "Tu idea en pocas palabras", "new_idea_text": "Descripción", "new_idea_text_hint": "Contale más al equipo: qué resolvería, a quién ayuda (opcional)", "comments_n": "Comentarios ({n})", "done_n": "Mostrar las hechas ({n})", "take_idea": "Me la asigno", "drop_idea": "Soltarla", "taken_by": "La tiene {who}", "assign_summary": "Idea {n}: la tiene {who}", "unassign_summary": "Idea {n}: quedó libre", "add_idea": "Agregar", "days": ["hoy", "ayer", "hace {n} días"],
+        "comment_summary": "Comentario en la idea {n}", "new_idea": "Título", "new_idea_hint": "Tu idea en pocas palabras", "new_idea_text": "Descripción", "new_idea_text_hint": "Contale más al equipo: qué resolvería, a quién ayuda (opcional)", "comments_n": "Comentarios ({n})", "done_n": "Mostrar las hechas ({n})", "archived_n": "Mostrar las archivadas ({n})", "take_idea": "Me la asigno", "drop_idea": "Soltarla", "taken_by": "La tiene {who}", "assign_summary": "Idea {n}: la tiene {who}", "unassign_summary": "Idea {n}: quedó libre", "add_idea": "Agregar", "days": ["hoy", "ayer", "hace {n} días"],
         "idea_summary": "Nueva idea: {text}", "set_status": "Estado", "save_status": "Guardar estado",
         "status_summary": "Idea {n}: {status}",
         "versions": "Versiones anteriores", "current": "Versión actual", "go_back": "Volver a esta versión",
@@ -389,6 +389,9 @@ with st.sidebar:
             st.session_state.section = name
             st.session_state.pop("viewing", None)
             st.rerun()
+        if name == t["tab_artifacts"] and current:
+            # Filled further down, once the artifacts are listed: one entry per artifact.
+            artifact_menu = menu.container(key="artmenu")
     section = st.session_state.section
 
 st.title(section)
@@ -556,9 +559,9 @@ if section == t["tab_ideas"]:
         ideas = []
     # Every save happens in the click's callback, before the page is drawn again: the list stays
     # as it was while the change is sent to the team, then shows the result (no half-drawn cards).
-    keys = ["new", "planned", "done"]
-    labels = {"en": {"new": "New", "planned": "Planned", "done": "Done"},
-              "es": {"new": "Nueva", "planned": "En camino", "done": "Hecha"}}[team.get("language", "en") if team.get("language") in ("en", "es") else "en"]
+    keys = ["new", "planned", "done", "archived"]
+    labels = {"en": {"new": "New", "planned": "Planned", "done": "Done", "archived": "Archived"},
+              "es": {"new": "Nueva", "planned": "En camino", "done": "Hecha", "archived": "Archivada"}}[team.get("language", "en") if team.get("language") in ("en", "es") else "en"]
 
     def ideas_script(*args):
         run(sys.executable, "-I", str(CORE / "scripts/ideas.py"), *args)
@@ -632,7 +635,7 @@ if section == t["tab_ideas"]:
                 if owner and owner == me:
                     st.button(t["drop_idea"], key=f"drop-{n}", use_container_width=True,
                               on_click=assign, args=(n, ""))
-                elif not owner and idea["key"] != "done":
+                elif not owner and idea["key"] not in ("done", "archived"):
                     st.button(t["take_idea"], key=f"take-{n}", use_container_width=True,
                               on_click=assign, args=(n, me or "?"))
             if idea.get("description"):
@@ -654,8 +657,8 @@ if section == t["tab_ideas"]:
         group = [i for i in reversed(ideas) if i["key"] == key]
         if not group:
             continue
-        if key == "done":  # a switch, not an expander: comments inside a card already fold
-            if st.toggle(t["done_n"].format(n=len(group)), key="show-done-ideas"):
+        if key in ("done", "archived"):  # a switch, not an expander: comments inside a card already fold
+            if st.toggle(t[f"{key}_n"].format(n=len(group)), key=f"show-{key}-ideas"):
                 for idea in group:
                     idea_card(idea)
         else:
@@ -741,6 +744,25 @@ def artifact_title(folder):
     except OSError:
         pass
     return re.sub(r"^\d{4}-\d{2}-\d{2}-", "", folder.name).replace("-", " ").capitalize()
+
+
+def artifact_group(item):
+    """The heading an artifact is listed under: its type folder, links apart."""
+    if item["kind"] == "link":
+        return "Links"
+    return (item.get("type") or "").capitalize()
+
+
+def artifact_icon(item):
+    """App (Streamlit) gets an app icon, HTML a code icon, links a link icon."""
+    if item["kind"] == "link":
+        return ":material/link:"
+    p = item["path"]
+    if item["kind"] == "folder" and (p / "app.py").is_file():
+        return ":material/apps:"
+    if (item["kind"] == "folder" and (p / "index.html").is_file()) or p.suffix.lower() in (".html", ".htm"):
+        return ":material/code:"
+    return ":material/description:"
 
 
 def share_report(item):
@@ -855,9 +877,10 @@ def show_report(item):
     p = item["path"]
     if item["kind"] == "folder":
         entry = p / "index.html"
+        # The page is already shown below, so only the folder button is offered.
+        if st.button(t["show_folder"], icon=":material/folder_open:"):
+            show_in_folder(entry if entry.is_file() else p)
         if entry.is_file():
-            if st.button(t["open_browser"], icon=":material/open_in_new:"):
-                webbrowser.open(entry.as_uri())  # in the browser its assets/ load too
             page = "<style>html{background:#fff;color:#111}</style>" + entry.read_text(encoding="utf-8", errors="replace")
             components.html(page, height=720, scrolling=True)
         return
@@ -877,6 +900,20 @@ def show_report(item):
 
 if section == t["tab_artifacts"]:
     items = report_items()
+    # Sidebar: every artifact under the Artifacts entry, to jump from one to another.
+    last_group = None
+    for item in sorted(items, key=lambda i: (artifact_group(i), i["title"].lower())):
+        if artifact_group(item) != last_group:
+            last_group = artifact_group(item)
+            artifact_menu.caption(last_group)
+        here = st.session_state.get("viewing") == item["key"]
+        if item["kind"] == "link":
+            artifact_menu.link_button(item["title"], item["url"], icon=artifact_icon(item), type="tertiary",
+                                      use_container_width=True)
+        elif artifact_menu.button(item["title"], icon=artifact_icon(item), type="primary" if here else "tertiary",
+                                  use_container_width=True, key=f"artmenu-{item['key']}"):
+            enter_artifact(item)
+            st.rerun()
     viewing = next((i for i in items if i["key"] == st.session_state.get("viewing")), None)
     if viewing:
         if st.button(f"← {t['back']}"):
@@ -891,10 +928,24 @@ if section == t["tab_artifacts"]:
             st.subheader(heading)
             if not group:
                 if heading == t["private"]:
-                    empty_state(t["no_private"], t["ask_report"])
+                    empty_state(t["no_private"], team.get("example_ask") or t["ask_report"])
                 else:
                     empty_state(t["no_shared"])
-            for i, item in enumerate(group):
+            # Grouped by type (presentations, dashboards, apps...), each with a small heading.
+            by_type = {}
+            for item in group:
+                by_type.setdefault(artifact_group(item), []).append(item)
+            rows = []
+            for type_name in sorted(by_type):
+                rows.append(type_name)
+                rows.extend(by_type[type_name])
+            i = 0
+            for item in rows:
+                if isinstance(item, str):
+                    if len(by_type) > 1 or item:
+                        st.markdown(f"**{html.escape(item)}**")
+                    continue
+                i += 1
                 with st.container(border=True, key=f"artrow-{heading == t['private']}-{i}"):
                     about = artifact_about(item)
                     cols = st.columns([9, 1, 1, 1] if item["private"] else [11, 1], vertical_alignment="center", gap="small")
@@ -902,7 +953,7 @@ if section == t["tab_artifacts"]:
                         cols[0].link_button(item["title"], item["url"], type="tertiary", use_container_width=True,
                                             icon=":material/open_in_new:")
                     elif cols[0].button(item["title"], key=f"art-{item['key']}", type="tertiary", use_container_width=True,
-                                        icon=":material/chevron_right:"):
+                                        icon=artifact_icon(item)):
                         enter_artifact(item)
                         st.rerun()
                     if about:

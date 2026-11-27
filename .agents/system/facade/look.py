@@ -31,6 +31,14 @@ def tokens(brand):
 
 
 BACK = {"en": "← Back to the team page", "es": "← Volver a la página del equipo"}
+COPY = {"en": "Copy", "es": "Copiar"}
+
+
+def team_language():
+    try:
+        return json.loads((BRAND_DIR.parent / "team.json").read_text(encoding="utf-8")).get("language", "en")
+    except (OSError, ValueError):
+        return "en"
 
 
 def back_link():
@@ -108,6 +116,10 @@ hr {{ border-color:var(--rule) !important; }}
   color:var(--ink) !important; border-radius:8px; padding:.5rem .75rem; min-height:2.4rem; }}
 .st-key-menu button > div {{ justify-content:flex-start; }}
 .st-key-menu button:hover {{ background:var(--wash) !important; }}
+.st-key-artmenu {{ padding-left:.6rem; gap:.1rem !important; border-left:1px solid var(--rule); margin-left:1rem; width:calc(100% - 1rem) !important; box-sizing:border-box; }}
+.st-key-artmenu [data-testid="stCaptionContainer"] {{ font-size:.72rem; text-transform:uppercase; letter-spacing:.08em; margin:.5rem 0 0 .6rem; }}
+.st-key-artmenu button {{ min-height:2rem !important; padding:.2rem .6rem !important; }}
+.st-key-artmenu button p {{ font-size:.88rem !important; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }}
 .st-key-menu [data-testid="stBaseButton-primary"] {{ background:var(--wash) !important; font-weight:650;
   box-shadow:inset 3px 0 0 var(--accent); }}
 .st-key-menu [data-testid="stBaseButton-primary"] p {{ font-weight:650; }}
@@ -158,6 +170,7 @@ button p {{ white-space:nowrap; }}
 [class*="st-key-ideatag-new-"] button {{ background:var(--wash) !important; color:var(--accent) !important; border-color:var(--accent) !important; }}
 [class*="st-key-ideatag-planned-"] button {{ background:transparent !important; color:#D9A400 !important; border-color:#D9A400 !important; }}
 [class*="st-key-ideatag-done-"] button {{ background:transparent !important; color:#2E9E5B !important; border-color:#2E9E5B !important; }}
+[class*="st-key-ideatag-archived-"] button {{ background:transparent !important; color:var(--muted) !important; border-color:var(--rule) !important; }}
 
 /* Cards that open: the whole card is clickable (an invisible button covers it) */
 [class*="st-key-skillcard-"], [class*="st-key-artcard-"] {{ position:relative; }}
@@ -192,13 +205,23 @@ button:focus-visible {{ outline:2px solid var(--accent) !important; outline-offs
 
 /* Examples of what to ask: the page's type, quieter than the skill's own request */
 [class*="st-key-example-"] [data-testid="stCode"] pre {{ background:transparent !important; border:1px dashed var(--rule);
-  border-radius:12px !important; padding:.8rem 3rem .8rem 1.1rem !important; }}
+  border-radius:12px !important; padding:.8rem 7.5rem .8rem 1.1rem !important; }}
 [class*="st-key-example-"] [data-testid="stCode"] code {{ font-family:{font} !important; background:transparent !important;
   color:var(--ink) !important; font-size:1rem !important; white-space:pre-wrap !important; }}
 
+/* Requests to paste: the copy button is always visible and says what it does */
+[data-testid="stCodeCopyButton"] {{ opacity:1 !important; visibility:visible !important; width:auto !important;
+  height:auto !important; top:50% !important; right:.6rem !important; transform:translateY(-50%);
+  display:flex !important; align-items:center; gap:.35rem; padding:.35rem .8rem !important; border-radius:999px !important;
+  background:var(--accent) !important; color:var(--on-accent) !important; border:none !important; font-weight:600; font-size:.85rem; }}
+[data-testid="stCodeCopyButton"] svg {{ stroke:var(--on-accent) !important; color:var(--on-accent) !important; }}
+[data-testid="stCodeCopyButton"]::after {{ content:"{COPY.get(team_language(), COPY["en"])}"; }}
+[data-testid="stCode"] div:has(> [data-testid="stCodeCopyButton"]) {{ opacity:1 !important; }}
+[data-testid="stCode"] pre {{ padding-right:7.5rem !important; }}
+
 /* The request to paste: the page's one loud element */
 [class*="st-key-ask-"] [data-testid="stCode"] pre {{ background:var(--wash) !important; border-radius:14px !important;
-  padding:1.1rem 3rem 1.1rem 1.25rem !important; }}
+  padding:1.1rem 7.5rem 1.1rem 1.25rem !important; }}
 [class*="st-key-ask-"] [data-testid="stCode"] code {{ font-family:{font} !important; background:transparent !important;
   color:var(--ink) !important; font-size:1.35rem !important; font-weight:560; letter-spacing:-0.01em;
   white-space:pre-wrap !important; font-variation-settings:'opsz' 36; line-height:1.3; }}

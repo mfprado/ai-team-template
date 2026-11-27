@@ -90,3 +90,21 @@ prefix_rule(
     decision = "allow",
     justification = "Regenera las copias de cada asistente de IA.",
 )
+
+prefix_rule(
+    pattern = ["sh", ".agents/system/bin/py", "-I", ".agents/system/scripts/new_artifact.py"],
+    decision = "allow",
+    justification = "Crea la carpeta de un artefacto nuevo, siempre privada.",
+)
+
+prefix_rule(
+    pattern = ["sh", ".agents/system/bin/py", "-I", ".agents/system/scripts/artifact_link.py"],
+    decision = "allow",
+    justification = "Anota el link de un artefacto para que aparezca en la página del equipo.",
+)
+
+prefix_rule(
+    pattern = ["sh", ".agents/system/bin/py", "-I", ".agents/system/scripts/ideas.py"],
+    decision = "allow",
+    justification = "Anota y lee las ideas del equipo.",
+)

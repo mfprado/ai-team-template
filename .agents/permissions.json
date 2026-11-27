@@ -228,6 +228,24 @@
       "reason": "Regenera las copias de cada asistente de IA."
     },
     {
+      "tool": "Bash",
+      "pattern": "sh .agents/system/bin/py -I .agents/system/scripts/new_artifact.py",
+      "tier": "allow",
+      "reason": "Crea la carpeta de un artefacto nuevo, siempre privada."
+    },
+    {
+      "tool": "Bash",
+      "pattern": "sh .agents/system/bin/py -I .agents/system/scripts/artifact_link.py",
+      "tier": "allow",
+      "reason": "Anota el link de un artefacto para que aparezca en la página del equipo."
+    },
+    {
+      "tool": "Bash",
+      "pattern": "sh .agents/system/bin/py -I .agents/system/scripts/ideas.py",
+      "tier": "allow",
+      "reason": "Anota y lee las ideas del equipo."
+    },
+    {
       "tool": "mcp__Claude_Browser__preview_start",
       "tier": "allow",
       "reason": "Ver la página del equipo en el navegador del asistente."

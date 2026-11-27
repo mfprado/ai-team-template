@@ -5,7 +5,7 @@
                                             adds it as new, with today's date and your git name
                                             (--text, the description, is optional)
   ideas.py list                             prints the ideas as JSON
-  ideas.py status --id 3 --to planned       changes an idea's status (anyone on the team)
+  ideas.py status --id 3 --to planned       (or new, done, archived) changes an idea's status (anyone on the team)
   ideas.py comment --id 3 --text "..."      adds a comment to an idea, with today's date and your git name
   ideas.py assign --id 3 [--to "Ana Lopez"] assigns the idea to someone (you, by default)
   ideas.py assign --id 3 --clear            leaves it unassigned again
@@ -31,8 +31,8 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[3]
 FILE = ROOT / "IDEAS.md"
 STATUSES = {
-    "en": {"new": "New", "planned": "Planned", "done": "Done"},
-    "es": {"new": "Nueva", "planned": "En camino", "done": "Hecha"},
+    "en": {"new": "New", "planned": "Planned", "done": "Done", "archived": "Archived"},
+    "es": {"new": "Nueva", "planned": "En camino", "done": "Hecha", "archived": "Archivada"},
 }
 HEADER = {
     "en": "# Team ideas\n\nIdeas for the team's AI workspace. Anyone can add one or update its status.\n\n",
@@ -112,7 +112,7 @@ def main():
     sub.add_parser("list")
     st = sub.add_parser("status")
     st.add_argument("--id", type=int, required=True)
-    st.add_argument("--to", required=True, choices=["new", "planned", "done"])
+    st.add_argument("--to", required=True, choices=["new", "planned", "done", "archived"])
     cm = sub.add_parser("comment")
     cm.add_argument("--id", type=int, required=True)
     cm.add_argument("--text", required=True)
