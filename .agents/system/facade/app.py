@@ -36,7 +36,7 @@ T = {
         "tab_skills": "Skills", "tab_perms": "General permissions", "tab_artifacts": "Artifacts", "tab_history": "History",
         "tab_ideas": "Ideas", "ideas_intro": "Ideas for the team's workspace. Anyone can add one or update its status.",
         "no_ideas": "No ideas yet.", "comment": "Comment", "comment_hint": "Add a comment", "comment_send": "Comment",
-        "comment_summary": "Comment on idea {n}", "new_idea": "Your idea", "new_idea_hint": "Write your idea for the team…", "add_idea": "Add idea",
+        "comment_summary": "Comment on idea {n}", "new_idea": "Your idea", "new_idea_hint": "Write your idea for the team…", "add_idea": "Add", "days": ["today", "yesterday", "{n} days ago"],
         "idea_summary": "New idea: {text}", "set_status": "Status", "save_status": "Save status",
         "status_summary": "Idea {n}: {status}",
         "versions": "Earlier versions", "current": "Current version", "go_back": "Go back to this version",
@@ -96,7 +96,7 @@ T = {
         "tab_skills": "Skills", "tab_perms": "Permisos generales", "tab_artifacts": "Artefactos", "tab_history": "Historial",
         "tab_ideas": "Ideas", "ideas_intro": "Ideas para el espacio del equipo. Cualquiera puede sumar una o cambiar su estado.",
         "no_ideas": "Todavía no hay ideas.", "comment": "Comentario", "comment_hint": "Sumá un comentario", "comment_send": "Comentar",
-        "comment_summary": "Comentario en la idea {n}", "new_idea": "Tu idea", "new_idea_hint": "Escribí tu idea para el equipo…", "add_idea": "Agregar idea",
+        "comment_summary": "Comentario en la idea {n}", "new_idea": "Tu idea", "new_idea_hint": "Escribí tu idea para el equipo…", "add_idea": "Agregar", "days": ["hoy", "ayer", "hace {n} días"],
         "idea_summary": "Nueva idea: {text}", "set_status": "Estado", "save_status": "Guardar estado",
         "status_summary": "Idea {n}: {status}",
         "versions": "Versiones anteriores", "current": "Versión actual", "go_back": "Volver a esta versión",
@@ -216,6 +216,24 @@ def show_flow(diagram):
     page = flow_page.build(diagram, brand, ROOT / ".agents/brand", language=team.get("language", "en"))
     # A first guess at the height; the diagram then sizes its frame to fit.
     components.html(page, height=min(900, 60 * diagram.count("\n")))
+
+
+MONTHS = {"en": "Jan Feb Mar Apr May Jun Jul Aug Sep Oct Nov Dec".split(),
+          "es": "ene feb mar abr may jun jul ago sep oct nov dic".split()}
+
+
+def nice_date(iso):
+    """2026-11-27 as people say it: today, yesterday, 3 days ago, or 27 Nov."""
+    try:
+        day = datetime.date.fromisoformat(iso)
+    except ValueError:
+        return iso
+    days = (datetime.date.today() - day).days
+    if 0 <= days <= 6:
+        return t["days"][min(days, 2)].format(n=days)
+    months = MONTHS.get(team.get("language"), MONTHS["en"])
+    when = f"{day.day} {months[day.month - 1]}" if team.get("language") == "es" else f"{months[day.month - 1]} {day.day}"
+    return when if day.year == datetime.date.today().year else f"{when} {day.year}"
 
 
 def ago(ts, t):
@@ -535,9 +553,10 @@ if section == t["tab_ideas"]:
     # Saving refreshes the page before a form can clear itself: a new round gives empty fields.
     round_ = st.session_state.setdefault("ideas_round", 0)
     with st.form(f"new-idea-{round_}", border=False):
-        text = st.text_area(t["new_idea"], max_chars=500, height=80, placeholder=t["new_idea_hint"],
-                            label_visibility="collapsed")
-        if st.form_submit_button(t["add_idea"], type="primary") and text.strip():
+        field, send = st.columns([5, 1.2], vertical_alignment="bottom")
+        text = field.text_input(t["new_idea"], max_chars=500, placeholder=t["new_idea_hint"],
+                                label_visibility="collapsed")
+        if send.form_submit_button(t["add_idea"], type="primary", use_container_width=True) and text.strip():
             st.session_state.ideas_round += 1
             run(sys.executable, "-I", str(CORE / "scripts/ideas.py"), "add", "--text", text)
             share(t["idea_summary"].format(text=" ".join(text.split())[:80]), ["IDEAS.md"])  # refreshes the list
@@ -549,20 +568,22 @@ if section == t["tab_ideas"]:
     for idea in reversed(ideas):  # newest first
         n = str(idea["id"])
         with st.container(border=True, key=f"ideacard-{n}"):
-            text_col, status_col = st.columns([4, 1.4])
-            text_col.markdown(f"**{html.escape(idea['text'])}**")
-            text_col.caption(f"{idea['who']}, {idea['date']}")
-            choice = status_col.selectbox(t["set_status"], keys, index=keys.index(idea["key"]), format_func=labels.get,
-                                          key=f"idea-{n}", label_visibility="collapsed")
-            if choice != idea["key"]:  # saved straight away, like any change
+            st.markdown(f'<div class="idea-text">{html.escape(idea["text"])}</div>'
+                        f'<div class="idea-who">{html.escape(idea["who"])}, {nice_date(idea["date"])}</div>',
+                        unsafe_allow_html=True)
+            # The three states at a glance; one click changes it, saved straight away like any change.
+            choice = st.segmented_control(t["set_status"], keys, default=idea["key"], format_func=labels.get,
+                                          key=f"idea-{n}-{round_}", label_visibility="collapsed")
+            if choice and choice != idea["key"]:
+                st.session_state.ideas_round += 1
                 run(sys.executable, "-I", str(CORE / "scripts/ideas.py"), "status", "--id", n, "--to", choice)
                 share(t["status_summary"].format(n=n, status=labels[choice]), ["IDEAS.md"])
             for c in idea.get("comments", []):
                 st.markdown(f'<div class="idea-comment"><div>{html.escape(c["text"])}</div>'
-                            f'<div class="who">{html.escape(c["who"])}, {c["date"]}</div></div>',
+                            f'<div class="who">{html.escape(c["who"])}, {nice_date(c["date"])}</div></div>',
                             unsafe_allow_html=True)
             with st.form(f"comment-form-{n}-{round_}", border=False):
-                field, send = st.columns([4, 1.4], vertical_alignment="bottom")
+                field, send = st.columns([5, 1.2], vertical_alignment="bottom")
                 comment = field.text_input(t["comment"], placeholder=t["comment_hint"], label_visibility="collapsed")
                 if send.form_submit_button(t["comment_send"], use_container_width=True) and comment.strip():
                     st.session_state.ideas_round += 1
