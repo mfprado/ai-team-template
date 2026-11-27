@@ -66,7 +66,7 @@ T = {
         "no_skill_perms": "Nothing: it asks before every action.",
         "perm_off_confirm": "From now on, **{skill}** will ask before: {perm}. This applies to the whole team.",
         "perm_on_confirm": "From now on, **{skill}** will do this without asking: {perm}. This applies to the whole team.",
-        "perm_on": "Switch on", "perm_off": "Switch off",
+        "perm_on": "Switch on", "perm_off": "Switch off", "rule_help": "For the AI assistant: {rule}",
         "perm_off_summary": "Skill {skill}: asks again before {perm}",
         "perm_on_summary": "Skill {skill}: {perm} without asking",
         "add_perm": "To let it do something else without asking, ask your AI assistant, for example:",
@@ -79,7 +79,7 @@ T = {
         "recent": "Recent changes", "no_history": "Nothing saved for the team yet. Every change shows up here, with who made it.",
         "sensitive": "Changes how the AI works for everyone", "changed_what": "changed",
         "what": {"skill": "skill {x}", "perms": "permissions", "docs": "documents", "reports": "artifacts",
-                 "rules": "team rules", "brand": "the company's brand", "system": "system", "other": "other files"},
+                 "rules": "team rules", "brand": "the company's brand", "ideas": "the ideas", "system": "system", "other": "other files"},
         "ago": {"now": "just now", "min": "{n} min ago", "h": "{n} h ago", "d": "{n} days ago"},
         "perm_summary": "Permissions: {items}",
         "reports_intro": "Artifacts are reports, presentations, dashboards and small apps made with the AI, each in its own folder. Ask the assistant for a new one any time.",
@@ -126,7 +126,7 @@ T = {
         "no_skill_perms": "Nada: pregunta antes de cada acción.",
         "perm_off_confirm": "Desde ahora, **{skill}** va a preguntar antes de: {perm}. Vale para todo el equipo.",
         "perm_on_confirm": "Desde ahora, **{skill}** va a hacer esto sin preguntar: {perm}. Vale para todo el equipo.",
-        "perm_on": "Encender", "perm_off": "Apagar",
+        "perm_on": "Encender", "perm_off": "Apagar", "rule_help": "Para el asistente de IA: {rule}",
         "perm_off_summary": "Skill {skill}: vuelve a preguntar antes de {perm}",
         "perm_on_summary": "Skill {skill}: {perm} sin preguntar",
         "add_perm": "Para que haga otra cosa sin preguntar, pedíselo a tu asistente de IA, por ejemplo:",
@@ -139,7 +139,7 @@ T = {
         "recent": "Cambios recientes", "no_history": "Todavía no hay nada guardado para el equipo. Acá aparece cada cambio, con quién lo hizo.", "changed_what": "cambió",
         "sensitive": "Cambia cómo funciona la IA para todos",
         "what": {"skill": "la skill {x}", "perms": "los permisos", "docs": "documentos", "reports": "artefactos",
-                 "rules": "reglas del equipo", "brand": "la marca de la empresa", "system": "el sistema", "other": "otros archivos"},
+                 "rules": "reglas del equipo", "brand": "la marca de la empresa", "ideas": "las ideas", "system": "el sistema", "other": "otros archivos"},
         "ago": {"now": "recién", "min": "hace {n} min", "h": "hace {n} h", "d": "hace {n} días"},
         "perm_summary": "Permisos: {items}",
         "reports_intro": "Los artefactos son reportes, presentaciones, tableros y pequeñas apps hechos con la IA, cada uno en su carpeta. Pedile uno nuevo al asistente cuando quieras.",
@@ -259,6 +259,8 @@ def describe_paths(paths, t):
             item = t["what"]["docs"]
         elif p.startswith(("artifacts/", "artefactos/")):
             item = t["what"]["reports"]
+        elif p == "IDEAS.md":
+            item = t["what"]["ideas"]
         elif p.startswith(".agents/brand"):
             item = t["what"]["brand"]
         elif p.startswith((".agents/rules/", ".agents/team.json")):
@@ -341,8 +343,7 @@ def sync_status():
 
 
 def rule_label(rule):
-    what = rule.get("pattern") or rule.get("tool", "")
-    return f"{rule.get('reason') or what}\u2003`{what}`"
+    return rule.get("reason") or rule.get("pattern") or rule.get("tool", "")
 
 
 # ---------- page ----------
@@ -399,6 +400,11 @@ if "flash" in st.session_state:
     ok, message = st.session_state.pop("flash")
     if message:
         (st.success if ok else st.warning)(message, icon=":material/check_circle:" if ok else ":material/warning:")
+
+
+def card_hit(key, on_click):
+    """An invisible button over the whole card (look.py): a click anywhere on it opens it."""
+    st.button(" ", key=f"cardhit-{abs(hash(key)) % 10**9}", on_click=on_click)
 
 
 def empty_state(text, prompt=None):
@@ -468,7 +474,7 @@ def show_skill_permissions(name, title):
         # The switch's value lives in the session only (setting it there and as a default clashes).
         if key not in st.session_state or st.session_state.pop(f"{key}-undo", False):
             st.session_state[key] = perm["on"]
-        wanted = st.toggle(f"{perm['plain']}\u2003`{perm['rule']}`", key=key,
+        wanted = st.toggle(perm["plain"], key=key, help=t["rule_help"].format(rule=perm["rule"]),
                            on_change=lambda k=key: st.session_state.update(perm_touched=k))
         if wanted == perm["on"]:
             continue
@@ -525,6 +531,7 @@ if section == t["tab_skills"]:
                 st.rerun()
             if not is_open:
                 st.caption(short(summary))
+                card_hit(f"skill-{name}", lambda n=name: st.session_state.update(open_skill=n))
                 continue
             st.write(summary)
             if flow:
@@ -550,21 +557,47 @@ if section == t["tab_ideas"]:
         ideas = json.loads(listed.stdout or "[]")
     except ValueError:
         ideas = []
-    # Saving refreshes the page before a form can clear itself: a new round gives empty fields.
-    round_ = st.session_state.setdefault("ideas_round", 0)
-    with st.form(f"new-idea-{round_}", border=False):
-        field, send = st.columns([5, 1.2], vertical_alignment="bottom")
-        text = field.text_input(t["new_idea"], max_chars=500, placeholder=t["new_idea_hint"],
-                                label_visibility="collapsed")
-        if send.form_submit_button(t["add_idea"], type="primary", use_container_width=True) and text.strip():
-            st.session_state.ideas_round += 1
-            run(sys.executable, "-I", str(CORE / "scripts/ideas.py"), "add", "--text", text)
-            share(t["idea_summary"].format(text=" ".join(text.split())[:80]), ["IDEAS.md"])  # refreshes the list
-    if not ideas:
-        st.caption(t["no_ideas"])
+    # Every save happens in the click's callback, before the page is drawn again: the list stays
+    # as it was while the change is sent to the team, then shows the result (no half-drawn cards).
     keys = ["new", "planned", "done"]
     labels = {"en": {"new": "New", "planned": "Planned", "done": "Done"},
               "es": {"new": "Nueva", "planned": "En camino", "done": "Hecha"}}[team.get("language", "en") if team.get("language") in ("en", "es") else "en"]
+
+    def ideas_script(*args):
+        run(sys.executable, "-I", str(CORE / "scripts/ideas.py"), *args)
+
+    def save_from_callback(summary):
+        st.session_state.in_dialog = True  # inside a callback: the page refreshes on its own afterwards
+        share(summary, ["IDEAS.md"])
+
+    def add_idea():
+        text = st.session_state.get("new-idea-text", "").strip()
+        if text:
+            ideas_script("add", "--text", text)
+            save_from_callback(t["idea_summary"].format(text=" ".join(text.split())[:80]))
+
+    def change_status(n, current):
+        choice = st.session_state.get(f"idea-{n}")
+        if not choice:  # clicking the current state again clears the control: keep it
+            st.session_state[f"idea-{n}"] = current
+        elif choice != current:
+            ideas_script("status", "--id", n, "--to", choice)
+            save_from_callback(t["status_summary"].format(n=n, status=labels[choice]))
+
+    def add_comment(n):
+        text = st.session_state.get(f"comment-{n}", "").strip()
+        if text:
+            ideas_script("comment", "--id", n, "--text", text)
+            save_from_callback(t["comment_summary"].format(n=n))
+
+    # A form sends the text and the click together; it clears itself after the callback saves.
+    with st.form("new-idea", clear_on_submit=True, border=False):
+        field, send = st.columns([5, 1.2], vertical_alignment="bottom")
+        field.text_input(t["new_idea"], max_chars=500, placeholder=t["new_idea_hint"], key="new-idea-text",
+                         label_visibility="collapsed")
+        send.form_submit_button(t["add_idea"], type="primary", use_container_width=True, on_click=add_idea)
+    if not ideas:
+        st.caption(t["no_ideas"])
     for idea in reversed(ideas):  # newest first
         n = str(idea["id"])
         with st.container(border=True, key=f"ideacard-{n}"):
@@ -572,23 +605,19 @@ if section == t["tab_ideas"]:
                         f'<div class="idea-who">{html.escape(idea["who"])}, {nice_date(idea["date"])}</div>',
                         unsafe_allow_html=True)
             # The three states at a glance; one click changes it, saved straight away like any change.
-            choice = st.segmented_control(t["set_status"], keys, default=idea["key"], format_func=labels.get,
-                                          key=f"idea-{n}-{round_}", label_visibility="collapsed")
-            if choice and choice != idea["key"]:
-                st.session_state.ideas_round += 1
-                run(sys.executable, "-I", str(CORE / "scripts/ideas.py"), "status", "--id", n, "--to", choice)
-                share(t["status_summary"].format(n=n, status=labels[choice]), ["IDEAS.md"])
+            if st.session_state.get(f"idea-{n}") != idea["key"]:
+                st.session_state[f"idea-{n}"] = idea["key"]  # follow the file (e.g. after getting the team's latest)
+            st.segmented_control(t["set_status"], keys, format_func=labels.get, key=f"idea-{n}",
+                                 label_visibility="collapsed", on_change=change_status, args=(n, idea["key"]))
             for c in idea.get("comments", []):
                 st.markdown(f'<div class="idea-comment"><div>{html.escape(c["text"])}</div>'
                             f'<div class="who">{html.escape(c["who"])}, {nice_date(c["date"])}</div></div>',
                             unsafe_allow_html=True)
-            with st.form(f"comment-form-{n}-{round_}", border=False):
+            with st.form(f"comment-form-{n}", clear_on_submit=True, border=False):
                 field, send = st.columns([5, 1.2], vertical_alignment="bottom")
-                comment = field.text_input(t["comment"], placeholder=t["comment_hint"], label_visibility="collapsed")
-                if send.form_submit_button(t["comment_send"], use_container_width=True) and comment.strip():
-                    st.session_state.ideas_round += 1
-                    run(sys.executable, "-I", str(CORE / "scripts/ideas.py"), "comment", "--id", n, "--text", comment)
-                    share(t["comment_summary"].format(n=n), ["IDEAS.md"])
+                field.text_input(t["comment"], placeholder=t["comment_hint"], key=f"comment-{n}",
+                                 label_visibility="collapsed")
+                send.form_submit_button(t["comment_send"], use_container_width=True, on_click=add_comment, args=(n,))
 
 # Permissions: switches; changes are shared via propose_change.py
 if section == t["tab_perms"]:
@@ -598,28 +627,32 @@ if section == t["tab_perms"]:
     changes = []
     for tier, label in (("deny", t["blocked"]), ("ask", t["asks"])):
         st.subheader(label)
+        # Rules with the same reason are one switch: people see what is protected, not each command.
+        groups = {}
         for i, rule in enumerate(perms.get("rules", [])):
-            if rule.get("tier", "deny") != tier:
-                continue
-            current = rule.get("enabled", True) is not False
-            wanted = st.toggle(rule_label(rule), value=current, key=f"rule-{i}")
+            if rule.get("tier", "deny") == tier:
+                groups.setdefault(rule_label(rule), []).append(i)
+        for reason, ids in groups.items():
+            current = all(perms["rules"][i].get("enabled", True) is not False for i in ids)
+            what = ", ".join(perms["rules"][i].get("pattern") or perms["rules"][i].get("tool", "") for i in ids)
+            wanted = st.toggle(reason, value=current, key=f"rule-{ids[0]}", help=t["rule_help"].format(rule=what))
             if wanted != current:
-                changes.append((i, wanted))
+                changes.append((ids, wanted))
     if changes:
         st.divider()
         st.write(t["changed"])
         items = []
-        for i, wanted in changes:
-            rule = perms["rules"][i]
-            items.append(f"{rule.get('reason') or rule.get('pattern')} ({t['on'] if wanted else t['off']})")
+        for ids, wanted in changes:
+            items.append(f"{rule_label(perms['rules'][ids[0]])} ({t['on'] if wanted else t['off']})")
             st.write(f"- {items[-1]}")
         if st.button(t["apply"], type="primary"):
             with st.spinner(t["applying"]):
-                for i, wanted in changes:
-                    if wanted:
-                        perms["rules"][i].pop("enabled", None)
-                    else:
-                        perms["rules"][i]["enabled"] = False
+                for ids, wanted in changes:
+                    for i in ids:
+                        if wanted:
+                            perms["rules"][i].pop("enabled", None)
+                        else:
+                            perms["rules"][i]["enabled"] = False
                 perms_path.write_text(json.dumps(perms, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
                 run(sys.executable, "-I", str(CORE / "scripts/sync.py"))
                 share(t["perm_summary"].format(items="; ".join(items)), [".agents/permissions.json"])
@@ -797,13 +830,13 @@ if section == t["tab_artifacts"]:
                     meta = ", ".join(x for x in (item.get("type", "").capitalize(), who, item["when"] or "") if x)
                     if meta:
                         st.caption(meta)
+                    card_hit(f"art-{item['key']}", lambda k=item["key"]: st.session_state.update(viewing=k))
                     if item["private"] and st.button(t["share_team"], key=f"share-{item['key']}",
                                                      icon=":material/group:"):
                         confirm_share(item)
 
 # History: who changed what, in plain words
 if section == t["tab_history"]:
-    st.subheader(t["recent"])
     out = git("log", "-n", "30", "--format=\x1e%an\x1f%at\x1f%s", "--name-only").stdout
     if not out.strip():
         empty_state(t["no_history"])
@@ -812,8 +845,9 @@ if section == t["tab_history"]:
         author, ts, subject = lines[0].split("\x1f")
         what = describe_paths(lines[1:], t)
         sensitive = any(l == ".agents/permissions.json" or l.startswith((".agents/rules/", ".agents/system/", ".agents/team.json")) for l in lines[1:])
-        with st.container(key=f"change-{ts}-{abs(hash(subject)) % 10**6}"):
-            st.markdown(f"**{author}** {t['changed_what']} {what or t['what']['other']}")
-            st.caption(f"{subject}\u2003{ago(int(ts), t)}")
-            if sensitive:
-                st.markdown(f":orange[{t['sensitive']}]")
+        # One block per change: who and what, then the change in their words and when.
+        flag = f'<div class="flag">{html.escape(t["sensitive"])}</div>' if sensitive else ""
+        st.markdown(f'<div class="change"><div><strong>{html.escape(author)}</strong> {t["changed_what"]} '
+                    f'{html.escape(what or t["what"]["other"])}</div>'
+                    f'<div class="note">{html.escape(subject)}<span class="when">{ago(int(ts), t)}</span></div>'
+                    f'{flag}</div>', unsafe_allow_html=True)

@@ -38,12 +38,28 @@ TOOL = re.compile(r"^(?:[A-Z][A-Za-z]+|mcp__[\w-]+__[\w*-]+|mcp__[\w-]+__\*)(?:\
 # Too broad for a skill: they would let it do anything of that kind without asking.
 TOO_BROAD = {"Bash", "Bash(*)", "Write", "Edit", "MultiEdit", "NotebookEdit", "*"}
 
+# The team's own scripts and common commands, in words a teammate understands.
+KNOWN = {
+    "en": {"sync": "Get the skill ready for the AI assistant", "find_logo": "Look up tool logos on the internet",
+           "skill_permissions": "Change a skill's permissions", "new_artifact": "Create the folder for an artifact",
+           "share_artifact": "Share an artifact with the team", "ideas": "Note the team's ideas",
+           "brand": "Save the company's brand", "propose_change": "Save changes for the team",
+           "git log": "Look at the history of changes", "git config user.name": "Check your name",
+           "git config user.email": "Check your email", "gh api user": "Check your GitHub account"},
+    "es": {"sync": "Dejar la skill lista para el asistente de IA", "find_logo": "Buscar logos de herramientas en internet",
+           "skill_permissions": "Cambiar los permisos de una skill", "new_artifact": "Crear la carpeta de un artefacto",
+           "share_artifact": "Compartir un artefacto con el equipo", "ideas": "Anotar las ideas del equipo",
+           "brand": "Guardar la marca de la empresa", "propose_change": "Guardar cambios para el equipo",
+           "git log": "Ver el historial de cambios", "git config user.name": "Ver tu nombre",
+           "git config user.email": "Ver tu email", "gh api user": "Ver tu cuenta de GitHub"},
+}
+
 WORDS = {
-    "en": {"read": "Read files", "read_in": "Read files in {x}", "change_in": "Change files in {x}",
+    "en": {"read": "Read the folder's files", "read_in": "Read files in {x}", "change_in": "Change files in {x}",
            "run": "Run: {x}", "web": "Read web pages", "web_from": "Read web pages from {x}",
            "search": "Search the web", "skill": "Use the {x} skill", "any": "anything in {x}",
            "script": "Run the {x} script", "git": "Git: {x}"},
-    "es": {"read": "Leer archivos", "read_in": "Leer archivos en {x}", "change_in": "Cambiar archivos en {x}",
+    "es": {"read": "Leer los archivos de la carpeta", "read_in": "Leer archivos en {x}", "change_in": "Cambiar archivos en {x}",
            "run": "Ejecutar: {x}", "web": "Leer páginas web", "web_from": "Leer páginas de {x}",
            "search": "Buscar en internet", "skill": "Usar la skill {x}", "any": "cualquier cosa en {x}",
            "script": "Ejecutar el script {x}", "git": "Git: {x}"},
@@ -78,9 +94,13 @@ def describe(rule, language="en"):
     if tool in ("Write", "Edit", "MultiEdit"):
         return w["change_in"].format(x=target)
     if tool == "Bash":
+        known = KNOWN.get(language, KNOWN["en"])
         script = re.search(r"scripts/([\w-]+)\.(?:py|sh)\b", target or "")
         if script:
-            return w["script"].format(x=script.group(1).replace("_", " "))
+            return known.get(script.group(1)) or w["script"].format(x=script.group(1).replace("_", " "))
+        command = (target or "").rstrip(" *")
+        if command in known:
+            return known[command]
         if (target or "").startswith("git "):
             return w["git"].format(x=target[4:].rstrip(" *"))
         return w["run"].format(x=target)

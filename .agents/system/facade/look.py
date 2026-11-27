@@ -77,8 +77,10 @@ hr {{ border-color:var(--rule) !important; }}
 [class*="st-key-art-"] button > div {{ justify-content:flex-start; flex-direction:row-reverse; gap:.35rem; }}
 [class*="st-key-art-"] button p {{ font-size:1.1rem !important; font-weight:650; color:var(--ink); }}
 [class*="st-key-art-"] button:hover p {{ color:var(--accent); }}
-[class*="st-key-change-"] {{ padding:.55rem 0 .65rem; border-bottom:1px solid var(--rule); gap:.15rem; }}
-[class*="st-key-change-"] p {{ margin:0; }}
+.change {{ padding:.8rem 0 .85rem; border-bottom:1px solid var(--rule); line-height:1.45; }}
+.change .note {{ color:var(--muted); font-size:.9rem; margin-top:.2rem; }}
+.change .when {{ margin-left:.9rem; opacity:.8; }}
+.change .flag {{ color:#D98A1C; font-size:.85rem; margin-top:.25rem; }}
 button p {{ white-space:nowrap; }}
 
 /* Ideas: each a card; its comments indented under it */
@@ -92,6 +94,16 @@ button p {{ white-space:nowrap; }}
 .idea-comment {{ border-left:2px solid var(--rule); padding:.1rem 0 .1rem .8rem; margin:.1rem 0 .35rem .1rem; line-height:1.45; }}
 .idea-comment .who {{ color:var(--muted); font-size:.85rem; margin-top:.1rem; }}
 [class*="st-key-ideacard-"] [data-testid="stForm"] {{ padding:0; margin-top:.2rem; }}
+
+/* Cards that open: the whole card is clickable (an invisible button covers it) */
+[class*="st-key-skillcard-"], [class*="st-key-artcard-"] {{ position:relative; }}
+[class*="st-key-cardhit-"] {{ position:absolute !important; inset:-1rem; z-index:1; margin:0 !important; }}
+[class*="st-key-cardhit-"] div, [class*="st-key-cardhit-"] button {{ width:100% !important; height:100% !important; }}
+[class*="st-key-cardhit-"] button {{ opacity:0; cursor:pointer; }}
+[class*="st-key-share-"] {{ position:relative; z-index:2; }}
+[data-testid="stVerticalBlockBorderWrapper"]:has([class*="st-key-cardhit-"]:hover) {{ border-color:var(--accent) !important; }}
+[data-testid="stVerticalBlockBorderWrapper"]:has([class*="st-key-cardhit-"]:hover) [class*="st-key-skill-"] p,
+[data-testid="stVerticalBlockBorderWrapper"]:has([class*="st-key-cardhit-"]:hover) [class*="st-key-art-"] p {{ color:var(--accent); }}
 
 /* Buttons */
 [data-testid="stBaseButton-secondary"] {{ border:1px solid var(--rule) !important; background:var(--card) !important;
