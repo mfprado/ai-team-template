@@ -59,10 +59,10 @@ def loading_css():
         mark = "background:var(--accent); border-radius:50%; transform:scale(.55);"
     return f"""
 /* Loading: the company's logo instead of Streamlit's running icon */
-[data-testid="stStatusWidget"] img {{ opacity:0 !important; }}
-[data-testid="stStatusWidget"] > div:first-child {{ position:relative; }}
-[data-testid="stStatusWidget"] > div:first-child::before {{ content:""; position:absolute; inset:0; {mark}
-  animation:brand-loading 1.1s ease-in-out infinite; }}
+[data-testid="stStatusWidget"] img {{ display:none !important; }}
+[data-testid="stStatusWidget"] > div:first-child {{ display:flex; align-items:center; gap:.5rem; }}
+[data-testid="stStatusWidget"] > div:first-child::before {{ content:""; display:block; flex:none; width:1.6rem;
+  height:1.6rem; {mark} animation:brand-loading 1.1s ease-in-out infinite; }}
 @keyframes brand-loading {{
   0%, 100% {{ opacity:.45; transform:scale(.82); }}
   50% {{ opacity:1; transform:scale(1); }}
@@ -135,11 +135,11 @@ button p {{ white-space:nowrap; }}
 [class*="st-key-ideacard-"] [data-testid="stTextInput"] > div > div {{ background:transparent !important;
   border:1px solid var(--rule) !important; }}
 [class*="st-key-ideacard-"] [data-testid="stFormSubmitButton"] button {{ background:transparent !important; }}
-.idea-comment {{ border-left:2px solid var(--rule); padding:.1rem 0 .1rem .8rem; margin:.1rem 0 .35rem .1rem; line-height:1.45; }}
+.idea-comment {{ border-left:2px solid var(--rule); padding:.35rem 0 .35rem 1rem; margin:.2rem 0 .9rem .1rem; line-height:1.55; white-space:pre-wrap; }}
 .idea-comment .who {{ color:var(--muted); font-size:.85rem; margin-top:.1rem; }}
 [class*="st-key-ideacard-"] [data-testid="stForm"] {{ padding:0; margin-top:.2rem; }}
 /* New idea box: in the page's colours, whatever the browser theme */
-[class*="st-key-new-idea"] textarea, .st-key-new-idea-title input {{ background:var(--card) !important; color:var(--ink) !important;
+[class*="st-key-new-idea"] textarea, .st-key-new-idea-title input, [class*="st-key-comment-"] textarea {{ background:var(--card) !important; color:var(--ink) !important;
   border:1px solid var(--rule) !important; border-radius:10px !important; }}
 [class*="st-key-new-idea"] textarea::placeholder, .st-key-new-idea-title input::placeholder {{ color:var(--muted) !important; opacity:1; }}
 [class*="st-key-ideacard-"] [data-testid="stExpander"] details {{ background:transparent !important; }}

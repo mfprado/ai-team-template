@@ -648,11 +648,9 @@ if section == t["tab_ideas"]:
                                 f'<div class="who">{html.escape(c["who"])}, {nice_date(c["date"])}</div></div>',
                                 unsafe_allow_html=True)
                 with st.form(f"comment-form-{n}", clear_on_submit=True, border=False):
-                    field, send = st.columns([5, 1.2], vertical_alignment="bottom")
-                    field.text_input(t["comment"], placeholder=t["comment_hint"], key=f"comment-{n}",
-                                     label_visibility="collapsed")
-                    send.form_submit_button(t["comment_send"], use_container_width=True,
-                                            on_click=add_comment, args=(n,))
+                    st.text_area(t["comment"], placeholder=t["comment_hint"], key=f"comment-{n}",
+                                 height=90, max_chars=1000, label_visibility="collapsed")
+                    st.form_submit_button(t["comment_send"], on_click=add_comment, args=(n,))
 
     # Grouped by status, newest first; done ideas stay folded away at the end.
     for key in keys:
