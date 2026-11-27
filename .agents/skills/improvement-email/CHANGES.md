@@ -19,6 +19,20 @@ anyone has to do anything. Written for people who are not technical.
   > `.agents/system/facade/` as in the template, check the Artifacts section of the team page,
   > and save it for the team.
 
+## 2026-11-27 — Apps have a way back to the team page
+
+**What the team gets**
+- Every app the team makes (the ones that open in their own browser tab) shows a
+  "Back to the team page" link at the top.
+
+**What you need to do**
+- Paste this in your AI assistant, opened in your team folder:
+
+  > Bring the "back to the team page" link from ai-team-template: update `run_app.py` and
+  > `look.py` in `.agents/system/facade/` and the apps note in `.agents/rules/artifacts.md` as in
+  > the template, check that an app opened from the team page shows the link, and save it for
+  > the team.
+
 ## 2026-11-10 — First version
 
 **What the team gets**

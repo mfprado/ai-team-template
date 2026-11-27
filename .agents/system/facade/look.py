@@ -7,6 +7,9 @@ set large in the page's type on a wash of the brand colour: asking the AI in you
 what the page is about. Everything else stays quiet.
 """
 
+import html
+import json
+import os
 from pathlib import Path
 
 from flow_page import company_font, mix, on, palette
@@ -24,6 +27,24 @@ def tokens(brand):
         "wash": mix(c["background"], c["primary"], 0.12 if light else 0.2),
         "rule": mix(c["background"], c["text"], 0.13),
     }
+
+
+BACK = {"en": "← Back to the team page", "es": "← Volver a la página del equipo"}
+
+
+def back_link():
+    """A link back to the team page, for apps started from it (run_app.py sets TEAM_PAGE_URL).
+
+    The team page itself never has TEAM_PAGE_URL, so it shows no link."""
+    url = os.environ.get("TEAM_PAGE_URL", "")
+    if not url.startswith("http://localhost:"):
+        return ""
+    try:
+        language = json.loads((BRAND_DIR.parent / "team.json").read_text(encoding="utf-8")).get("language", "en")
+    except (OSError, ValueError):
+        language = "en"
+    return (f'<a class="team-back" href="{html.escape(url)}" target="_self">'
+            f'{BACK.get(language, BACK["en"])}</a>')
 
 
 def css(brand):
@@ -144,7 +165,10 @@ button:focus-visible {{ outline:2px solid var(--accent) !important; outline-offs
 [data-testid="stPopoverBody"], [data-testid="stPopoverBody"] * {{ color:var(--ink) !important; }}
 
 @media (prefers-reduced-motion: reduce) {{ * {{ transition:none !important; animation:none !important; }} }}
-</style>"""
+.team-back {{ display:inline-block; margin:0 0 6px; padding:6px 12px; border:1px solid var(--rule);
+  border-radius:4px; color:var(--ink) !important; text-decoration:none !important; font-size:.9rem; }}
+.team-back:hover {{ border-color:var(--accent); color:var(--accent) !important; }}
+</style>""" + back_link()
 
 
 def sync_badge(text, ok):
