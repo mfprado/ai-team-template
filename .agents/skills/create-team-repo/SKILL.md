@@ -19,7 +19,7 @@ flowchart TD
     F --> G
     G --> H[Copy the template and fill in the team's settings]
     H --> M{{Did they share a design guide or website?}}
-    M -- Yes --> N[Apply its colours and logo, after their OK] --> I
+    M -- Yes --> N[Apply its colours, typeface and logo] --> I
     M -- No --> I{{Are changes saved in the Champion's name?}}
     I -- No --> J[Set their name and email] --> K
     I -- Yes --> K[Save the first version for the team]
@@ -33,11 +33,11 @@ flowchart TD
     %% B: Uses the language the Champion wrote in (English or Spanish) and says it in one line, so they can correct it.
     %% C: One short question per message: company, team, then confirms their name and GitHub email, then asks for a design guide or website.
     %% D: If IT already created the team's shared folder on GitHub, it uses that one instead of creating a new one.
-    %% F: Creates a private, empty shared folder on GitHub in the Champion's account, after their OK.
+    %% F: Creates a private, empty shared folder on GitHub in the Champion's account.
     %% G: Downloads the shared folder to the Champion's Desktop as a folder called <Team>-AI.
     %% H: Copies the template's files (not its history) and writes the team's settings, README and folders in the team's language.
     %% M: A design guide wins over the website: it has the exact colours, fonts and logo.
-    %% N: Shows the colours and logo in plain words and saves them after the Champion's OK.
+    %% N: Saves the colours, typeface and logo straight away and says in one line what it used.
     %% I: Every change in the team folder must be saved under the Champion's name and GitHub email.
     %% K: Saves the first version straight to the team, without asking: it is part of creating the folder.
     %% L: The first double-click installs what is needed, turns on the team checks, hides technical files and opens the team page.
@@ -53,11 +53,15 @@ one question, plus a few words of why only when it helps. Wait for the answer be
 question. Never list several questions or explain what comes later. Never mention step numbers,
 the guide or what you read ("I downloaded the template and read..."): just ask.
 
-**Ask before every action** that creates, downloads or publishes anything, except saving the
-first version of the team's folder (step 6), which goes straight to the team.
+**Do not ask permission for the steps.** The Champion asked for their team's folder: creating
+the shared folder on GitHub, downloading it, copying the template, applying the brand, saving
+and cleaning up are all part of that. Say what you are doing in one short line and do it
+("Creating your team's shared folder on GitHub..."). Only ask for information you do not have.
+Stop and ask only when something is not as expected (a folder with that name already exists, a
+check fails).
 Talk in the Champion's language. Keep it short and friendly; they may not be technical.
-When you ask for OK, say what will happen in plain words (one or two lines). Do not show
-commands, file paths or how scripts work unless they ask; you still read scripts before running them.
+Do not show commands, file paths or how scripts work unless they ask; you still read scripts
+before running them.
 
 This skill is **template-only**: it is never copied into the team's repository.
 
@@ -111,7 +115,7 @@ After question 5:
   https://github.com/signup, sign up with that email, choose the **Free** plan, confirm the
   email GitHub sends, and tell you when done. The shared folder will live in their own account.
 
-Propose the name, and confirm in one short message:
+Tell them the name in one short line, without asking (they can ask for another one):
 
 - **Shared folder name:** `<company>-<team>-ai`, lowercase, hyphens (e.g. `acme-sales-ai`).
   This is the repository name on GitHub. Skip it when the folder already exists.
@@ -129,7 +133,7 @@ The team's repository must contain only the Champion's own commits, never ours. 
 
 **If you can create it yourself** (`gh auth status` succeeds, or a GitHub connector can create
 repositories): the owner is the signed-in account (`gh api user --jq .login`), which is also
-the Champion's GitHub username. Say what you will create, in plain words, and wait for OK.
+the Champion's GitHub username. Say in one line that you are creating it, and create it.
 
 ```
 gh repo create <owner>/<repo-name> --private
@@ -154,7 +158,7 @@ sh TEMPLATE_DIR/.agents/system/bin/py TEMPLATE_DIR/.agents/skills/create-team-re
 
 It prints the Desktop path, then `free` or `exists` for `<Desktop>/<Team>-AI`. Do not check
 with another command (a failing check looks like an error to the Champion). If it `exists`, stop and ask the Champion what it is; never mix
-files into it. Otherwise ask before downloading the empty shared folder there:
+files into it. Otherwise download the empty shared folder there:
 
 ```
 git clone https://github.com/<owner>/<repo-name>.git "<Desktop>/<Team>-AI"
@@ -191,10 +195,11 @@ shows the company's logo on the folder and its icon.
    whether it is serif or sans) and the logo from it; if the guide comes with the font files,
    use them. From a website: its main colour (buttons, header), background and text
    colours, the typeface its text uses (the first name in its `font-family`), and its logo
-   (prefer a square PNG logo; ask before downloading it, saying from where). A guide wins over the website when they differ.
-2. Show it in plain words and wait for OK, for example: "Main colour: dark blue (#0B3D91).
-   Background: white. Typeface: Montserrat. Logo: the one at the top of your website."
-3. Save it, inside the team folder:
+   (prefer a square PNG logo, e.g. the site's icon; download it). A guide wins over the website
+   when they differ.
+2. Save it straight away, without asking, inside the team folder, and say in one line what you
+   used, for example: "Applied We Are's brand: orange (#F54D23) on near-black, Space Grotesk and
+   the logo from the website." The Champion can ask for a change later.
 
    ```
    sh .agents/system/bin/py .agents/system/scripts/brand.py --primary "<#hex>" \
@@ -202,7 +207,7 @@ shows the company's logo on the folder and its icon.
      [--font-family "<typeface>"] [--font-file "<font file>" ...]
    ```
 
-   It works on any computer. If it answers `"icons": "made on the next launch"`, this computer
+3. It works on any computer. If it answers `"icons": "made on the next launch"`, this computer
    cannot make the icons yet: the first launch (step 7) makes them from the logo.
 
 Reports and dashboards the AI makes from now on use these colours and logo (artifacts rule).
@@ -269,7 +274,7 @@ paste or attach a skill, script, instructions or macro they already use.
 
 ## 9. Clean up and close
 
-- Delete `TEMPLATE_DIR` (the temporary copy), after saying so.
+- Delete `TEMPLATE_DIR` (the temporary copy).
 - Tell the Champion, in three short lines: where the folder is, how to open it (the
   `<Team>-AI` icon, then choose the folder in Claude or Codex), and what comes next (adding
   teammates is a later step with their facilitator).
