@@ -14,6 +14,12 @@ Instructions for any AI agent (Codex, Claude Code, others) working in this team 
 - Say "the AI assistant" ("el asistente de IA"), not Claude or Codex: each person only knows the one they use,
   and the team folder works the same with both.
 
+## The team's context
+
+If `.agents/team-context.md` exists, read it before any task for the team: it says how the
+team works, its roles, processes and how it uses each tool. If it does not exist yet, offer
+once to set it up (`.agents/rules/team-context.md`).
+
 ## What lives where
 
 Everything in this folder belongs to the team.
@@ -25,6 +31,7 @@ Everything in this folder belongs to the team.
 | `.agents/permissions.json` | What the AI may and may not do in the whole folder (general permissions) | You, only after the person agrees to the change |
 | A skill's `allowed-tools` | What that skill may do without asking while it runs | You, with `skill_permissions.py`, only after the person agrees |
 | `.agents/team.json`, `.agents/brand.json`, `.agents/brand/` | Team settings and company brand | You, when asked (sensitive) |
+| `.agents/team-context.md` | How the team works: roles, processes, tools | You, after interviewing the team (`.agents/rules/team-context.md`) |
 | `.agents/system/` | The machinery: team checks, team page, launcher steps, scripts | Only when the person clearly asks, after explaining the effect (sensitive) |
 | `.claude/`, `.codex/` | **Generated** from `.agents/` on every save | Never edit. Change `.agents/` instead |
 | Visible folders (documents, artifacts) | The team's own work | The team and you |
@@ -41,6 +48,7 @@ Read a rule file **only when its situation applies**. The team may add its own r
 | Anything involving credentials, messages to people, or changing permissions | `.agents/rules/safety.md` |
 | Changing a skill, rule, permission, hook or team setting, or sharing a change that clashes with someone else's | `.agents/rules/changes.md` |
 | Someone shares an idea for the team, or asks about the team's ideas | `.agents/rules/ideas.md` |
+| The team has no context file yet, or someone wants to set up or update how the team works | `.agents/rules/team-context.md` |
 | An "IMPROVEMENT REVIEW" note appears, or someone asks what could work better | `.agents/rules/improvements.md` |
 | Any other task covered by a file in `.agents/rules/` | That file |
 
