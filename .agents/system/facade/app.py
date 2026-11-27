@@ -43,11 +43,11 @@ T = {
         "go_back_confirm": "**{skill}** will go back to how it was on {date}, for the whole team. You can always come back to a later version here. Go back?",
         "go_back_summary": "Skill {skill}: back to the version from {date}", "no_versions": "No earlier versions yet.",
         "no_skills": "Your team has no skills yet. A skill is a task the AI does the same way for everyone, like a weekly report.",
-        "try_asking": "To start, ask your AI assistant in this folder, for example:",
+        "try_asking": "For example, ask your AI assistant:",
         "ask_skill": "Help me bring an automation I already use to the team.",
-        "no_shared": "Nothing shared yet. Artifacts appear here when someone shares one with the team.",
+        "no_shared": "Nothing shared yet.",
         "ask_report": "Make a report on this month's sales by region.",
-        "no_private": "What you ask the AI to make appears here first, only on your computer. When it is ready, share it with the team.",
+        "no_private": "What you make with the AI shows up here. Share it when it is ready.",
         "up_to_date": "Up to date with the team", "not_synced": "Could not get the team's latest",
         "unshared": "You have changes not shared with the team",
         "pending_what": "Not shared yet: {what}.", "saved_changes": "changes saved on this computer",
@@ -82,7 +82,7 @@ T = {
                  "rules": "team rules", "brand": "the company's brand", "ideas": "the ideas", "system": "system", "other": "other files"},
         "ago": {"now": "just now", "min": "{n} min ago", "h": "{n} h ago", "d": "{n} days ago"},
         "perm_summary": "Permissions: {items}",
-        "reports_intro": "Artifacts are reports, presentations, dashboards and small apps made with the AI, each in its own folder. Ask the assistant for a new one any time.",
+        "reports_intro": "Reports, presentations, dashboards and apps made with the AI.",
         "shared_by": "by {who}", "view": "View", "back": "Back to the list", "about_artifact": "What it is and how to make it again", "app_opening": "Opening the app in your browser. It can take a few seconds the first time.",
         "open_link": "Open it", "open_browser": "Open in the browser", "what_it_is": "What it is", "link_note": "This one lives in your AI assistant. It opens in a new browser tab.",
         "share_team": "Share with the team", "share_confirm": "**{title}** moves to the team's artifacts and is saved for the whole team: everyone will be able to see it and change it.",
@@ -103,11 +103,11 @@ T = {
         "go_back_confirm": "**{skill}** va a volver a como estaba el {date}, para todo el equipo. Siempre podés volver a una versión más nueva desde acá. ¿Volver?",
         "go_back_summary": "Skill {skill}: vuelve a la versión del {date}", "no_versions": "Todavía no hay versiones anteriores.",
         "no_skills": "Tu equipo todavía no tiene skills. Una skill es una tarea que la IA hace igual para todos, como un reporte semanal.",
-        "try_asking": "Para empezar, pedíselo a tu asistente de IA en esta carpeta, por ejemplo:",
+        "try_asking": "Por ejemplo, pedile a tu asistente de IA:",
         "ask_skill": "Ayudame a traer al equipo una automatización que ya uso.",
-        "no_shared": "Todavía no hay nada compartido. Los artefactos aparecen acá cuando alguien comparte uno con el equipo.",
+        "no_shared": "Todavía no hay nada compartido.",
         "ask_report": "Hacé un reporte de las ventas del mes por región.",
-        "no_private": "Lo que le pidas a la IA aparece primero acá, solo en tu computadora. Cuando esté listo, compartilo con el equipo.",
+        "no_private": "Lo que hagas con la IA aparece acá. Compartilo cuando esté listo.",
         "up_to_date": "Al día con el equipo", "not_synced": "No se pudo traer lo último del equipo",
         "unshared": "Tenés cambios sin compartir con el equipo", "behind": "El equipo tiene cambios más nuevos",
         "pending_what": "Falta compartir: {what}.", "saved_changes": "cambios guardados en esta computadora",
@@ -142,7 +142,7 @@ T = {
                  "rules": "reglas del equipo", "brand": "la marca de la empresa", "ideas": "las ideas", "system": "el sistema", "other": "otros archivos"},
         "ago": {"now": "recién", "min": "hace {n} min", "h": "hace {n} h", "d": "hace {n} días"},
         "perm_summary": "Permisos: {items}",
-        "reports_intro": "Los artefactos son reportes, presentaciones, tableros y pequeñas apps hechos con la IA, cada uno en su carpeta. Pedile uno nuevo al asistente cuando quieras.",
+        "reports_intro": "Reportes, presentaciones, tableros y apps hechos con la IA.",
         "shared_by": "de {who}", "view": "Ver", "back": "Volver a la lista", "about_artifact": "Qué es y cómo volver a hacerlo", "app_opening": "Abriendo la app en tu navegador. La primera vez puede tardar unos segundos.",
         "open_link": "Abrir", "open_browser": "Abrir en el navegador", "what_it_is": "Qué es", "link_note": "Este está en tu asistente de IA. Se abre en otra pestaña del navegador.",
         "share_team": "Compartir con el equipo", "share_confirm": "**{title}** pasa a los artefactos del equipo y se guarda para todos: cualquiera va a poder verlo y cambiarlo.",
@@ -357,6 +357,20 @@ icon = ROOT / ".agents/brand/icon.png"
 st.set_page_config(page_title=t["title"].format(team=team.get("team", "Team")), layout="centered",
                    page_icon=str(icon) if icon.exists() else None)
 st.markdown(look.css(load_json(ROOT / ".agents/brand.json", {})), unsafe_allow_html=True)
+# Copy buttons: show "Copied!" for a moment after a click (the copy itself blurs the button,
+# so CSS alone cannot tell). The script runs in a hidden frame of the same page.
+components.html("""<script>
+const doc = window.parent.document;
+if (!doc.body.dataset.copyFeedback) {
+  doc.body.dataset.copyFeedback = "1";
+  doc.addEventListener("click", e => {
+    const b = e.target.closest('[data-testid="stCodeCopyButton"]');
+    if (!b) return;
+    b.classList.add("copied");
+    setTimeout(() => b.classList.remove("copied"), 1500);
+  }, true);
+}
+</script>""", height=0)
 # Section picker that survives reruns (st.tabs jumps back to the first tab when a switch changes).
 SECTIONS = [t["tab_skills"], t["tab_artifacts"], t["tab_ideas"], t["tab_perms"], t["tab_history"]]
 ICONS = dict(zip(SECTIONS, [":material/auto_awesome:", ":material/bar_chart:", ":material/lightbulb:",

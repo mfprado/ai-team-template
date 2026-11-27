@@ -32,6 +32,7 @@ def tokens(brand):
 
 BACK = {"en": "← Back to the team page", "es": "← Volver a la página del equipo"}
 COPY = {"en": "Copy", "es": "Copiar"}
+COPIED = {"en": "Copied!", "es": "¡Copiado!"}
 
 
 def team_language():
@@ -127,6 +128,8 @@ hr {{ border-color:var(--rule) !important; }}
 /* The logo: an app icon */
 [class*="st-key-to-perms-"] button {{ color:var(--accent) !important; padding:0 !important; min-height:0; font-size:.88rem; }}
 [class*="st-key-to-perms-"] button:hover {{ text-decoration:underline; }}
+/* The hidden frame that runs the copy feedback takes no room */
+[data-testid="stIFrame"][height="0"], iframe[height="0"] {{ display:none; }}
 /* Sidebar header: the logo, and the team's name to its right */
 .team-head {{ display:flex; align-items:center; gap:.75rem; margin:.2rem 0 .35rem; }}
 .team-head img {{ width:40px; height:40px; object-fit:contain; flex:none; }}
@@ -220,6 +223,12 @@ button:focus-visible {{ outline:2px solid var(--accent) !important; outline-offs
   top:50% !important; transform:translateY(-50%) !important; filter:brightness(1.08); }}
 [data-testid="stCodeCopyButton"] svg {{ stroke:var(--on-accent) !important; color:var(--on-accent) !important; }}
 [data-testid="stCodeCopyButton"]::after {{ content:"{COPY.get(team_language(), COPY["en"])}"; }}
+/* After a click: the button pops and says it copied, for a moment (app.py adds .copied) */
+[data-testid="stCodeCopyButton"]:active {{ transform:translateY(-50%) scale(.92) !important; }}
+[data-testid="stCodeCopyButton"].copied {{ background:#2E9E5B !important; animation:copied .35s ease-out; }}
+[data-testid="stCodeCopyButton"].copied::after {{ content:"{COPIED.get(team_language(), COPIED["en"])}"; }}
+@keyframes copied {{ 0% {{ transform:translateY(-50%) scale(.9); }} 60% {{ transform:translateY(-50%) scale(1.08); }}
+  100% {{ transform:translateY(-50%) scale(1); }} }}
 [data-testid="stCode"] div:has(> [data-testid="stCodeCopyButton"]) {{ opacity:1 !important; }}
 [data-testid="stCode"] pre {{ padding-right:7.5rem !important; }}
 

@@ -66,6 +66,36 @@ WORDS = {
 }
 
 
+# Words in connector actions (mcp__Gmail__create_draft), for teams that do not work in English.
+# Unknown words stay as they are.
+ACTION_WORDS = {
+    "es": {"create": "crear", "get": "ver", "read": "leer", "list": "listar", "search": "buscar",
+           "find": "buscar", "query": "consultar", "fetch": "traer", "download": "descargar",
+           "upload": "subir", "update": "actualizar", "edit": "editar", "modify": "modificar",
+           "add": "agregar", "remove": "quitar", "delete": "borrar", "trash": "mandar a la papelera",
+           "send": "enviar", "reply": "responder", "forward": "reenviar", "share": "compartir",
+           "copy": "copiar", "move": "mover", "label": "etiquetar", "unlabel": "quitar la etiqueta de",
+           "draft": "borrador", "drafts": "borradores", "message": "mensaje", "messages": "mensajes",
+           "thread": "conversación", "threads": "conversaciones", "email": "email", "file": "archivo",
+           "files": "archivos", "folder": "carpeta", "event": "evento", "events": "eventos",
+           "calendar": "calendario", "calendars": "calendarios", "page": "página", "pages": "páginas",
+           "doc": "documento", "document": "documento", "sheet": "hoja", "values": "valores",
+           "comment": "comentario", "comments": "comentarios", "item": "elemento", "items": "elementos",
+           "board": "tablero", "boards": "tableros", "user": "usuario", "users": "usuarios",
+           "metadata": "datos", "content": "contenido", "info": "información", "and": "y", "to": "a"},
+}
+
+
+def action_words(action, language):
+    words = ACTION_WORDS.get(language)
+    if not words:
+        return action.replace("_", " ")
+    parts = [words.get(part.lower(), part) for part in re.split(r"[_-]+", action) if part]
+    # English puts the noun last ("board items"); Spanish puts it first ("elementos de tablero").
+    verb, nouns = parts[:1], parts[1:]
+    return " ".join(verb + ([" de ".join(reversed(nouns))] if nouns else []))
+
+
 def parse(value):
     """The rules in an allowed-tools value (string, comma or space separated)."""
     return RULE.findall(value or "")
@@ -87,7 +117,7 @@ def describe(rule, language="en"):
     tool, target = m.group(1), m.group(2)
     if tool.startswith("mcp__"):
         _, server, action = tool.split("__", 2)
-        action = w["any"].format(x=server) if action == "*" else action.replace("_", " ")
+        action = w["any"].format(x=server) if action == "*" else action_words(action, language)
         return f"{server.replace('_', ' ')}: {action}"
     if tool == "Read":
         return w["read_in"].format(x=target) if target else w["read"]
