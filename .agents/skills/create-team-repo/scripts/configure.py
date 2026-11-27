@@ -42,7 +42,7 @@ TEMPLATE_LAUNCHER = "Team-AI"
 TEMPLATE_ONLY = ["create-team-repo", "improvement-email"]
 # Team skills with a version per language. English is the live skill in .agents/skills/; other
 # languages are kept in create-team-repo/team-skills/<language>/<name>/ and replace it.
-LOCALISED_SKILLS = {"migrate-skill": {"es": "migrar-skill"}}
+LOCALISED_SKILLS = {"migrate-skill": {"es": "migrar-skill"}, "add-idea": {"es": "agregar-idea"}}
 TEAM_SKILLS = TEMPLATE / ".agents/skills/create-team-repo/team-skills"
 VISIBLE_DIRS = {"en": ["documents", "artifacts"], "es": ["documentos", "artefactos"]}
 IDEAS = {

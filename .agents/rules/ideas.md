@@ -3,6 +3,9 @@
 Applies when someone shares an idea for the team ("I have an idea", "it would be nice if...",
 "we could..."), asks what ideas there are, or wants to update one.
 
+Follow the team's idea skill (`add-idea`, or `agregar-idea` in Spanish) to add one: it also draws
+the workflow when the idea is about a way of working. To list ideas or update one, use the script.
+
 The team's ideas live in `IDEAS.md` at the top of the team's folder, one line per idea with
 date, who, the idea's title and its status, an optional description, with its comments indented under it. Use the script, never edit the file by hand:
 
@@ -23,4 +26,4 @@ sh .agents/system/bin/py -I .agents/system/scripts/ideas.py assign --id <n> --cl
 - An idea can have one person working on it, so two people don't do the same thing. Before someone
   starts on an idea, check `list`: if someone else has it, tell them who and suggest they talk first.
 - After adding or updating, save it for the team straight away
-  (`propose_change.py --paths IDEAS.md`).
+  (`propose_change.py --paths IDEAS.md .agents/ideas`).

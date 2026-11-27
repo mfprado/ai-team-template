@@ -9,6 +9,8 @@
   ideas.py comment --id 3 --text "..."      adds a comment to an idea, with today's date and your git name
   ideas.py assign --id 3 [--to "Ana Lopez"] assigns the idea to someone (you, by default)
   ideas.py assign --id 3 --clear            leaves it unassigned again
+  ideas.py flow --id 3 --file flow.mmd      saves the idea's workflow diagram (Mermaid flowchart)
+  ideas.py flow --id 3 --clear              removes it
 
 One line per idea (its title), readable by people and easy to edit, with an optional description
 line ("> ..."), who is working on it ("@ ...") and its comments indented under it:
@@ -17,7 +19,9 @@ line ("> ..."), who is working on it ("@ ...") and its comments indented under i
     @ Ana Lopez
     - 2026-11-12 · Ana Lopez: Let's add the web sales too
 
-Status words follow the team's language (team.json). Standard library only.
+An idea about a way of working can have a flow diagram, one file per idea in .agents/ideas/
+(idea-<n>.mmd), shown on the team page. Status words follow the team's language (team.json).
+Standard library only.
 """
 
 import argparse
@@ -30,6 +34,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[3]
 FILE = ROOT / "IDEAS.md"
+FLOWS = ROOT / ".agents/ideas"
 STATUSES = {
     "en": {"new": "New", "planned": "Planned", "done": "Done", "archived": "Archived"},
     "es": {"new": "Nueva", "planned": "En camino", "done": "Hecha", "archived": "Archivada"},
@@ -120,12 +125,19 @@ def main():
     asg.add_argument("--id", type=int, required=True)
     asg.add_argument("--to", default="")
     asg.add_argument("--clear", action="store_true")
+    fl = sub.add_parser("flow")
+    fl.add_argument("--id", type=int, required=True)
+    fl.add_argument("--file")
+    fl.add_argument("--clear", action="store_true")
     args = parser.parse_args()
 
     header, ideas = read()
     words = STATUSES[lang()]
     if args.cmd == "list":
-        print(json.dumps([dict(i, id=n + 1, me=git_config("user.name"), key=status_key(i["status"])) for n, i in enumerate(ideas)], ensure_ascii=False))
+        def flow(n):
+            f = FLOWS / f"idea-{n}.mmd"
+            return f.read_text(encoding="utf-8") if f.is_file() else ""
+        print(json.dumps([dict(i, id=n + 1, me=git_config("user.name"), flow=flow(n + 1), key=status_key(i["status"])) for n, i in enumerate(ideas)], ensure_ascii=False))
         return 0
     if args.cmd == "add":
         title = " ".join(args.title.split())
@@ -142,6 +154,25 @@ def main():
     if not 1 <= args.id <= len(ideas):
         print(json.dumps({"ok": False, "problem": "no idea with that number"}))
         return 1
+    if args.cmd == "flow":
+        target = FLOWS / f"idea-{args.id}.mmd"
+        if args.clear:
+            target.unlink(missing_ok=True)
+            print(json.dumps({"ok": True}))
+            return 0
+        try:
+            diagram = Path(args.file).read_text(encoding="utf-8").strip()
+        except (OSError, TypeError):
+            print(json.dumps({"ok": False, "problem": "give the diagram with --file"}))
+            return 1
+        diagram = diagram.removeprefix("```mermaid").removesuffix("```").strip()
+        if not diagram.startswith(("flowchart", "graph")):
+            print(json.dumps({"ok": False, "problem": "the diagram must be a Mermaid flowchart"}))
+            return 1
+        FLOWS.mkdir(parents=True, exist_ok=True)
+        target.write_text(diagram + "\n", encoding="utf-8")
+        print(json.dumps({"ok": True, "path": target.relative_to(ROOT).as_posix()}))
+        return 0
     if args.cmd == "assign":
         who = "" if args.clear else (" ".join(args.to.split()) or git_config("user.name") or "?")
         ideas[args.id - 1]["assignee"] = who

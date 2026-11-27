@@ -36,7 +36,7 @@ T = {
         "tab_skills": "Skills", "tab_perms": "General permissions", "tab_artifacts": "Artifacts", "tab_history": "History",
         "tab_ideas": "Ideas", "ideas_intro": "Ideas for the team's workspace. Anyone can add one or update its status.",
         "no_ideas": "No ideas yet.", "comment": "Comment", "comment_hint": "Add a comment", "comment_send": "Comment",
-        "comment_summary": "Comment on idea {n}", "new_idea": "Title", "new_idea_hint": "Your idea in a few words", "new_idea_text": "Description", "new_idea_text_hint": "Tell the team more: what it would solve, who it helps (optional)", "comments_n": "Comments ({n})", "done_n": "Show done ideas ({n})", "archived_n": "Show archived ideas ({n})", "take_idea": "I'll take it", "drop_idea": "Let it go", "taken_by": "{who} is on it", "assign_summary": "Idea {n}: {who} is on it", "unassign_summary": "Idea {n}: free again", "add_idea": "Add", "days": ["today", "yesterday", "{n} days ago"],
+        "comment_summary": "Comment on idea {n}", "new_idea": "Title", "new_idea_hint": "Your idea in a few words", "new_idea_text": "Description", "new_idea_text_hint": "Tell the team more: what it would solve, who it helps (optional)", "comments_n": "Comments ({n})", "idea_flow": "See the workflow", "done_n": "Show done ideas ({n})", "archived_n": "Show archived ideas ({n})", "take_idea": "I'll take it", "drop_idea": "Let it go", "taken_by": "{who} is on it", "assign_summary": "Idea {n}: {who} is on it", "unassign_summary": "Idea {n}: free again", "add_idea": "Add", "days": ["today", "yesterday", "{n} days ago"],
         "idea_summary": "New idea: {text}", "set_status": "Status", "save_status": "Save status",
         "status_summary": "Idea {n}: {status}",
         "versions": "Earlier versions", "perms_title": "Permissions", "current": "Current version", "go_back": "Go back to this version",
@@ -96,7 +96,7 @@ T = {
         "tab_skills": "Skills", "tab_perms": "Permisos generales", "tab_artifacts": "Artefactos", "tab_history": "Historial",
         "tab_ideas": "Ideas", "ideas_intro": "Ideas para el espacio del equipo. Cualquiera puede sumar una o cambiar su estado.",
         "no_ideas": "Todavía no hay ideas.", "comment": "Comentario", "comment_hint": "Sumá un comentario", "comment_send": "Comentar",
-        "comment_summary": "Comentario en la idea {n}", "new_idea": "Título", "new_idea_hint": "Tu idea en pocas palabras", "new_idea_text": "Descripción", "new_idea_text_hint": "Contale más al equipo: qué resolvería, a quién ayuda (opcional)", "comments_n": "Comentarios ({n})", "done_n": "Mostrar las hechas ({n})", "archived_n": "Mostrar las archivadas ({n})", "take_idea": "Me la asigno", "drop_idea": "Soltarla", "taken_by": "La tiene {who}", "assign_summary": "Idea {n}: la tiene {who}", "unassign_summary": "Idea {n}: quedó libre", "add_idea": "Agregar", "days": ["hoy", "ayer", "hace {n} días"],
+        "comment_summary": "Comentario en la idea {n}", "new_idea": "Título", "new_idea_hint": "Tu idea en pocas palabras", "new_idea_text": "Descripción", "new_idea_text_hint": "Contale más al equipo: qué resolvería, a quién ayuda (opcional)", "comments_n": "Comentarios ({n})", "idea_flow": "Ver el flujo", "done_n": "Mostrar las hechas ({n})", "archived_n": "Mostrar las archivadas ({n})", "take_idea": "Me la asigno", "drop_idea": "Soltarla", "taken_by": "La tiene {who}", "assign_summary": "Idea {n}: la tiene {who}", "unassign_summary": "Idea {n}: quedó libre", "add_idea": "Agregar", "days": ["hoy", "ayer", "hace {n} días"],
         "idea_summary": "Nueva idea: {text}", "set_status": "Estado", "save_status": "Guardar estado",
         "status_summary": "Idea {n}: {status}",
         "versions": "Versiones anteriores", "perms_title": "Permisos", "current": "Versión actual", "go_back": "Volver a esta versión",
@@ -259,7 +259,7 @@ def describe_paths(paths, t):
             item = t["what"]["docs"]
         elif p.startswith(("artifacts/", "artefactos/")):
             item = t["what"]["reports"]
-        elif p == "IDEAS.md":
+        elif p == "IDEAS.md" or p.startswith(".agents/ideas/"):
             item = t["what"]["ideas"]
         elif p.startswith(".agents/brand"):
             item = t["what"]["brand"]
@@ -659,6 +659,8 @@ if section == t["tab_ideas"]:
             if idea.get("description"):
                 st.markdown(f'<div class="idea-description">{html.escape(idea["description"])}</div>',
                             unsafe_allow_html=True)
+            if idea.get("flow"):  # shown open, as on a skill: a diagram drawn while folded has no size
+                show_flow(idea["flow"])
             comments = idea.get("comments", [])
             with st.expander(t["comments_n"].format(n=len(comments))):
                 for c in comments:
