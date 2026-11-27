@@ -42,6 +42,12 @@ artifacts/                                (artefactos/)
 - **A new version** of an artifact the team keeps updating (the weekly report) replaces the files
   in the same folder; git keeps the earlier versions. A different artifact gets a new folder.
 
+## Buttons
+
+Controls that are a common action use their usual icon, with the words in a tooltip
+(`title` and `aria-label`): full screen is an expand icon (a collapse icon while in full
+screen), close is ×, next and previous are arrows. Keep words on buttons whose action is not obvious.
+
 ## Apps: HTML or Streamlit
 
 An app (`--type app`) or a dashboard can be built two ways. Choose by what it needs:

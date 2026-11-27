@@ -211,9 +211,11 @@ button:focus-visible {{ outline:2px solid var(--accent) !important; outline-offs
 
 /* Requests to paste: the copy button is always visible and says what it does */
 [data-testid="stCodeCopyButton"] {{ opacity:1 !important; visibility:visible !important; width:auto !important;
-  height:auto !important; top:50% !important; right:.6rem !important; transform:translateY(-50%);
+  height:auto !important; top:50% !important; right:.6rem !important; transform:translateY(-50%) !important;
   display:flex !important; align-items:center; gap:.35rem; padding:.35rem .8rem !important; border-radius:999px !important;
   background:var(--accent) !important; color:var(--on-accent) !important; border:none !important; font-weight:600; font-size:.85rem; }}
+[data-testid="stCodeCopyButton"]:hover, [data-testid="stCodeCopyButton"]:active, [data-testid="stCodeCopyButton"]:focus {{
+  top:50% !important; transform:translateY(-50%) !important; filter:brightness(1.08); }}
 [data-testid="stCodeCopyButton"] svg {{ stroke:var(--on-accent) !important; color:var(--on-accent) !important; }}
 [data-testid="stCodeCopyButton"]::after {{ content:"{COPY.get(team_language(), COPY["en"])}"; }}
 [data-testid="stCode"] div:has(> [data-testid="stCodeCopyButton"]) {{ opacity:1 !important; }}

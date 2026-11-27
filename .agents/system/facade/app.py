@@ -39,7 +39,7 @@ T = {
         "comment_summary": "Comment on idea {n}", "new_idea": "Title", "new_idea_hint": "Your idea in a few words", "new_idea_text": "Description", "new_idea_text_hint": "Tell the team more: what it would solve, who it helps (optional)", "comments_n": "Comments ({n})", "done_n": "Show done ideas ({n})", "archived_n": "Show archived ideas ({n})", "take_idea": "I'll take it", "drop_idea": "Let it go", "taken_by": "{who} is on it", "assign_summary": "Idea {n}: {who} is on it", "unassign_summary": "Idea {n}: free again", "add_idea": "Add", "days": ["today", "yesterday", "{n} days ago"],
         "idea_summary": "New idea: {text}", "set_status": "Status", "save_status": "Save status",
         "status_summary": "Idea {n}: {status}",
-        "versions": "Earlier versions", "current": "Current version", "go_back": "Go back to this version",
+        "versions": "Earlier versions", "perms_title": "Permissions", "current": "Current version", "go_back": "Go back to this version",
         "go_back_confirm": "**{skill}** will go back to how it was on {date}, for the whole team. You can always come back to a later version here. Go back?",
         "go_back_summary": "Skill {skill}: back to the version from {date}", "no_versions": "No earlier versions yet.",
         "no_skills": "Your team has no skills yet. A skill is a task the AI does the same way for everyone, like a weekly report.",
@@ -99,7 +99,7 @@ T = {
         "comment_summary": "Comentario en la idea {n}", "new_idea": "Título", "new_idea_hint": "Tu idea en pocas palabras", "new_idea_text": "Descripción", "new_idea_text_hint": "Contale más al equipo: qué resolvería, a quién ayuda (opcional)", "comments_n": "Comentarios ({n})", "done_n": "Mostrar las hechas ({n})", "archived_n": "Mostrar las archivadas ({n})", "take_idea": "Me la asigno", "drop_idea": "Soltarla", "taken_by": "La tiene {who}", "assign_summary": "Idea {n}: la tiene {who}", "unassign_summary": "Idea {n}: quedó libre", "add_idea": "Agregar", "days": ["hoy", "ayer", "hace {n} días"],
         "idea_summary": "Nueva idea: {text}", "set_status": "Estado", "save_status": "Guardar estado",
         "status_summary": "Idea {n}: {status}",
-        "versions": "Versiones anteriores", "current": "Versión actual", "go_back": "Volver a esta versión",
+        "versions": "Versiones anteriores", "perms_title": "Permisos", "current": "Versión actual", "go_back": "Volver a esta versión",
         "go_back_confirm": "**{skill}** va a volver a como estaba el {date}, para todo el equipo. Siempre podés volver a una versión más nueva desde acá. ¿Volver?",
         "go_back_summary": "Skill {skill}: vuelve a la versión del {date}", "no_versions": "Todavía no hay versiones anteriores.",
         "no_skills": "Tu equipo todavía no tiene skills. Una skill es una tarea que la IA hace igual para todos, como un reporte semanal.",
@@ -539,7 +539,8 @@ if section == t["tab_skills"]:
             st.caption(t["how_to_ask"])
             with st.container(key=f"ask-{name}"):
                 st.code(ask or t["default_ask"].format(name=name), language="text")
-            show_skill_permissions(name, title)
+            with st.expander(t["perms_title"]):
+                show_skill_permissions(name, title)
             if not flow:
                 st.caption(t["no_flow"])
                 st.code(t["ask_flow"].format(name=name), language="text")
