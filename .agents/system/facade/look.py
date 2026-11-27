@@ -184,8 +184,9 @@ button p {{ white-space:nowrap; }}
 [class*="st-key-cardhit-"] button {{ opacity:0; cursor:pointer; }}
 [class*="st-key-share-"] {{ position:relative; z-index:2; }}
 [data-testid="stVerticalBlockBorderWrapper"]:has([class*="st-key-cardhit-"]:hover) {{ border-color:var(--accent) !important; }}
-[data-testid="stVerticalBlockBorderWrapper"]:has([class*="st-key-cardhit-"]:hover) [class*="st-key-skill-"] p,
-[data-testid="stVerticalBlockBorderWrapper"]:has([class*="st-key-cardhit-"]:hover) [class*="st-key-art-"] p {{ color:var(--accent); }}
+/* Only the hovered card's title (a rule on the page's wrapper would colour every card) */
+[class*="st-key-skillcard-"]:has([class*="st-key-cardhit-"]:hover) [class*="st-key-skill-"] p,
+[class*="st-key-artcard-"]:has([class*="st-key-cardhit-"]:hover) [class*="st-key-art-"] p {{ color:var(--accent); }}
 
 /* Buttons */
 [data-testid="stBaseButton-secondary"] {{ border:1px solid var(--rule) !important; background:var(--card) !important;
