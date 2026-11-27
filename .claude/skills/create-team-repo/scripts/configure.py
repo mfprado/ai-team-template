@@ -22,7 +22,7 @@ What it does (deterministic, so every team repository starts the same way):
 - creates the visible folders in the team's language (documents/ and artifacts/, or
   documentos/ and artefactos/)
 - writes the team's README.md in the team's language
-- renames the launchers Team-AI.* to <Team>-AI.*
+- renames the launchers Team-AI.* to <Team>-AI.* (<Team>-IA.* for a Spanish team)
 - regenerates .claude/ and .codex/
 
 Standard library only.
@@ -98,11 +98,11 @@ def git(*args, cwd=TEMPLATE):
     return subprocess.run(["git", "-C", str(cwd), *args], capture_output=True, text=True, check=True).stdout
 
 
-def launcher_name(team):
-    """'sales ops' -> 'Sales-Ops-AI'; drops characters Windows does not allow in file names."""
+def launcher_name(team, language="en"):
+    """'sales ops' -> 'Sales-Ops-AI' ('Sales-Ops-IA' in Spanish); drops characters Windows does not allow in file names."""
     clean = re.sub(r'[<>:"/\\|?*\x00-\x1f]', "", team).strip()
     words = [w[:1].upper() + w[1:] for w in re.split(r"[\s_-]+", clean) if w]
-    return "-".join(words + ["AI"])
+    return "-".join(words + ["IA" if language == "es" else "AI"])
 
 
 SYSTEM_FILES = (".DS_Store", "Thumbs.db", "desktop.ini")
@@ -180,7 +180,7 @@ def main():
 
     copied = copy_skeleton(target, TEMPLATE_ONLY, args.language)
     github = args.champion_github if args.champion_github is not None else gh_username()
-    launcher = launcher_name(args.team)
+    launcher = launcher_name(args.team, args.language)
     team_file = target / ".agents/team.json"
     team_file.parent.mkdir(parents=True, exist_ok=True)
     team_file.write_text(json.dumps({

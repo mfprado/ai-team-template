@@ -122,12 +122,16 @@ After question 5:
 
 Tell them the name in one short line, without asking (they can ask for another one):
 
-- **Shared folder name:** `<company>-<team>-ai`, lowercase, hyphens (e.g. `acme-sales-ai`).
-  This is the repository name on GitHub. Skip it when the folder already exists.
+- **Shared folder name:** `<company>-<team>-ai`, lowercase, hyphens (e.g. `acme-sales-ai`); for a
+  Spanish team it ends in `-ia` (e.g. `acme-ventas-ia`). This is the repository name on GitHub.
+  If the shared folder already exists, keep its name as it is: do not propose another one.
 
 In the same message, one line (nothing to choose): their Desktop will get a folder `<Team>-AI`
-(e.g. `Sales-AI`), with an icon of the same name they double-click to open it. Internally that
-is the launcher name, `<Team>-AI`. Explain how the team shares changes only if they ask.
+(e.g. `Sales-AI`; `<Team>-IA` for a Spanish team, e.g. `Ventas-IA`), with an icon of the same
+name they double-click to open it. Internally that is the launcher name. Explain how the team
+shares changes only if they ask.
+
+In the rest of this skill, `<Team>-AI` stands for that name: read it as `<Team>-IA` for a Spanish team.
 
 ## 3. Create the EMPTY shared folder on GitHub
 
@@ -315,8 +319,8 @@ tells the Champion how to open it next time.
 **On Windows** (`%OS%` = `Windows_NT`), or when the Mac run needs the Champion: ask them to
 double-click **`<Team>-AI.command`** (Mac) or **`<Team>-AI.bat`** (Windows), in the `<Team>-AI`
 folder on their Desktop, and to tell you when a window has opened and stopped moving. Mention
-only their system's file and help, for example: "Hacé doble clic en AI-Adoption-AI.command,
-dentro de la carpeta AI-Adoption-AI de tu Escritorio." Never ask them to copy the window: read
+only their system's file and help, for example: "Hacé doble clic en Adopcion-IA.command,
+dentro de la carpeta Adopcion-IA de tu Escritorio." Never ask them to copy the window: read
 the same `launch.log`.
 
 - No log: the icon has not run yet. On a Mac, if it was blocked, right-click the file and choose
