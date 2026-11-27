@@ -160,6 +160,10 @@ button:focus-visible {{ outline:2px solid var(--accent) !important; outline-offs
   color:var(--ink) !important; font-size:1.35rem !important; font-weight:560; letter-spacing:-0.01em;
   white-space:pre-wrap !important; font-variation-settings:'opsz' 36; line-height:1.3; }}
 
+/* Popovers (an artifact's "What it is"): readable on the brand, dark brands included */
+[data-testid="stPopoverBody"] {{ background:var(--card) !important; border:1px solid var(--rule) !important; }}
+[data-testid="stPopoverBody"], [data-testid="stPopoverBody"] * {{ color:var(--ink) !important; }}
+
 @media (prefers-reduced-motion: reduce) {{ * {{ transition:none !important; animation:none !important; }} }}
 .team-back {{ display:inline-block; margin:0 0 6px; padding:6px 12px; border:1px solid var(--rule);
   border-radius:4px; color:var(--ink) !important; text-decoration:none !important; font-size:.9rem; }}

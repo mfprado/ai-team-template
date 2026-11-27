@@ -3,6 +3,22 @@
 Newest first. Each entry says, in plain words, what improves for the team and whether
 anyone has to do anything. Written for people who are not technical.
 
+## 2026-11-27 — A simpler list of artifacts
+
+**What the team gets**
+- On the team page, each artifact is just its name: one click opens the app, or shows the report
+  or presentation. An (i) icon next to it says what it is, when its description has that part.
+  The folder buttons and the long descriptions are gone.
+- The team's shared artifacts come first; your own come after, each with a button to delete it
+  (it asks first: they are only on your computer).
+
+**What you need to do**
+- Paste this in your AI assistant, opened in your team folder:
+
+  > Bring the simpler artifacts list from ai-team-template: update `app.py` and `look.py` in
+  > `.agents/system/facade/` as in the template, check the Artifacts section of the team page,
+  > and save it for the team.
+
 ## 2026-11-27 — The AI learns how your team works
 
 **What the team gets**
