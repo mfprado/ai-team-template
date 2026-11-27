@@ -34,7 +34,7 @@ artifacts/                                (artefactos/)
   it again (what to ask, or the script that builds it, and where the data comes from).
 - **Team or private:** ask whether it is for the team or only for the person, unless they said.
   `--private` puts it in the private folder: it is never shared and stays on this computer.
-  A team artifact is a change like any other: offer to share it with the team (AGENTS.md).
+  A team artifact is a change like any other: save it for the team straight away (AGENTS.md).
 - **A new version** of an artifact the team keeps updating (the weekly report) replaces the files
   in the same folder; git keeps the earlier versions. A different artifact gets a new folder.
 

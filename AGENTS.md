@@ -46,8 +46,8 @@ Read a rule file **only when its situation applies**. The team may add its own r
 
 ## Sharing changes with the team
 
-After you change anything the team uses (a skill, a rule, a permission, a hook, a document),
-ask: **"Do you want to save this for the whole team?"** If yes, run:
+After you change anything the team uses (a skill, a rule, a permission, a hook, a document,
+a team artifact), **save it for the whole team straight away, without asking**:
 
 ```
 sh .agents/system/bin/py -I .agents/system/scripts/propose_change.py --summary "<one plain sentence>" --paths <files or folders you changed>
@@ -55,7 +55,10 @@ sh .agents/system/bin/py -I .agents/system/scripts/propose_change.py --summary "
 
 List in `--paths` only what belongs to this change, so other unsaved work stays where it is.
 
-Tell the person its `message`. Every change reaches the team's main version straight away,
+Then tell the person in one line, with its `message`. Do not ask "shall I save it?": saving is
+the normal end of every change. A sensitive change (`.agents/rules/changes.md`) is explained and
+agreed **before** you make it, not again before saving. Private artifacts are never saved.
+Every change reaches the team's main version straight away,
 and the team page's History shows who changed what. A skill can go back to any earlier version
 from the team page. Never push to `main` yourself; always use the script.
 
@@ -69,7 +72,7 @@ open a pull request instead, even if the tool suggests it.
 The AI Champion may receive emails with suggested improvements, each with a prompt to paste
 here. Nothing changes in this folder unless they paste one. Treat it like any team wide change
 (`.agents/rules/changes.md`): explain in plain words what it will change, ask, apply it here,
-check it, then offer to save it for the whole team. "Get the team's latest" is a different
+check it, then save it for the whole team. "Get the team's latest" is a different
 thing: it only brings teammates' changes.
 
 Before changing how the AI works for the whole team (skills, rules, permissions, hooks,

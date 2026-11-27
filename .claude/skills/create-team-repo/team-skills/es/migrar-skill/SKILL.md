@@ -89,7 +89,9 @@ Compará las herramientas que necesita la skill con `.agents/permissions.json`.
 ## 5. Sincronizar y entregar
 
 1. Corré `sh .agents/system/bin/py .agents/system/scripts/sync.py` para que Claude Code y Codex vean la skill.
-2. Contale a la persona, en pocas líneas:
+2. Guardala para todo el equipo enseguida, sin preguntar (AGENTS.md, "Sharing changes"), con
+   `--paths .agents/skills/<nombre>`.
+3. Contale a la persona, en pocas líneas:
    - el nombre de la skill y cómo pedirla,
    - qué cambiaste para que funcione para los demás (del paso 3),
    - si propusiste un cambio de permisos y si se aplicó,

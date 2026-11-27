@@ -14,5 +14,5 @@ sh .agents/system/bin/py -I .agents/system/scripts/ideas.py status --id <n> --to
 
 - Write the idea in the person's own words, short; the script adds the date and their name.
 - Anyone on the team can change an idea's status.
-- After adding or updating, offer to share it with the team as usual
+- After adding or updating, save it for the team straight away
   (`propose_change.py --paths IDEAS.md`).

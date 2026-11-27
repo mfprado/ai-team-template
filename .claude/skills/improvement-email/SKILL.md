@@ -65,8 +65,8 @@ In this team folder, <what to improve, in one plain sentence>.
 Get the files from https://github.com/mfprado/ai-team-template (download it to a temporary
 folder): <the exact files or folders to bring, e.g. .agents/system/facade/app.py>.
 Compare them with ours, explain in plain words what will change, and ask me before changing
-anything. Keep our own skills, rules, settings and brand. Then check it works and offer to
-save it for the whole team.
+anything. Keep our own skills, rules, settings and brand. Then check it works and save it
+for the whole team.
 ```
 
 Rules for prompts:
