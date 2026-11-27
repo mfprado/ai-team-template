@@ -23,7 +23,7 @@ flowchart TD
     M -- No --> I{{Are changes saved in the Champion's name?}}
     I -- No --> J[Set their name and email] --> K
     I -- Yes --> K[Save the first version for the team]
-    K --> L[The Champion opens the team icon and it sets up the computer]
+    K --> L[The AI assistant sets up the computer and opens the team page]
     L --> O[Offer to bring their first automation]
     O --> P([Clean up and tell them where everything is]):::done
     GH@{ icon: "logos:github-icon", label: "GitHub" }
@@ -40,7 +40,7 @@ flowchart TD
     %% N: Saves the colours, typeface and logo straight away and says in one line what it used.
     %% I: Every change in the team folder must be saved under the Champion's name and GitHub email.
     %% K: Saves the first version straight to the team, without asking: it is part of creating the folder.
-    %% L: The first double-click installs what is needed, turns on the team checks, hides technical files and opens the team page.
+    %% L: The AI assistant runs the team icon itself: it installs what is needed, turns on the team checks, hides technical files and opens the team page in its own browser. If it cannot, the Champion double-clicks the icon.
     %% O: Offers to bring an automation the Champion already uses into the team with the migrate skill.
     %% P: Deletes the temporary copy of the template and says in three lines where the folder is and how to open it.
 ```
@@ -243,29 +243,47 @@ The team's checks run on this commit (generated files, secrets, skills). If they
 explain the message in plain words and fix it. Never commit or push under any other name.
 When it is saved, say it in one line (e.g. "Saved the first version for the team.") and go on.
 
-## 7. Prepare this computer
+## 7. Prepare this computer and open the team page
 
-Name the exact file for this computer (check the system: `uname` answers `Darwin` on a Mac;
-Windows has `%OS%` = `Windows_NT`): **`<Team>-AI.command`** on a Mac, **`<Team>-AI.bat`** on
-Windows. Ask the Champion to double-click it, in the `<Team>-AI` folder on their Desktop, and
-to tell you when a window has opened and stopped moving. Mention only their system's file and
-only their system's help below, for example: "Hacé doble clic en AI-Adoption-AI.command, dentro
-de la carpeta AI-Adoption-AI de tu Escritorio." The first time it installs what is needed, turns on
-the team checks, hides technical files and lets Codex use the team rules, then opens the
-team page in the browser (keep the window open while using it).
+Do it yourself; do not ask the Champion to double-click the icon. Say in one line what you are
+doing ("Preparing your computer and opening your team's page...").
 
-You cannot see that window, and never ask the Champion to copy it: read
-`<Desktop>/<Team>-AI/.git/launch.log`, where the launcher writes what the window shows.
+**On a Mac** (`uname` answers `Darwin`), run the team icon from the team folder, in the
+background (it keeps the team page running), with the browser opening turned off and no input:
 
-- No log: the launcher has not run yet. On a Mac, if it was blocked, right-click the file and
-  choose **Open**. On Windows, if a blue "Windows protected your PC" box appears, click
-  **More info**, then **Run anyway**. Say only the one for their system.
-- `Setup finished.` and `Launcher finished.`: done. The team page is open in the browser, in the
-  company's look: if you can see it (screenshots), look at each section before going on and fix
-  what does not read well on the brand (contrast, logos, buttons on two lines). Otherwise ask the
-  Champion in one line whether it looks right. (The icons are made from the logo on each
-  computer and never saved: nothing is left to save after the launch.)
-- Anything else: explain the last lines in plain words and help fix them.
+```
+cd "<Desktop>/<Team>-AI" && TEAM_PAGE_NO_BROWSER=1 bash "<Team>-AI.command" < /dev/null
+```
+
+Then read `<Desktop>/<Team>-AI/.git/launch.log`, where the icon writes what its window would
+show, until it says `Launcher finished.` and a line with the page's address
+(`http://127.0.0.1:<port>`). It usually takes under a minute the first time.
+
+- **The address is there:** open it in your own browser (in the Claude desktop app, the built-in
+  browser) so the Champion sees the team page next to the chat. If you have no browser of your
+  own, open it in the computer's browser (`open <address>`). Look at each section before going
+  on and fix what does not read well on the brand (contrast, logos, buttons on two lines); if
+  you cannot see it, ask the Champion in one line whether it looks right. (The icons are made
+  from the logo on each computer and never saved: nothing is left to save after the launch.)
+- **It stopped to install Apple's developer tools, or to sign in to GitHub:** those need the
+  Champion. Fall back to the double-click below.
+- **Anything else:** explain the last lines in plain words and help fix them.
+
+The page you started keeps running only while this conversation does. Tell the Champion in one
+line that next time they open it with the `<Team>-AI` icon.
+
+**On Windows** (`%OS%` = `Windows_NT`), or when the Mac run needs the Champion: ask them to
+double-click **`<Team>-AI.command`** (Mac) or **`<Team>-AI.bat`** (Windows), in the `<Team>-AI`
+folder on their Desktop, and to tell you when a window has opened and stopped moving. Mention
+only their system's file and help, for example: "Hacé doble clic en AI-Adoption-AI.command,
+dentro de la carpeta AI-Adoption-AI de tu Escritorio." Never ask them to copy the window: read
+the same `launch.log`.
+
+- No log: the icon has not run yet. On a Mac, if it was blocked, right-click the file and choose
+  **Open**; if macOS asks whether Terminal may access the Desktop, choose **Allow**. On Windows,
+  if a blue "Windows protected your PC" box appears, click **More info**, then **Run anyway**.
+- `Setup finished.` and `Launcher finished.`: done; the team page is open in their browser.
+  Check it as above.
 
 ## 8. First automation
 
