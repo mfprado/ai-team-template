@@ -14,8 +14,12 @@ desktop.ini
 Icon?
 *.lnk
 
-# Made on each computer from the team's brand (setup.py)
+# Made on each computer from the team's brand (setup.py): only the logo the company gave
+# (.agents/brand/logo-source.*) is shared, so opening the folder never leaves changes behind
 .streamlit/
+.agents/brand/logo.png
+.agents/brand/icon.png
+.agents/brand/icon.ico
 
 # Secrets: never saved in the team's repository
 .env

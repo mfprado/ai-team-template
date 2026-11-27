@@ -7,9 +7,9 @@
 
 Writes, in the team's settings (shared with the team like any other change):
 - .agents/brand.json         colours and font
-- .agents/brand/logo.png     the logo as given (converted to PNG)
-- .agents/brand/icon.png     a square icon (Mac folder icon)
-- .agents/brand/icon.ico     the same icon for Windows
+- .agents/brand/logo-source.<ext>   the logo exactly as given: the only logo file shared with the team
+- .agents/brand/logo.png, icon.png, icon.ico   made from it on each computer (not shared): the
+  logo as PNG, a square icon (Mac folder icon) and the same icon for Windows
 - .agents/brand/fonts/       the company's font files, when it provides them (.woff2, .woff, .ttf, .otf)
 
 --font-family is the company's own typeface, as its design guide names it. The team page, the
@@ -17,8 +17,7 @@ flow diagrams, the apps and the reports use it: from its files when given, else 
 Fonts. --font (sans or serif) is what to fall back to when it cannot load.
 
 Making the PNG and the icons needs Pillow. Without it (e.g. while creating the team, before the
-launcher has installed anything), the logo is kept as given in .agents/brand/logo-source.<ext>
-and the next launch makes the rest (setup.py, which runs with Pillow).
+launcher has installed anything), the next launch makes them (setup.py, which runs with Pillow).
 
 Every launch then uses them (setup.py): the team page's colours and the folder's icon.
 Prints what it wrote, as JSON.
@@ -98,17 +97,16 @@ def main():
             print(json.dumps({"error": f"The logo file was not found: {logo}"}))
             return 1
         icons_later = False
+        # The logo as given is what the team shares; the PNG and icons are made from it per computer.
+        FOLDER.mkdir(parents=True, exist_ok=True)
+        for old in FOLDER.glob("logo-source.*"):
+            old.unlink()
+        source = FOLDER / f"logo-source{logo.suffix.lower()}"
+        shutil.copyfile(logo, source)
         try:
-            make_icons(logo, args.background)
-            for old in FOLDER.glob("logo-source.*"):
-                old.unlink()
+            make_icons(source, args.background)
         except ImportError:
-            # No Pillow here: keep the logo as given; the next launch makes the PNG and the icons.
-            FOLDER.mkdir(parents=True, exist_ok=True)
-            for old in FOLDER.glob("logo-source.*"):
-                old.unlink()
-            shutil.copyfile(logo, FOLDER / f"logo-source{logo.suffix.lower()}")
-            icons_later = True
+            icons_later = True  # no Pillow here: the next launch makes them
         except OSError as e:
             print(json.dumps({"error": f"The logo could not be read as an image ({e})."}))
             return 1

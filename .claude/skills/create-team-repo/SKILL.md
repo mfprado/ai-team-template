@@ -263,14 +263,8 @@ You cannot see that window, and never ask the Champion to copy it: read
 - `Setup finished.` and `Launcher finished.`: done. The team page is open in the browser, in the
   company's look: if you can see it (screenshots), look at each section before going on and fix
   what does not read well on the brand (contrast, logos, buttons on two lines). Otherwise ask the
-  Champion in one line whether it looks right. If the log says it made the company's icons
-  from its logo, save them straight to the team, without asking (part of creating the folder):
-
-  ```
-  git add .agents/brand
-  git commit -m "Add <company>'s icons"
-  git push
-  ```
+  Champion in one line whether it looks right. (The icons are made from the logo on each
+  computer and never saved: nothing is left to save after the launch.)
 - Anything else: explain the last lines in plain words and help fix them.
 
 ## 8. First automation

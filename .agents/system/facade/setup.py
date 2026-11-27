@@ -215,12 +215,14 @@ def windows_shortcut(icon_ico):
 
 
 def make_missing_icons(brand, brand_dir):
-    """The logo was saved without Pillow (while creating the team): make the PNG and icons now.
+    """Make the logo PNG and the icons from the logo the team shares (logo-source.*).
 
-    The launcher runs setup.py with Pillow. True when they were made (new files to save).
+    They are made on each computer and never shared (.gitignore), so opening the folder leaves no
+    changes behind. Remade when the logo changes. The launcher runs setup.py with Pillow.
     """
     sources = sorted(brand_dir.glob("logo-source.*"))
-    if (brand_dir / "icon.png").exists() or not sources:
+    icon = brand_dir / "icon.png"
+    if not sources or (icon.exists() and icon.stat().st_mtime >= sources[0].stat().st_mtime):
         return False
     try:
         import importlib.util
@@ -230,8 +232,6 @@ def make_missing_icons(brand, brand_dir):
         module.make_icons(sources[0], brand.get("background"))
     except Exception:  # no Pillow, or a logo it cannot read (e.g. SVG): keep the default icon
         return False
-    for source in sources:
-        source.unlink()
     return True
 
 
@@ -249,9 +249,7 @@ def apply_brand():
     made = make_missing_icons(brand, brand_dir)
     changed = folder_icon(brand_dir / "icon.png", brand_dir / "icon.ico", team)
     changed = windows_shortcut(brand_dir / "icon.ico") or changed
-    if made:
-        return "Made the company's icons from its logo; the team folder now has them (save them for the team)."
-    if changed:
+    if made or changed:
         return "The team folder now has your company's icon."
     return None
 

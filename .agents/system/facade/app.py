@@ -49,7 +49,11 @@ T = {
         "ask_report": "Make a report about <topic> and share it with the team.",
         "no_private": "What you ask the AI to make appears here first, only on your computer. When it is ready, share it with the team.",
         "up_to_date": "Up to date with the team", "not_synced": "Could not get the team's latest",
-        "unshared": "You have changes not shared with the team", "behind": "The team has newer changes",
+        "unshared": "You have changes not shared with the team",
+        "pending_what": "Not shared yet: {what}.", "saved_changes": "changes saved on this computer",
+        "share_pending": "Share with the team",
+        "pending_confirm": "This saves for the whole team: {what}. Everyone will have it the next time they get the team's latest.",
+        "pending_summary": "Shared: {what}", "behind": "The team has newer changes",
         "menu": "Menu",
         "how_to_ask": "To use it, open your AI assistant in this folder and paste this (or say it in your own words):",
         "default_ask": "Use the {name} skill.",
@@ -75,7 +79,7 @@ T = {
         "recent": "Recent changes", "no_history": "Nothing saved for the team yet. Every change shows up here, with who made it.",
         "sensitive": "Changes how the AI works for everyone", "changed_what": "changed",
         "what": {"skill": "skill {x}", "perms": "permissions", "docs": "documents", "reports": "artifacts",
-                 "rules": "team rules", "system": "system", "other": "other files"},
+                 "rules": "team rules", "brand": "the company's brand", "system": "system", "other": "other files"},
         "ago": {"now": "just now", "min": "{n} min ago", "h": "{n} h ago", "d": "{n} days ago"},
         "perm_summary": "Permissions: {items}",
         "reports_intro": "Artifacts are reports, presentations, dashboards and small apps made with the AI, each in its own folder. Ask the assistant for a new one any time.",
@@ -106,6 +110,10 @@ T = {
         "no_private": "Lo que le pidas a la IA aparece primero acá, solo en tu computadora. Cuando esté listo, compartilo con el equipo.",
         "up_to_date": "Al día con el equipo", "not_synced": "No se pudo traer lo último del equipo",
         "unshared": "Tenés cambios sin compartir con el equipo", "behind": "El equipo tiene cambios más nuevos",
+        "pending_what": "Falta compartir: {what}.", "saved_changes": "cambios guardados en esta computadora",
+        "share_pending": "Compartir con el equipo",
+        "pending_confirm": "Se guarda para todo el equipo: {what}. Todos lo van a tener la próxima vez que traigan lo último del equipo.",
+        "pending_summary": "Compartido: {what}",
         "menu": "Menú",
         "how_to_ask": "Para usarla, abrí tu asistente de IA en esta carpeta y pegá esto (o pedilo con tus palabras):",
         "default_ask": "Usá la skill {name}.",
@@ -131,7 +139,7 @@ T = {
         "recent": "Cambios recientes", "no_history": "Todavía no hay nada guardado para el equipo. Acá aparece cada cambio, con quién lo hizo.", "changed_what": "cambió",
         "sensitive": "Cambia cómo funciona la IA para todos",
         "what": {"skill": "la skill {x}", "perms": "los permisos", "docs": "documentos", "reports": "artefactos",
-                 "rules": "reglas del equipo", "system": "el sistema", "other": "otros archivos"},
+                 "rules": "reglas del equipo", "brand": "la marca de la empresa", "system": "el sistema", "other": "otros archivos"},
         "ago": {"now": "recién", "min": "hace {n} min", "h": "hace {n} h", "d": "hace {n} días"},
         "perm_summary": "Permisos: {items}",
         "reports_intro": "Los artefactos son reportes, presentaciones, tableros y pequeñas apps hechos con la IA, cada uno en su carpeta. Pedile uno nuevo al asistente cuando quieras.",
@@ -233,7 +241,9 @@ def describe_paths(paths, t):
             item = t["what"]["docs"]
         elif p.startswith(("artifacts/", "artefactos/")):
             item = t["what"]["reports"]
-        elif p.startswith((".agents/rules/", ".agents/team.json", ".agents/brand")):
+        elif p.startswith(".agents/brand"):
+            item = t["what"]["brand"]
+        elif p.startswith((".agents/rules/", ".agents/team.json")):
             item = t["what"]["rules"]
         elif p.startswith((".agents/system/", "AGENTS.md", "CLAUDE.md")):
             item = t["what"]["system"]
@@ -259,7 +269,8 @@ def show_in_folder(path):
 
 def share(summary, paths):
     """Save a change for the team (propose_change.py); its outcome shows at the top of the page."""
-    result = run(sys.executable, "-I", str(CORE / "scripts/propose_change.py"), "--summary", summary, "--paths", *paths)
+    result = run(sys.executable, "-I", str(CORE / "scripts/propose_change.py"), "--summary", summary,
+                 *(["--paths", *paths] if paths else []))  # no paths: everything not yet shared
     try:
         outcome = json.loads(result.stdout.strip().splitlines()[-1])
     except (ValueError, IndexError):
@@ -271,6 +282,29 @@ def flash(ok, message):
     """A message for the top of the page after the next refresh (windows close on their own)."""
     st.session_state.flash = (ok, message)
     if not st.session_state.get("in_dialog"):
+        st.rerun()
+
+
+def pending_changes():
+    """Files changed here and not yet shared, as git paths (generated copies included)."""
+    paths = []
+    for line in git("status", "--porcelain").stdout.splitlines():
+        path = line[3:].split(" -> ")[-1].strip().strip('"')
+        if path:
+            paths.append(path)
+    return paths
+
+
+@st.dialog(" ")
+def confirm_share_pending(what):
+    st.write(t["pending_confirm"].format(what=what))
+    yes, no, _ = st.columns([1, 1, 2])
+    if yes.button(t["share_yes"], type="primary", use_container_width=True):
+        st.session_state.in_dialog = True
+        with st.spinner(t["applying"]):
+            share(t["pending_summary"].format(what=what), [])
+        st.rerun()
+    elif no.button(t["share_no"], use_container_width=True):
         st.rerun()
 
 
@@ -319,7 +353,14 @@ with st.sidebar:
     if refresh or "synced" not in st.session_state:
         git("fetch", "--quiet")  # then fast-forward, keeping unsaved work (whatever pull.rebase says)
         st.session_state.synced = git("merge", "--ff-only", "--autostash", "--quiet", "@{upstream}").returncode == 0
-    st.markdown(look.sync_badge(*sync_status()), unsafe_allow_html=True)
+    status, ok = sync_status()
+    st.markdown(look.sync_badge(status, ok), unsafe_allow_html=True)
+    if status == t["unshared"]:
+        # Say what is waiting, and let the person share it from here.
+        what = describe_paths(pending_changes(), t) or t["saved_changes"]
+        st.caption(t["pending_what"].format(what=what))
+        if st.button(t["share_pending"], icon=":material/group:", use_container_width=True, key="share-pending"):
+            confirm_share_pending(what)
     st.divider()
     if st.session_state.get("section") not in SECTIONS:
         st.session_state.section = SECTIONS[0]
