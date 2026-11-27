@@ -6,6 +6,7 @@ team; anyone else's become a change request the Champion approves (propose_chang
 """
 
 import datetime
+import html
 import json
 import platform
 import re
@@ -18,6 +19,7 @@ import streamlit as st
 import streamlit.components.v1 as components
 
 import flow_page  # next to this file
+import look
 
 ROOT = Path(__file__).resolve().parents[3]
 CORE = ROOT / ".agents/system"
@@ -263,17 +265,17 @@ def share(summary, paths):
 
 
 def sync_status():
-    """One honest line: in step with the team, or what is different."""
+    """One honest line: in step with the team, or what is different. (text, all good?)"""
     if not st.session_state.get("synced"):
-        return f":orange-background[{t['not_synced']}]"
+        return t["not_synced"], False
     unsaved = bool(git("status", "--porcelain").stdout.strip())
     ahead = git("rev-list", "--count", "origin/main..HEAD").stdout.strip() not in ("", "0")
     behind = git("rev-list", "--count", "HEAD..origin/main").stdout.strip() not in ("", "0")
     if unsaved or ahead:
-        return f":orange-background[{t['unshared']}]"
+        return t["unshared"], False
     if behind:
-        return f":orange-background[{t['behind']}]"
-    return f":green-background[{t['up_to_date']}]"
+        return t["behind"], False
+    return t["up_to_date"], True
 
 
 def rule_label(rule):
@@ -291,6 +293,7 @@ logo = ROOT / ".agents/brand/logo.png"
 icon = ROOT / ".agents/brand/icon.png"
 st.set_page_config(page_title=t["title"].format(team=team.get("team", "Team")), layout="centered",
                    page_icon=str(icon) if icon.exists() else None)
+st.markdown(look.css(load_json(ROOT / ".agents/brand.json", {})), unsafe_allow_html=True)
 # Section picker that survives reruns (st.tabs jumps back to the first tab when a switch changes).
 SECTIONS = [t["tab_skills"], t["tab_artifacts"], t["tab_ideas"], t["tab_perms"], t["tab_history"]]
 ICONS = dict(zip(SECTIONS, [":material/auto_awesome:", ":material/bar_chart:", ":material/lightbulb:",
@@ -298,20 +301,18 @@ ICONS = dict(zip(SECTIONS, [":material/auto_awesome:", ":material/bar_chart:", "
 
 with st.sidebar:
     if logo.exists():
-        st.image(str(logo), width=140)
-    st.markdown(f"### {team.get('team', 'Team')}")
-    st.caption(t["champion"].format(name=champion))
+        st.image(str(logo), width=150)
+    st.markdown(f'<div class="team-name">{html.escape(team.get("team", "Team"))}</div>'
+                f'<div class="champion">{html.escape(t["champion"].format(name=champion))}</div>',
+                unsafe_allow_html=True)
     refresh = st.button(t["sync"], icon=":material/refresh:", use_container_width=True)
     if refresh or "synced" not in st.session_state:
         git("fetch", "--quiet")  # then fast-forward, keeping unsaved work (whatever pull.rebase says)
         st.session_state.synced = git("merge", "--ff-only", "--autostash", "--quiet", "@{upstream}").returncode == 0
-    st.markdown(sync_status())
+    st.markdown(look.sync_badge(*sync_status()), unsafe_allow_html=True)
     st.divider()
     if st.session_state.get("section") not in SECTIONS:
         st.session_state.section = SECTIONS[0]
-    # Menu buttons read like a list: icon and text on the left.
-    st.markdown("<style>.st-key-menu button{justify-content:flex-start}"
-                ".st-key-menu button>div{justify-content:flex-start}</style>", unsafe_allow_html=True)
     menu = st.container(key="menu")
     for name in SECTIONS:
         current = st.session_state.section == name
@@ -420,16 +421,12 @@ if section == t["tab_skills"]:
         empty_state(t["no_skills"], t["ask_skill"])
     # A list: one row per skill (name and what it does). A click opens it: the flow diagram, the
     # request to paste, the instructions and earlier versions. A second click closes it.
-    st.markdown("<style>[class*='st-key-skill-'] button{justify-content:flex-start;text-align:left}"
-                "[class*='st-key-skill-'] button>div{justify-content:flex-start}"
-                "[class*='st-key-skill-'] button p{font-size:1.05rem;font-weight:600}</style>",
-                unsafe_allow_html=True)
     opened = st.session_state.get("open_skill")
     for name, description, body in skills:
         title, summary, ask = skill_card(name, description)
         flow, instructions = skill_flow(body)
         is_open = opened == name
-        with st.container(border=True):
+        with st.container(border=True, key=f"skillcard-{name}"):
             if st.button(title, key=f"skill-{name}", type="tertiary", use_container_width=True,
                          icon=":material/expand_less:" if is_open else ":material/expand_more:"):
                 st.session_state.open_skill = None if is_open else name
@@ -441,7 +438,8 @@ if section == t["tab_skills"]:
             if flow:
                 show_flow(flow)
             st.caption(t["how_to_ask"])
-            st.code(ask or t["default_ask"].format(name=name), language="text")
+            with st.container(key=f"ask-{name}"):
+                st.code(ask or t["default_ask"].format(name=name), language="text")
             show_skill_permissions(name, title)
             if not flow:
                 st.caption(t["no_flow"])

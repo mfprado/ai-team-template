@@ -22,9 +22,12 @@ DETAIL = r'^\s*%%\s*(\w+)\s*:\s*(.+)$'
 # An arrow with an answer on it:  C -- Yes --> E
 BRANCH = r'^\s*(\w+)\s*--\s*([^->][^>]*?)\s*-->\s*(\w+)'
 
-FONTS = {"sans": "-apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif",
-         "serif": "Georgia, 'Times New Roman', serif"}
-DEFAULT = {"primary": "#4F6BED", "background": "#FFFFFF", "text": "#1F2937"}
+# The team page's type (look.py): Bricolage Grotesque, or Newsreader for a serif brand.
+FONTS = {"sans": "'Bricolage Grotesque', -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif",
+         "serif": "'Newsreader', Georgia, 'Times New Roman', serif"}
+FONT_URLS = {"sans": "Bricolage+Grotesque:opsz,wght@12..96,300..800", "serif": "Newsreader:opsz,wght@6..72,300..700"}
+# Without a brand: pine green on a cool white.
+DEFAULT = {"primary": "#1F6F5C", "background": "#F5F7F6", "text": "#17201D"}
 
 
 def rgb(hex_colour):
@@ -106,6 +109,7 @@ def build(diagram, brand, brand_dir, language="en"):
     return f"""<!doctype html>
 <html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Flow</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family={FONT_URLS["serif" if brand.get("font") == "serif" else "sans"]}&display=swap">
 <style>
 html,body{{margin:0;background:{c['background']};color:{c['text']};font-family:{c['font']}}}
 main{{padding:0}}
@@ -327,6 +331,7 @@ document.addEventListener("keydown", e => {{ if (e.key === "Escape") closeCard()
       chip.appendChild(logo(t, 20)); chip.appendChild(document.createTextNode(t.label));
       row.appendChild(chip);
     }}
+    try {{ await document.fonts.ready; }} catch (e) {{}}  // measure the boxes in the page's type
     mermaid.initialize({json.dumps(config)});
     const r = await mermaid.render("flow-svg", diagram);
     document.getElementById("flow").innerHTML = r.svg;

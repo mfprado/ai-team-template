@@ -240,8 +240,9 @@ def apply_brand():
         brand = json.loads((ROOT / ".agents/brand.json").read_text(encoding="utf-8"))
         team = json.loads((ROOT / ".agents/team.json").read_text(encoding="utf-8")).get("team", "Team")
     except (OSError, ValueError):
-        return None  # no brand yet: default look
+        brand = {}
     if not brand.get("primary"):
+        page_theme({"primary": "#1F6F5C", "background": "#F5F7F6", "text": "#17201D"})  # no brand yet: default look
         return None
     page_theme(brand)
     brand_dir = ROOT / ".agents/brand"
