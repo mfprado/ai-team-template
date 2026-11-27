@@ -208,6 +208,59 @@
       "pattern": ".agents/team.json",
       "tier": "ask",
       "reason": "Team settings, including who the AI Champion is."
+    },
+    {
+      "tool": "Bash",
+      "pattern": "TEAM_PAGE_NO_BROWSER=1 uv run --quiet --no-project --python 3.12 --with streamlit==1.41.1 .agents/system/facade/page.py",
+      "tier": "allow",
+      "reason": "Abre la página del equipo dentro del navegador del asistente, sin abrir el navegador de la persona."
+    },
+    {
+      "tool": "Bash",
+      "pattern": "sh .agents/system/bin/py -I .agents/system/scripts/propose_change.py",
+      "tier": "allow",
+      "reason": "Guarda los cambios para todo el equipo (los controles del equipo siguen corriendo)."
+    },
+    {
+      "tool": "Bash",
+      "pattern": "sh .agents/system/bin/py .agents/system/scripts/sync.py",
+      "tier": "allow",
+      "reason": "Regenera las copias de cada asistente de IA."
+    },
+    {
+      "tool": "mcp__Claude_Browser__preview_start",
+      "tier": "allow",
+      "reason": "Ver la página del equipo en el navegador del asistente."
+    },
+    {
+      "tool": "mcp__Claude_Browser__navigate",
+      "tier": "allow",
+      "reason": "Ver la página del equipo en el navegador del asistente."
+    },
+    {
+      "tool": "mcp__Claude_Browser__tabs_context",
+      "tier": "allow",
+      "reason": "Ver la página del equipo en el navegador del asistente."
+    },
+    {
+      "tool": "mcp__Claude_Browser__read_page",
+      "tier": "allow",
+      "reason": "Ver la página del equipo en el navegador del asistente."
+    },
+    {
+      "tool": "mcp__Claude_Browser__get_page_text",
+      "tier": "allow",
+      "reason": "Ver la página del equipo en el navegador del asistente."
+    },
+    {
+      "tool": "mcp__Claude_Browser__find",
+      "tier": "allow",
+      "reason": "Ver la página del equipo en el navegador del asistente."
+    },
+    {
+      "tool": "mcp__Claude_Browser__computer",
+      "tier": "allow",
+      "reason": "Ver la página del equipo en el navegador del asistente."
     }
   ]
 }
