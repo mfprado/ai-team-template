@@ -58,6 +58,9 @@ An app (`--type app`) or a dashboard can be built two ways. Choose by what it ne
     its version),
   - `assets/` and the README, as for any artifact; the README says how to open it.
 
+  Every Streamlit app shows a **Back to the team page** link at the top on its own (from
+  `look.css`): do not add another one.
+
   The team page's Open button starts it the same way. It runs on the person's computer, while
   its window is open; anything it saves goes to a file in `assets/` or a team spreadsheet, and
   the README says where. To use it without the team folder it would need hosting: say so, do not

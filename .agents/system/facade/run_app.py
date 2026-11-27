@@ -11,6 +11,7 @@ that is already running is only opened again in the browser. Keeps running until
 """
 
 import json
+import os
 import socket
 import subprocess
 import sys
@@ -61,8 +62,14 @@ def main():
         state_file.write_text(json.dumps(state, indent=2) + "\n", encoding="utf-8")
     except OSError:
         pass
+    # The app shows a link back to the team page (look.css), at this team's own address (page.py).
+    env = dict(os.environ)
+    try:
+        env["TEAM_PAGE_URL"] = f"http://localhost:{int((root / '.git/team-page-port').read_text().strip())}"
+    except (OSError, ValueError):
+        env.pop("TEAM_PAGE_URL", None)
     process = subprocess.Popen([sys.executable, "-m", "streamlit", "run", str(app), "--server.port", str(port),
-                                "--server.headless", "true", "--browser.gatherUsageStats", "false"], cwd=root)
+                                "--server.headless", "true", "--browser.gatherUsageStats", "false"], cwd=root, env=env)
     for _ in range(120):  # up to a minute for the first start
         if alive(port) or process.poll() is not None:
             break
