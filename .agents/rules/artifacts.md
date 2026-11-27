@@ -38,6 +38,30 @@ artifacts/                                (artefactos/)
 - **A new version** of an artifact the team keeps updating (the weekly report) replaces the files
   in the same folder; git keeps the earlier versions. A different artifact gets a new folder.
 
+## Dashboards
+
+Build a dashboard (`--type dashboard`) on the pattern of
+https://advanced-dashboard-demo.streamlit.app/, in the company's colours and type:
+
+- **Header:** the title, and under it one line saying what is shown right now ("All regions,
+  all plans, last 12 months"). On the right, Reset and Export.
+- **Controls in one row:** the period as quick choices (3M, 6M, 12M, 24M) and the other filters
+  in one Filters menu. Every chart follows them.
+- **First row: 3 to 5 key numbers**, each in its own card: its name, the number large, the change
+  as a small green or red chip with what it is compared to ("+5.4 pts vs. 24 months ago"), and
+  a small trend line or bars underneath.
+- **Then the charts**, each in a card with a short title and one line saying what it shows, the
+  legend above the chart, values formatted for people ($1.2M, 12%), and a tooltip on hover.
+  Choose the chart for the question: lines for change over time, stacked areas for parts of a
+  total, a waterfall for what moved a number, a heatmap for when, bars for comparing.
+- **Clicking a part of a chart filters the rest** (a slice, a bar), and the header line says so.
+- **Last, a table** of the rows that matter most (top accounts, open deals), sortable.
+- **Colour:** the brand's main colour for the main series, then a few colours that sit well
+  with it for the others; green and red only for good and bad changes. Background, text and
+  font from the brand. Light grid lines, no 3D, no decoration.
+- It stays one artifact folder: `index.html` with the charts (a charting library from a CDN is
+  fine), the data in `assets/`, and in the README where the data comes from and how to refresh it.
+
 ## Brand and repeat runs
 
 - **Brand:** if `.agents/brand.json` exists, use its colours, font and logo
