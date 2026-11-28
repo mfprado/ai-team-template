@@ -306,6 +306,14 @@ button:focus-visible {{ outline:2px solid var(--accent) !important; outline-offs
 /* "Working..." messages: on the page, not on a dark band */
 [data-testid="stSpinner"], [data-testid="stSpinner"] > div {{ background:transparent !important; color:var(--ink) !important; }}
 [data-testid="stSpinner"] i {{ border-color:var(--rule) !important; border-top-color:var(--accent) !important; }}
+/* Tables written in documents (Markdown): thin lines, no stripes, in the page's colours */
+[data-testid="stMarkdownContainer"] table {{ border-collapse:collapse; width:100%; margin:.6rem 0 1.2rem; }}
+[data-testid="stMarkdownContainer"] th, [data-testid="stMarkdownContainer"] td {{ background:transparent !important;
+  color:var(--ink) !important; border:0 !important; border-bottom:1px solid var(--rule) !important;
+  padding:.6rem .8rem !important; text-align:left; vertical-align:top; line-height:1.45; }}
+[data-testid="stMarkdownContainer"] th {{ font-weight:650; border-bottom:1.5px solid var(--muted) !important; }}
+[data-testid="stMarkdownContainer"] tr {{ background:transparent !important; }}
+[data-testid="stMarkdownContainer"] td:first-child {{ color:var(--muted) !important; }}
 /* Hover hints (the "?" and the sun or moon): readable, day or night */
 [data-testid="stTooltipContent"], [data-baseweb="tooltip"] > div {{ background:var(--ink) !important; }}
 [data-testid="stTooltipContent"], [data-testid="stTooltipContent"] * {{ color:var(--paper) !important; }}
