@@ -341,6 +341,11 @@ button:focus-visible {{ outline:2px solid var(--accent) !important; outline-offs
 /* A presentation filling the window (where the browser refuses full screen): nothing on top of it */
 .slides-full [data-testid="stSidebar"], .slides-full [data-testid="stHeader"],
 .slides-full [data-testid="stSidebarCollapsedControl"] {{ display:none !important; }}
+/* Start of Artifacts and Documents: the side menu sits beside the page, pushing it, on any screen */
+.side-push [data-testid="stSidebar"][aria-expanded="true"] {{ position:relative !important; transform:none !important;
+  flex-shrink:0; }}
+.side-push [data-testid="stAppViewContainer"]:has([data-testid="stSidebar"][aria-expanded="true"]) [data-testid="stMain"] {{
+  position:relative !important; flex:1 1 0; min-width:0; }}
 /* Hover hints (the "?" and the sun or moon): readable, day or night */
 [data-testid="stTooltipContent"], [data-baseweb="tooltip"] > div {{ background:var(--ink) !important; }}
 [data-testid="stTooltipContent"], [data-testid="stTooltipContent"] * {{ color:var(--paper) !important; }}

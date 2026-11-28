@@ -1087,19 +1087,29 @@ def open_bar(state_key, path):
 
 
 def open_side_at_start(name, at_start):
-    """At the start of Artifacts or Documents the page is short: show the side menu if it is hidden
-    (once, on arriving there, so closing it again is respected)."""
+    """At the start of Artifacts or Documents the page is short: the side menu shows beside it,
+    pushing the page (not over it, even on a narrow screen). Opened once, on arriving there,
+    so closing it again is respected."""
     was = st.session_state.get(f"at-start-{name}", False)
     st.session_state[f"at-start-{name}"] = at_start
-    if at_start and not was:
-        components.html("""<script>
+    components.html("""<script>
 const doc = window.parent.document;
+doc.documentElement.classList.toggle("side-push", %s);
 const side = doc.querySelector('[data-testid="stSidebar"]');
-if (side && side.getAttribute("aria-expanded") !== "true") {
+if (%s && side && side.getAttribute("aria-expanded") !== "true") {
   const open = doc.querySelector('[data-testid="stSidebarCollapsedControl"] button, [data-testid="stExpandSidebarButton"]');
   if (open) open.click();
 }
-</script>""", height=0)
+// Leaving the start: on a narrow screen the menu would now cover the page, so it closes.
+if (%s && side && side.getAttribute("aria-expanded") === "true") {
+  const main = doc.querySelector('[data-testid="stMain"]');
+  if (main && side.getBoundingClientRect().right > main.getBoundingClientRect().left + 1) {
+    const close = doc.querySelector('[data-testid="stSidebarCollapseButton"] button');
+    if (close) close.click();
+  }
+}
+</script>""" % ("true" if at_start else "false", "true" if at_start and not was else "false",
+                 "true" if was and not at_start else "false"), height=0)
 
 
 def rel_dir(base, folder):
