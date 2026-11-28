@@ -117,9 +117,10 @@ hr {{ border-color:var(--rule) !important; }}
   color:var(--ink) !important; border-radius:8px; padding:.5rem .75rem; min-height:2.4rem; }}
 .st-key-menu button > div {{ justify-content:flex-start; }}
 .st-key-menu button:hover {{ background:var(--wash) !important; }}
-.st-key-artmenu {{ padding-left:.6rem; gap:.1rem !important; border-left:1px solid var(--rule); margin-left:1rem; width:calc(100% - 1rem) !important; box-sizing:border-box; }}
-.st-key-artmenu [data-testid="stCaptionContainer"] {{ font-size:.72rem; text-transform:uppercase; letter-spacing:.08em; margin:.5rem 0 0 .6rem; }}
-.st-key-artmenu button {{ min-height:2rem !important; padding:.2rem .6rem !important; }}
+.st-key-artmenu-folded, .st-key-docsmenu-folded {{ display:none; }}
+.st-key-artmenu, .st-key-docsmenu {{ padding-left:.6rem; gap:.1rem !important; border-left:1px solid var(--rule); margin-left:1rem; width:calc(100% - 1rem) !important; box-sizing:border-box; }}
+.st-key-artmenu [data-testid="stCaptionContainer"], .st-key-docsmenu [data-testid="stCaptionContainer"] {{ font-size:.72rem; text-transform:uppercase; letter-spacing:.08em; margin:.5rem 0 0 .6rem; }}
+.st-key-artmenu button, .st-key-docsmenu button {{ min-height:2rem !important; padding:.2rem .6rem !important; }}
 .st-key-artmenu button p {{ font-size:.88rem !important; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }}
 .st-key-menu [data-testid="stBaseButton-primary"] {{ background:var(--wash) !important; font-weight:650;
   box-shadow:inset 3px 0 0 var(--accent); }}

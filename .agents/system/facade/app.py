@@ -5,6 +5,7 @@ Changes to settings are shared like any other change: the AI Champion's go strai
 team; anyone else's become a change request the Champion approves (propose_change.py).
 """
 
+import base64
 import datetime
 import html
 import json
@@ -36,7 +37,7 @@ T = {
         "sync": "Get the team's latest", "synced": "Up to date with the team.",
         "sync_fail": "Could not get the team's latest changes right now.",
         "tab_skills": "Skills", "tab_perms": "General permissions", "tab_artifacts": "Artifacts", "tab_history": "History",
-        "tab_ideas": "Ideas", "ideas_intro": "Ideas for the team's workspace. Anyone can add one or update its status.",
+        "tab_docs": "Documents", "docs_intro": "What is in the team's documents folder. Click one to see it here.", "no_docs": "The documents folder is empty. Put the team's documents there (or ask the AI assistant to).", "tab_ideas": "Ideas", "ideas_intro": "Ideas for the team's workspace. Anyone can add one or update its status.",
         "no_ideas": "No ideas yet.", "comment": "Comment", "comment_hint": "Add a comment", "comment_send": "Comment",
         "comment_summary": "Comment on idea {n}", "new_idea": "Title", "new_idea_hint": "Your idea in a few words", "new_idea_text": "Description", "new_idea_text_hint": "Tell the team more: what it would solve, who it helps (optional)", "comments_n": "Comments ({n})", "idea_flow": "See the workflow", "done_n": "Show done ideas ({n})", "archived_n": "Show archived ideas ({n})", "take_idea": "I'll take it", "drop_idea": "Let it go", "taken_by": "{who} is on it", "assign_summary": "Idea {n}: {who} is on it", "unassign_summary": "Idea {n}: free again", "add_idea": "Add", "days": ["today", "yesterday", "{n} days ago"],
         "idea_summary": "New idea: {text}", "set_status": "Status", "save_status": "Save status",
@@ -96,7 +97,7 @@ T = {
         "sync": "Traer lo último del equipo", "synced": "Al día con el equipo.",
         "sync_fail": "No se pudieron traer los últimos cambios del equipo ahora.",
         "tab_skills": "Skills", "tab_perms": "Permisos generales", "tab_artifacts": "Artefactos", "tab_history": "Historial",
-        "tab_ideas": "Ideas", "ideas_intro": "Ideas para el espacio del equipo. Cualquiera puede sumar una o cambiar su estado.",
+        "tab_docs": "Documentos", "docs_intro": "Lo que hay en la carpeta de documentos del equipo. Hacé clic en uno para verlo acá.", "no_docs": "La carpeta de documentos está vacía. Poné ahí los documentos del equipo (o pedíselo al asistente de IA).", "tab_ideas": "Ideas", "ideas_intro": "Ideas para el espacio del equipo. Cualquiera puede sumar una o cambiar su estado.",
         "no_ideas": "Todavía no hay ideas.", "comment": "Comentario", "comment_hint": "Sumá un comentario", "comment_send": "Comentar",
         "comment_summary": "Comentario en la idea {n}", "new_idea": "Título", "new_idea_hint": "Tu idea en pocas palabras", "new_idea_text": "Descripción", "new_idea_text_hint": "Contale más al equipo: qué resolvería, a quién ayuda (opcional)", "comments_n": "Comentarios ({n})", "idea_flow": "Ver el flujo", "done_n": "Mostrar las hechas ({n})", "archived_n": "Mostrar las archivadas ({n})", "take_idea": "Me la asigno", "drop_idea": "Soltarla", "taken_by": "La tiene {who}", "assign_summary": "Idea {n}: la tiene {who}", "unassign_summary": "Idea {n}: quedó libre", "add_idea": "Agregar", "days": ["hoy", "ayer", "hace {n} días"],
         "idea_summary": "Nueva idea: {text}", "set_status": "Estado", "save_status": "Guardar estado",
@@ -374,9 +375,9 @@ if (!doc.body.dataset.copyFeedback) {
 }
 </script>""", height=0)
 # Section picker that survives reruns (st.tabs jumps back to the first tab when a switch changes).
-SECTIONS = [t["tab_skills"], t["tab_artifacts"], t["tab_ideas"], t["tab_perms"], t["tab_history"]]
-ICONS = dict(zip(SECTIONS, [":material/auto_awesome:", ":material/bar_chart:", ":material/lightbulb:",
-                            ":material/shield:", ":material/history:"]))
+SECTIONS = [t["tab_artifacts"], t["tab_docs"], t["tab_skills"], t["tab_ideas"], t["tab_perms"], t["tab_history"]]
+ICONS = dict(zip(SECTIONS, [":material/bar_chart:", ":material/folder:", ":material/auto_awesome:",
+                            ":material/lightbulb:", ":material/shield:", ":material/history:"]))
 
 with st.sidebar:
     st.markdown(look.team_header(logo, team.get("team", "Team"), t["champion"].format(name=champion)),
@@ -399,18 +400,27 @@ with st.sidebar:
     menu = st.container(key="menu")
     for name in SECTIONS:
         current = st.session_state.section == name
+        folded = st.session_state.get(f"fold-{name}", False)
         if menu.button(name, icon=ICONS[name], type="primary" if current else "secondary",
                      use_container_width=True, key=f"menu-{name}"):
+            if current and not st.session_state.get("viewing") and not st.session_state.get("viewing_doc"):
+                # Clicking the open section again hides or shows its list underneath.
+                st.session_state[f"fold-{name}"] = not folded
+                st.rerun()
             # A section's own entry takes you back to its start (out of an artifact, a skill).
             st.session_state.section = name
             st.session_state.pop("viewing", None)
+            st.session_state.pop("viewing_doc", None)
             st.rerun()
+        if name == t["tab_docs"] and current:
+            docs_menu = menu.container(key="docsmenu-folded" if folded else "docsmenu")  # filled in the Documents section
         if name == t["tab_artifacts"] and current:
             # Filled further down, once the artifacts are listed: one entry per artifact.
-            artifact_menu = menu.container(key="artmenu")
+            artifact_menu = menu.container(key="artmenu-folded" if folded else "artmenu")
     section = st.session_state.section
 
-if not (section == t["tab_artifacts"] and st.session_state.get("viewing")):  # an open artifact gets the whole page
+if not ((section == t["tab_artifacts"] and st.session_state.get("viewing"))
+        or (section == t["tab_docs"] and st.session_state.get("viewing_doc"))):  # an open artifact gets the whole page
     st.title(section)
 st.session_state.pop("in_dialog", None)
 if "flash" in st.session_state:
@@ -914,9 +924,26 @@ def enter_artifact(item):
         st.session_state.viewing = item["key"]
 
 
+PDF_VIEWER = """<style>html,body{margin:0;background:#525659}canvas{display:block;margin:12px auto;max-width:96%;
+box-shadow:0 1px 4px rgba(0,0,0,.4);background:#fff}</style><div id="pages"></div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<script>
+pdfjsLib.GlobalWorkerOptions.workerSrc = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
+const bytes = Uint8Array.from(atob("__DATA__"), c => c.charCodeAt(0));
+pdfjsLib.getDocument({data: bytes, standardFontDataUrl: "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/standard_fonts/"}).promise.then(async pdf => {
+  for (let n = 1; n <= pdf.numPages; n++) {
+    const page = await pdf.getPage(n), view = page.getViewport({scale: 2});
+    const c = document.createElement("canvas"); c.width = view.width; c.height = view.height;
+    document.getElementById("pages").appendChild(c);
+    await page.render({canvasContext: c.getContext("2d"), viewport: view}).promise;
+  }
+});
+</script>"""
+
+
 def show_report(item):
     # Pages and apps show their own title; the row is left out when it would be empty.
-    titled = item["kind"] == "link" or (item["kind"] == "file" and item["path"].suffix.lower() not in (".html", ".htm"))
+    titled = item["kind"] == "link" or (item["kind"] == "file" and item["path"].suffix.lower() not in (".html", ".htm", ".md"))
     if titled or item["private"]:
         head, action = st.columns([3, 2])
         if titled:
@@ -948,6 +975,10 @@ def show_report(item):
         # White by default (reports written without a background are unreadable on a dark page).
         page = "<style>html{background:#fff;color:#111}</style>" + p.read_text(encoding="utf-8", errors="replace")
         components.html(page, height=720, scrolling=True)
+    elif p.suffix.lower() == ".pdf":
+        # Drawn page by page with PDF.js: the browser's own PDF viewer does not run inside the page's frame.
+        data = base64.b64encode(p.read_bytes()).decode()
+        components.html(PDF_VIEWER.replace("__DATA__", data), height=720, scrolling=True)
     elif p.suffix.lower() in (".png", ".jpg", ".jpeg", ".gif", ".svg"):
         st.image(str(p))
     elif p.suffix.lower() == ".md":
@@ -956,6 +987,48 @@ def show_report(item):
         st.text(p.read_text(encoding="utf-8", errors="replace"))
     elif st.button(t["show_folder"]):  # a file the page cannot show or open
         show_in_folder(p)
+
+
+def open_bar(state_key, path):
+    """What opens (an artifact, a document) gets the whole window: no top margin, full width, as tall
+    as the window, with one thin row on top: back on the left, the folder on the right.
+    The page's top bar stays see-through so the back arrow under it can be clicked.
+    Returns True when the folder button was clicked."""
+    st.markdown("<style>[data-testid='stMainBlockContainer']{max-width:100%!important;padding:.5rem 2rem 0}"
+                "header[data-testid='stHeader']{background:transparent;pointer-events:none}"
+                "header[data-testid='stHeader'] *{pointer-events:auto}"
+                "iframe[src*='embed=true'],iframe[srcdoc]{height:calc(100vh - 110px)!important}"
+                ".st-key-artbar{padding:0 2.5rem}</style>",  # clear of the sidebar toggle and the menu
+                unsafe_allow_html=True)
+    back, _, folder = st.container(key="artbar").columns([1, 20, 1], vertical_alignment="center")
+    if back.button("", icon=":material/arrow_back:", type="tertiary", help=t["back"]):
+        st.session_state.pop(state_key, None)
+        st.rerun()
+    return bool(path) and folder.button("", icon=":material/folder_open:", type="tertiary", help=t["show_folder"])
+
+
+def docs_folder():
+    return ROOT / ("documentos" if team.get("language") == "es" else "documents")
+
+
+def doc_files():
+    """Every file in the documents folder, by subfolder (hidden files left out)."""
+    base = docs_folder()
+    if not base.is_dir():
+        return []
+    return sorted((p for p in base.rglob("*") if p.is_file() and not any(part.startswith(".") for part in p.relative_to(base).parts)),
+                  key=lambda p: (str(p.parent.relative_to(base)).lower(), p.name.lower()))
+
+
+def doc_icon(p):
+    ext = p.suffix.lower()
+    if ext in (".png", ".jpg", ".jpeg", ".gif", ".svg"):
+        return ":material/image:"
+    if ext in (".csv", ".xlsx", ".xls"):
+        return ":material/table_chart:"
+    if ext in (".html", ".htm"):
+        return ":material/code:"
+    return ":material/description:"
 
 
 if section == t["tab_artifacts"]:
@@ -976,21 +1049,7 @@ if section == t["tab_artifacts"]:
             st.rerun()
     viewing = next((i for i in items if i["key"] == st.session_state.get("viewing")), None)
     if viewing:
-        # An open artifact gets the whole window: no top margin, full width, as tall as the window.
-        # The page's top bar stays see-through so the back arrow under it can be clicked.
-        st.markdown("<style>[data-testid='stMainBlockContainer']{max-width:100%!important;padding:.5rem 2rem 0}"
-                    "header[data-testid='stHeader']{background:transparent;pointer-events:none}"
-                    "header[data-testid='stHeader'] *{pointer-events:auto}"
-                    "iframe[src*='embed=true'],iframe[srcdoc]{height:calc(100vh - 110px)!important}"
-                    ".st-key-artbar{padding:0 2.5rem}</style>",  # clear of the sidebar toggle and the menu
-                    unsafe_allow_html=True)
-        # One thin row: back on the left, the artifact's folder on the right.
-        back, _, folder = st.container(key="artbar").columns([1, 20, 1], vertical_alignment="center")
-        if back.button("", icon=":material/arrow_back:", type="tertiary", help=t["back"]):
-            st.session_state.pop("viewing", None)
-            st.rerun()
-        if viewing["kind"] != "link" and folder.button("", icon=":material/folder_open:", type="tertiary",
-                                                      help=t["show_folder"]):
+        if open_bar("viewing", viewing.get("path")):
             p = viewing["path"]
             show_in_folder(p / "index.html" if (p / "index.html").is_file() else p / "app.py" if (p / "app.py").is_file() else p)
         show_report(viewing)
@@ -1039,6 +1098,44 @@ if section == t["tab_artifacts"]:
                     if item["private"] and cols[3].button("", key=f"delete-{item['key']}", icon=":material/delete:",
                                                           help=t["delete"]):
                         confirm_delete(item)
+
+# Documents: a viewer of the team's documents folder
+if section == t["tab_docs"]:
+    base = docs_folder()
+    files = doc_files()
+    last = None
+    for f in files:
+        group = str(f.parent.relative_to(base))
+        if group != last:
+            last = group
+            if group != ".":
+                docs_menu.caption(group)
+        if docs_menu.button(f.name, icon=doc_icon(f), key=f"docmenu-{f}", use_container_width=True,
+                            type="primary" if st.session_state.get("viewing_doc") == str(f) else "tertiary"):
+            st.session_state.viewing_doc = str(f)
+            st.rerun()
+    doc = next((f for f in files if str(f) == st.session_state.get("viewing_doc")), None)
+    if doc:
+        if open_bar("viewing_doc", doc):
+            show_in_folder(doc)
+        show_report({"kind": "file", "path": doc, "title": doc.stem, "private": False, "key": str(doc)})
+    else:
+        st.write(t["docs_intro"])
+        if st.button(t["show_folder"], icon=":material/folder_open:"):
+            base.mkdir(exist_ok=True)
+            show_in_folder(base)
+        if not files:
+            empty_state(t["no_docs"])
+        last = None
+        for f in files:
+            group = str(f.parent.relative_to(base))
+            if group != last:
+                last = group
+                if group != ".":
+                    st.markdown(f"**{html.escape(group)}**")
+            if st.button(f.name, icon=doc_icon(f), key=f"doc-{f}", type="tertiary"):
+                st.session_state.viewing_doc = str(f)
+                st.rerun()
 
 # History: who changed what, in plain words
 if section == t["tab_history"]:
