@@ -287,6 +287,16 @@ button:focus-visible {{ outline:2px solid var(--accent) !important; outline-offs
 .st-key-modeswitch button {{ color:var(--muted) !important; padding:0 !important; min-height:0; height:40px; }}
 .st-key-modeswitch button:hover {{ color:var(--accent) !important; }}
 .st-key-modeswitch button span {{ font-size:1.4rem !important; }}
+/* Streamlit's own buttons (hide or show the menu, the ⋮ menu): visible, day or night */
+[data-testid="stSidebarCollapseButton"] button, [data-testid="stSidebarCollapsedControl"] button,
+[data-testid="stMainMenu"] button, [data-testid="stToolbar"] button {{ color:var(--ink) !important; }}
+[data-testid="stSidebarCollapseButton"] button:hover, [data-testid="stSidebarCollapsedControl"] button:hover,
+[data-testid="stMainMenu"] button:hover {{ background:var(--wash) !important; color:var(--accent) !important; }}
+/* Tables (st.table): in the page's colours, day or night */
+[data-testid="stTable"] table {{ color:var(--ink); background:transparent; }}
+[data-testid="stTable"] th, [data-testid="stTable"] td {{ color:var(--ink) !important; border-color:var(--rule) !important;
+  background:transparent !important; }}
+[data-testid="stTable"] th {{ color:var(--muted) !important; font-weight:600; }}
 /* Hover hints (the "?" and the sun or moon): readable, day or night */
 [data-testid="stTooltipContent"], [data-baseweb="tooltip"] > div {{ background:var(--ink) !important; }}
 [data-testid="stTooltipContent"], [data-testid="stTooltipContent"] * {{ color:var(--paper) !important; }}
