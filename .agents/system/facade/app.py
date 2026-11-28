@@ -905,7 +905,9 @@ def enter_artifact(item):
 
 def show_report(item):
     head, action = st.columns([3, 2])
-    head.subheader(item["title"])
+    is_app = item["kind"] == "folder" and (item["path"] / "app.py").is_file()
+    if not is_app:  # an app shows its own title
+        head.subheader(item["title"])
     if item["private"] and action.button(t["share_team"], type="primary", use_container_width=True):
         confirm_share(item)
     p = item["path"]

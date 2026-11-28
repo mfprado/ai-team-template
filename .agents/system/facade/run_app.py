@@ -73,6 +73,8 @@ def main():
         env["TEAM_PAGE_URL"] = f"http://localhost:{int((root / '.git/team-page-port').read_text().strip())}"
     except (OSError, ValueError):
         env.pop("TEAM_PAGE_URL", None)
+    if not browser:  # shown inside the team page: no link back to it
+        env.pop("TEAM_PAGE_URL", None)
     process = subprocess.Popen([sys.executable, "-m", "streamlit", "run", str(app), "--server.port", str(port),
                                 "--server.headless", "true", "--browser.gatherUsageStats", "false"], cwd=root, env=env)
     for _ in range(120):  # up to a minute for the first start
