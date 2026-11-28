@@ -213,6 +213,14 @@ button:focus-visible {{ outline:2px solid var(--accent) !important; outline-offs
 [class*="st-key-skill-"] button p {{ font-size:1.3rem !important; font-weight:680; letter-spacing:-0.012em;
   font-variation-settings:'opsz' 48; color:var(--ink); }}
 [class*="st-key-skill-"] button:hover p {{ color:var(--accent); }}
+/* Ideas: the title is the button that opens or folds the card */
+[class*="st-key-ideaopen-"] button {{ justify-content:flex-start; text-align:left; padding:0 !important; min-height:0;
+  background:transparent !important; border:0 !important; }}
+[class*="st-key-ideaopen-"] button > div {{ justify-content:flex-start; }}
+[class*="st-key-ideaopen-"] button p {{ font-size:1.05rem !important; font-weight:620; line-height:1.4; color:var(--ink); text-align:left;
+  white-space:normal !important; overflow-wrap:anywhere; }}
+[class*="st-key-ideaopen-"] button, [class*="st-key-ideaopen-"] button > div {{ white-space:normal !important; max-width:100%; min-width:0; }}
+[class*="st-key-ideaopen-"] button:hover p {{ color:var(--accent); }}
 
 /* Examples of what to ask: the page's type, quieter than the skill's own request */
 [class*="st-key-example-"] [data-testid="stCode"] pre {{ background:transparent !important; border:1px dashed var(--rule);
