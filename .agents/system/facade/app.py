@@ -1055,6 +1055,36 @@ def open_bar(state_key, path):
     return bool(path) and folder.button("", icon=":material/folder_open:", type="tertiary", help=t["show_folder"])
 
 
+def rel_dir(base, folder):
+    """A folder as the explorer keeps it: relative to its base, with "/" (also on Windows)."""
+    return folder.relative_to(base).as_posix() if folder != base else ""
+
+
+def explorer_here(base, state_key):
+    """The folder the explorer is in; back to the base if it no longer exists."""
+    here = base / st.session_state.get(state_key, "")
+    return here if here.is_dir() and base in (here, *here.parents) else base
+
+
+def side_explorer(menu, name, base, here, state_key, names, open_key, folders, icon):
+    """The side menu shows the same folder as the page: a way back up, then its folders.
+    The caller adds the folder's files after them."""
+    if here != base:
+        up = here.parent
+        if menu.button(names.get(up, up.name), icon=":material/arrow_back:", key=f"sideback-{name}",
+                       type="tertiary", use_container_width=True, help=t["back"]):
+            st.session_state[state_key] = rel_dir(base, up)
+            st.session_state.pop(open_key, None)
+            st.rerun()
+        menu.caption(names.get(here, here.name))
+    for d in folders:
+        if menu.button(names.get(d, d.name), icon=icon(d), key=f"sidedir-{name}-{d}", type="tertiary",
+                       use_container_width=True):
+            st.session_state[state_key] = rel_dir(base, d)
+            st.session_state.pop(open_key, None)
+            st.rerun()
+
+
 def explorer_trail(name, base, here, state_key, names):
     """Where you are in a folder explorer (Artifacts, Documents): each step goes back to that folder."""
     steps = [base, *reversed([p for p in here.parents if base in p.parents]), here] if here != base else [base]
@@ -1063,7 +1093,8 @@ def explorer_trail(name, base, here, state_key, names):
         for i, step in enumerate(steps):
             if trail[i].button(names.get(step, step.name), key=f"crumb-{name}-{step}", type="tertiary",
                                icon=":material/chevron_right:" if i else ":material/folder:", disabled=step == here):
-                st.session_state[state_key] = step.relative_to(base).as_posix() if step != base else ""
+                st.session_state[state_key] = rel_dir(base, step)
+                st.session_state.pop("viewing" if name == "art" else "viewing_doc", None)
                 st.rerun()
 
 
@@ -1093,21 +1124,36 @@ def doc_icon(p):
 
 if section == t["tab_artifacts"]:
     items = report_items()
-    # Sidebar: every artifact under the Artifacts entry, to jump from one to another.
-    last_group = None
-    for item in sorted(items, key=lambda i: (artifact_group(i), i["title"].lower())):
-        if artifact_group(item) != last_group:
-            last_group = artifact_group(item)
-            artifact_menu.caption(last_group)
-        here = st.session_state.get("viewing") == item["key"]
+    base, private = artifact_folders()
+    viewing = next((i for i in items if i["key"] == st.session_state.get("viewing")), None)
+    if viewing and viewing.get("path") is not None and base in viewing["path"].parents:
+        st.session_state.art_dir = rel_dir(base, viewing["path"].parent)  # the explorer follows what is open
+    here = explorer_here(base, "art_dir")
+    names = {base: t["tab_artifacts"], private: t["private"]}
+
+    def holds(d, item):
+        return item.get("path") is not None and d in item["path"].parents
+
+    folders = sorted((d for d in here.iterdir() if d.is_dir() and not d.name.startswith(".")
+                      and not any(i.get("path") == d for i in items) and any(holds(d, i) for i in items)),
+                     key=lambda d: (d == private, d.name.lower())) if here.is_dir() else []
+    shown = sorted((i for i in items if (here == (private if i["private"] else base) if i["kind"] == "link"
+                                         else i["path"].parent == here)), key=lambda i: i["title"].lower())
+
+    def folder_icon(d):
+        return ":material/lock:" if d == private else ":material/folder:"
+
+    # Sidebar: the same folder as the page, with a way back up.
+    side_explorer(artifact_menu, "art", base, here, "art_dir", names, "viewing", folders, folder_icon)
+    for item in shown:
         if item["kind"] == "link":
             artifact_menu.link_button(item["title"], item["url"], icon=artifact_icon(item), type="tertiary",
                                       use_container_width=True)
-        elif artifact_menu.button(item["title"], icon=artifact_icon(item), type="primary" if here else "tertiary",
-                                  use_container_width=True, key=f"artmenu-{item['key']}"):
+        elif artifact_menu.button(item["title"], icon=artifact_icon(item), use_container_width=True,
+                                  type="primary" if viewing and viewing["key"] == item["key"] else "tertiary",
+                                  key=f"artmenu-{item['key']}"):
             enter_artifact(item)
             st.rerun()
-    viewing = next((i for i in items if i["key"] == st.session_state.get("viewing")), None)
     if viewing:
         if open_bar("viewing", viewing.get("path")):
             p = viewing["path"]
@@ -1115,32 +1161,18 @@ if section == t["tab_artifacts"]:
         show_report(viewing)
     else:
         st.write(t["reports_intro"])
-        base, private = artifact_folders()
         if not items:
             empty_state(t["no_private"], team.get("example_ask") or t["ask_report"])
         else:
             # Like a file explorer, as Documents: where you are, then its folders, then its artifacts.
             # The private folder ("only on this computer") is one more folder, at the end.
-            here = base / st.session_state.get("art_dir", "")
-            if not here.is_dir() or base not in (here, *here.parents):
-                here = base
-            names = {base: t["tab_artifacts"], private: t["private"]}
             explorer_trail("art", base, here, "art_dir", names)
-
-            def holds(d, item):
-                return item.get("path") is not None and d in item["path"].parents
-
-            folders = sorted((d for d in here.iterdir() if d.is_dir() and not d.name.startswith(".")
-                              and not any(i.get("path") == d for i in items) and any(holds(d, i) for i in items)),
-                             key=lambda d: (d == private, d.name.lower()))
-            shown = sorted((i for i in items if (here == (private if i["private"] else base) if i["kind"] == "link"
-                                                 else i["path"].parent == here)), key=lambda i: i["title"].lower())
             with st.container(border=True, key="explist-art"):
                 for d in folders:
                     count = sum(1 for i in items if holds(d, i))
-                    if st.button(names.get(d, d.name), icon=":material/lock:" if d == private else ":material/folder:",
-                                 key=f"dir-{d}", type="tertiary", help=t["docs_count"].format(n=count)):
-                        st.session_state.art_dir = d.relative_to(base).as_posix()
+                    if st.button(names.get(d, d.name), icon=folder_icon(d), key=f"dir-{d}", type="tertiary",
+                                 help=t["docs_count"].format(n=count)):
+                        st.session_state.art_dir = rel_dir(base, d)
                         st.rerun()
                 for item in shown:
                     about = artifact_about(item)
@@ -1168,27 +1200,21 @@ if section == t["tab_artifacts"]:
 if section == t["tab_docs"]:
     base = docs_folder()
     files = doc_files()
-    last = None
-    for f in files:
-        group = f.parent.relative_to(base).as_posix()  # same "/" on Windows
-        fold_key = f"docfold-{group}"
-        if group != last:
-            last = group
-            if group != ".":
-                # A folder's name opens or closes its list of documents.
-                folded = st.session_state.get(fold_key, False)
-                if docs_menu.button(group, key=f"docgroup-{abs(hash(group)) % 10**9}", type="tertiary",
-                                    icon=":material/chevron_right:" if folded else ":material/expand_more:",
-                                    use_container_width=True):
-                    st.session_state[fold_key] = not folded
-                    st.rerun()
-        if group != "." and st.session_state.get(fold_key, False):
-            continue
+    doc = next((f for f in files if str(f) == st.session_state.get("viewing_doc")), None)
+    if doc:
+        st.session_state.docs_dir = rel_dir(base, doc.parent)  # the explorer follows what is open
+    here = explorer_here(base, "docs_dir")
+    names = {base: t["tab_docs"]}
+    inside = sorted((p for p in here.iterdir() if not p.name.startswith(".")),
+                    key=lambda p: (p.is_file(), p.name.lower())) if here.is_dir() else []
+    # Sidebar: the same folder as the page, with a way back up.
+    side_explorer(docs_menu, "docs", base, here, "docs_dir", names, "viewing_doc",
+                  [p for p in inside if p.is_dir()], lambda d: ":material/folder:")
+    for f in (p for p in inside if p.is_file()):
         if docs_menu.button(f.name, icon=doc_icon(f), key=f"docmenu-{f}", use_container_width=True,
-                            type="primary" if st.session_state.get("viewing_doc") == str(f) else "tertiary"):
+                            type="primary" if doc == f else "tertiary"):
             st.session_state.viewing_doc = str(f)
             st.rerun()
-    doc = next((f for f in files if str(f) == st.session_state.get("viewing_doc")), None)
     if doc:
         if open_bar("viewing_doc", doc):
             show_in_folder(doc)
@@ -1202,19 +1228,14 @@ if section == t["tab_docs"]:
             empty_state(t["no_docs"])
         else:
             # Like a file explorer: where you are (each step clickable), then its folders, then its files.
-            here = base / st.session_state.get("docs_dir", "")
-            if not here.is_dir() or base not in (here, *here.parents):
-                here = base
-            explorer_trail("docs", base, here, "docs_dir", {base: t["tab_docs"]})
-            inside = sorted((p for p in here.iterdir() if not p.name.startswith(".")),
-                            key=lambda p: (p.is_file(), p.name.lower()))
+            explorer_trail("docs", base, here, "docs_dir", names)
             with st.container(border=True, key="explist-docs"):
                 for item in inside:
                     if item.is_dir():
                         count = sum(1 for f in files if item in f.parents)
                         if st.button(item.name, icon=":material/folder:", key=f"dir-{item}", type="tertiary",
                                      help=t["docs_count"].format(n=count)):
-                            st.session_state.docs_dir = item.relative_to(base).as_posix()
+                            st.session_state.docs_dir = rel_dir(base, item)
                             st.rerun()
                     elif st.button(item.name, icon=doc_icon(item), key=f"doc-{item}", type="tertiary"):
                         st.session_state.viewing_doc = str(item)
