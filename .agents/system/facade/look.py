@@ -150,7 +150,7 @@ hr {{ border-color:var(--rule) !important; }}
 .st-key-artmenu button, .st-key-docsmenu button {{ min-height:2rem !important; padding:.2rem .6rem !important; }}
 .st-key-docsmenu [class*="st-key-docgroup-"] button {{ justify-content:flex-start; margin-top:.5rem; }}
 .st-key-docsmenu [class*="st-key-docgroup-"] button p {{ font-size:.72rem; text-transform:uppercase; letter-spacing:.08em; color:var(--muted, inherit); }}
-.st-key-artmenu button p {{ font-size:.88rem !important; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }}
+.st-key-artmenu button p, .st-key-docsmenu button p {{ font-size:.88rem !important; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }}
 .st-key-menu [data-testid="stBaseButton-primary"] {{ background:var(--wash) !important; font-weight:650;
   box-shadow:inset 3px 0 0 var(--accent); }}
 .st-key-menu [data-testid="stBaseButton-primary"] p {{ font-weight:650; }}
@@ -316,6 +316,11 @@ button:focus-visible {{ outline:2px solid var(--accent) !important; outline-offs
 [data-testid="stMarkdownContainer"] th {{ font-weight:650; border-bottom:1.5px solid var(--muted) !important; }}
 [data-testid="stMarkdownContainer"] tr {{ background:transparent !important; }}
 [data-testid="stMarkdownContainer"] td:first-child {{ color:var(--muted) !important; }}
+/* Side menu tree (Artifacts, Documents): each level indented, with a thin guide line */
+[class*="st-key-treelvl-"] {{ margin-left:.85rem; padding-left:.35rem; border-left:1px solid var(--rule); gap:.05rem !important;
+  width:calc(100% - .85rem) !important; box-sizing:border-box; }}
+[class*="st-key-tree-"] button {{ min-height:2rem !important; padding:.2rem .6rem !important; }}
+[class*="st-key-tree-"] button p {{ font-size:.88rem !important; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }}
 /* Artifacts and Documents: a folder explorer. A trail of where you are, then one row per folder or file */
 [class*="st-key-expcrumbs-"] button {{ padding:.1rem .2rem !important; min-height:0; color:var(--muted) !important; }}
 [class*="st-key-expcrumbs-"] button:hover {{ color:var(--accent) !important; }}

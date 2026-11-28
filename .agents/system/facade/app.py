@@ -1066,23 +1066,34 @@ def explorer_here(base, state_key):
     return here if here.is_dir() and base in (here, *here.parents) else base
 
 
-def side_explorer(menu, name, base, here, state_key, names, open_key, folders, icon):
-    """The side menu shows the same folder as the page: a way back up, then its folders.
-    The caller adds the folder's files after them."""
-    if here != base:
-        up = here.parent
-        if menu.button(names.get(up, up.name), icon=":material/arrow_back:", key=f"sideback-{name}",
-                       type="tertiary", use_container_width=True, help=t["back"]):
-            st.session_state[state_key] = rel_dir(base, up)
-            st.session_state.pop(open_key, None)
-            st.rerun()
-        menu.caption(names.get(here, here.name))
-    for d in folders:
-        if menu.button(names.get(d, d.name), icon=icon(d), key=f"sidedir-{name}-{d}", type="tertiary",
-                       use_container_width=True):
-            st.session_state[state_key] = rel_dir(base, d)
-            st.session_state.pop(open_key, None)
-            st.rerun()
+def side_tree(menu, name, base, here, state_key, open_key, names, children, leaf, icon):
+    """The side menu as a folder tree, like a code editor's: a folder's name opens or closes it,
+    its contents indented underneath. When the page moves to a folder, the way to it opens."""
+    opened = st.session_state.setdefault(f"tree-{name}", set())
+    if st.session_state.get(f"tree-{name}-at") != here:  # the page moved: open the way to it
+        st.session_state[f"tree-{name}-at"] = here
+        opened.update(rel_dir(base, d) for d in (here, *here.parents) if base in d.parents)
+
+    def draw(box, folder):
+        folders, leaves = children(folder)
+        for d in folders:
+            key = rel_dir(base, d)
+            is_open = key in opened
+            if box.button(names.get(d, d.name), key=f"tree-{name}-{d}", type="tertiary", use_container_width=True,
+                          icon=":material/expand_more:" if is_open else ":material/chevron_right:"):
+                if is_open:
+                    opened.discard(key)
+                else:
+                    opened.add(key)
+                    st.session_state[state_key] = key  # the page shows the folder you open
+                    st.session_state.pop(open_key, None)
+                st.rerun()
+            if is_open:
+                draw(box.container(key=f"treelvl-{name}-{abs(hash(key)) % 10**9}"), d)
+        for x in leaves:
+            leaf(box, x)
+
+    draw(menu, base)
 
 
 def explorer_trail(name, base, here, state_key, names):
@@ -1143,17 +1154,26 @@ if section == t["tab_artifacts"]:
     def folder_icon(d):
         return ":material/lock:" if d == private else ":material/folder:"
 
-    # Sidebar: the same folder as the page, with a way back up.
-    side_explorer(artifact_menu, "art", base, here, "art_dir", names, "viewing", folders, folder_icon)
-    for item in shown:
+    def art_children(d):
+        subs = sorted((x for x in d.iterdir() if x.is_dir() and not x.name.startswith(".")
+                       and not any(i.get("path") == x for i in items) and any(holds(x, i) for i in items)),
+                      key=lambda x: (x == private, x.name.lower())) if d.is_dir() else []
+        own = sorted((i for i in items if (d == (private if i["private"] else base) if i["kind"] == "link"
+                                           else i["path"].parent == d)), key=lambda i: i["title"].lower())
+        return subs, own
+
+    def art_leaf(box, item):
         if item["kind"] == "link":
-            artifact_menu.link_button(item["title"], item["url"], icon=artifact_icon(item), type="tertiary",
-                                      use_container_width=True)
-        elif artifact_menu.button(item["title"], icon=artifact_icon(item), use_container_width=True,
-                                  type="primary" if viewing and viewing["key"] == item["key"] else "tertiary",
-                                  key=f"artmenu-{item['key']}"):
+            box.link_button(item["title"], item["url"], icon=artifact_icon(item), type="tertiary",
+                            use_container_width=True)
+        elif box.button(item["title"], icon=artifact_icon(item), use_container_width=True,
+                        type="primary" if viewing and viewing["key"] == item["key"] else "tertiary",
+                        key=f"artmenu-{item['key']}"):
             enter_artifact(item)
             st.rerun()
+
+    # Sidebar: every folder and artifact as a tree.
+    side_tree(artifact_menu, "art", base, here, "art_dir", "viewing", names, art_children, art_leaf, folder_icon)
     if viewing:
         if open_bar("viewing", viewing.get("path")):
             p = viewing["path"]
@@ -1207,14 +1227,18 @@ if section == t["tab_docs"]:
     names = {base: t["tab_docs"]}
     inside = sorted((p for p in here.iterdir() if not p.name.startswith(".")),
                     key=lambda p: (p.is_file(), p.name.lower())) if here.is_dir() else []
-    # Sidebar: the same folder as the page, with a way back up.
-    side_explorer(docs_menu, "docs", base, here, "docs_dir", names, "viewing_doc",
-                  [p for p in inside if p.is_dir()], lambda d: ":material/folder:")
-    for f in (p for p in inside if p.is_file()):
-        if docs_menu.button(f.name, icon=doc_icon(f), key=f"docmenu-{f}", use_container_width=True,
-                            type="primary" if doc == f else "tertiary"):
+    def doc_children(d):
+        entries = sorted((x for x in d.iterdir() if not x.name.startswith(".")), key=lambda x: x.name.lower()) if d.is_dir() else []
+        return [x for x in entries if x.is_dir()], [x for x in entries if x.is_file()]
+
+    def doc_leaf(box, f):
+        if box.button(f.name, icon=doc_icon(f), key=f"docmenu-{f}", use_container_width=True,
+                      type="primary" if doc == f else "tertiary"):
             st.session_state.viewing_doc = str(f)
             st.rerun()
+
+    # Sidebar: every folder and document as a tree.
+    side_tree(docs_menu, "docs", base, here, "docs_dir", "viewing_doc", names, doc_children, doc_leaf, None)
     if doc:
         if open_bar("viewing_doc", doc):
             show_in_folder(doc)
