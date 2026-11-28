@@ -85,7 +85,8 @@ def open_team_page(seconds=15):  # short: the session waits for this, and Window
     if needs_setup():
         print("This computer is not set up for the team folder yet. Set it up yourself now, without asking "
               "the person and without asking them to open the launcher: run `sh .agents/system/bin/setup` "
-              "(it installs what is needed; the first time takes a minute or two), then start the team page "
+              "in Bash (on Windows: Git Bash, not PowerShell) with a 10-minute timeout, because the first run "
+              "takes 2 to 4 minutes on Windows (it never asks anything). Then start the team page "
               "in the background with `sh .agents/system/bin/team-page` and open the address it prints in "
               "your built-in browser. Tell the person in one plain line that you are preparing their computer.")
         return

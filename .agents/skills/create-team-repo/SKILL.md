@@ -295,7 +295,10 @@ in one line what you are doing ("Preparing your computer and opening your team's
 The same two commands work on Mac and on Windows (Claude Code runs them in Git Bash there), and
 they need no approval from the Champion. In the team folder:
 
-1. Prepare the computer, and wait for it (the first time takes a minute or two):
+1. Prepare the computer, and wait for it. The first time takes a minute or two on a Mac and 2 to
+   4 minutes on Windows: give the command a 10-minute timeout (or run it in the background and
+   wait for `Setup finished.` in `.git/launch.log`). On Windows run it in Git Bash (the Bash tool),
+   not PowerShell, where `sh` is not found until the setup has run:
    ```
    cd "<Desktop>/<Team>-AI" && sh .agents/system/bin/setup
    ```

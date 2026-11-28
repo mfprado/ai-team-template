@@ -127,7 +127,8 @@ def windows_sh_on_path():
                           env=dict(os.environ, TEAM_SH_FOLDER=str(folder)), capture_output=True, text=True)
     if done.returncode != 0:
         return "Could not add Git's tools to this computer's settings; Codex may not run the team checks."
-    return "Git's tools were added to this computer's settings, so Codex can run the team checks."
+    return ("Git's tools were added to this computer's settings, so Codex can run the team checks "
+            "(if Codex is open, close it and open it again).")
 
 
 def guard_ok():
