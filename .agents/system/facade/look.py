@@ -350,6 +350,10 @@ input::placeholder, textarea::placeholder {{ color:var(--muted) !important; opac
 [data-baseweb="select"], [data-baseweb="select"] *, [data-baseweb="popover"] li {{ font-family:inherit; }}
 [data-testid="stMarkdownContainer"], [data-testid="stWidgetLabel"] p, label {{ color:var(--ink); }}
 
+/* The buttons that open a popover (an artifact's "What it is"): quiet, in the page's colours */
+[data-testid="stPopover"] button {{ background:var(--card) !important; color:var(--ink) !important;
+  border:1px solid var(--rule) !important; }}
+[data-testid="stPopover"] button:hover {{ border-color:var(--accent) !important; color:var(--accent) !important; }}
 /* Popovers (an artifact's "What it is"): readable on the brand, dark brands included */
 [data-testid="stPopoverBody"] {{ background:var(--card) !important; border:1px solid var(--rule) !important; }}
 [data-testid="stPopoverBody"], [data-testid="stPopoverBody"] * {{ color:var(--ink) !important; }}
