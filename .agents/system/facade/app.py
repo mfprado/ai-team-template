@@ -1154,10 +1154,19 @@ if section == t["tab_docs"]:
     last = None
     for f in files:
         group = f.parent.relative_to(base).as_posix()  # same "/" on Windows
+        fold_key = f"docfold-{group}"
         if group != last:
             last = group
             if group != ".":
-                docs_menu.caption(group)
+                # A folder's name opens or closes its list of documents.
+                folded = st.session_state.get(fold_key, False)
+                if docs_menu.button(group, key=f"docgroup-{abs(hash(group)) % 10**9}", type="tertiary",
+                                    icon=":material/chevron_right:" if folded else ":material/expand_more:",
+                                    use_container_width=True):
+                    st.session_state[fold_key] = not folded
+                    st.rerun()
+        if group != "." and st.session_state.get(fold_key, False):
+            continue
         if docs_menu.button(f.name, icon=doc_icon(f), key=f"docmenu-{f}", use_container_width=True,
                             type="primary" if st.session_state.get("viewing_doc") == str(f) else "tertiary"):
             st.session_state.viewing_doc = str(f)

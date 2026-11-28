@@ -148,6 +148,8 @@ hr {{ border-color:var(--rule) !important; }}
 .st-key-artmenu, .st-key-docsmenu {{ padding-left:.6rem; gap:.1rem !important; border-left:1px solid var(--rule); margin-left:1rem; width:calc(100% - 1rem) !important; box-sizing:border-box; }}
 .st-key-artmenu [data-testid="stCaptionContainer"], .st-key-docsmenu [data-testid="stCaptionContainer"] {{ font-size:.72rem; text-transform:uppercase; letter-spacing:.08em; margin:.5rem 0 0 .6rem; }}
 .st-key-artmenu button, .st-key-docsmenu button {{ min-height:2rem !important; padding:.2rem .6rem !important; }}
+.st-key-docsmenu [class*="st-key-docgroup-"] button {{ justify-content:flex-start; margin-top:.5rem; }}
+.st-key-docsmenu [class*="st-key-docgroup-"] button p {{ font-size:.72rem; text-transform:uppercase; letter-spacing:.08em; color:var(--muted, inherit); }}
 .st-key-artmenu button p {{ font-size:.88rem !important; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }}
 .st-key-menu [data-testid="stBaseButton-primary"] {{ background:var(--wash) !important; font-weight:650;
   box-shadow:inset 3px 0 0 var(--accent); }}
