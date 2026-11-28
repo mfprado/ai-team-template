@@ -309,7 +309,12 @@ button:focus-visible {{ outline:2px solid var(--accent) !important; outline-offs
 input, textarea, [data-baseweb="select"] > div, [data-baseweb="input"], [data-baseweb="textarea"],
 [data-baseweb="base-input"] {{ background:var(--card) !important; color:var(--ink) !important; }}
 input::placeholder, textarea::placeholder {{ color:var(--muted) !important; opacity:1; }}
-[data-baseweb="popover"] ul, [data-baseweb="menu"] {{ background:var(--card) !important; color:var(--ink) !important; }}
+[data-baseweb="popover"] > div, [data-baseweb="popover"] ul, [data-baseweb="menu"],
+[data-baseweb="popover"] li, [data-baseweb="popover"] [role="option"] {{ background:var(--card) !important; color:var(--ink) !important; }}
+[data-baseweb="popover"] li:hover, [data-baseweb="popover"] [role="option"]:hover,
+[data-baseweb="popover"] [aria-selected="true"] {{ background:var(--wash) !important; }}
+[data-baseweb="popover"] li *, [data-baseweb="popover"] [role="option"] * {{ color:var(--ink) !important; }}
+[data-baseweb="select"], [data-baseweb="select"] *, [data-baseweb="popover"] li {{ font-family:inherit; }}
 [data-testid="stMarkdownContainer"], [data-testid="stWidgetLabel"] p, label {{ color:var(--ink); }}
 
 /* Popovers (an artifact's "What it is"): readable on the brand, dark brands included */
