@@ -94,6 +94,8 @@ https://advanced-dashboard-demo.streamlit.app/, in the company's colours and typ
 - **First row: 3 to 5 key numbers**, each in its own card: its name, the number large, the change
   as a small green or red chip with what it is compared to ("+5.4 pts vs. 24 months ago"), and
   a small trend line or bars underneath.
+  **All the cards in the row have the same height**, even when one has a longer text: put them in
+  one CSS grid (`display:grid`), not in separate `st.columns`, which size each card to its text.
 - **Then the charts**, each in a card with a short title and one line saying what it shows, the
   legend above the chart, values formatted for people ($1.2M, 12%), and a tooltip on hover.
   Choose the chart for the question: lines for change over time, stacked areas for parts of a
