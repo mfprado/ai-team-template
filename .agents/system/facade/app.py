@@ -11,8 +11,10 @@ import json
 import platform
 import re
 import shutil
+import socket
 import subprocess
 import sys
+import time
 import webbrowser
 from pathlib import Path
 
@@ -83,7 +85,7 @@ T = {
         "ago": {"now": "just now", "min": "{n} min ago", "h": "{n} h ago", "d": "{n} days ago"},
         "perm_summary": "Permissions: {items}",
         "reports_intro": "Reports, presentations, dashboards and apps made with the AI.",
-        "shared_by": "by {who}", "view": "View", "back": "Back to the list", "about_artifact": "What it is and how to make it again", "app_opening": "Opening the app in your browser. It can take a few seconds the first time.",
+        "shared_by": "by {who}", "view": "View", "back": "Back to the list", "about_artifact": "What it is and how to make it again", "app_failed": "The app could not start. Ask the AI assistant to look at it.", "app_opening": "Starting the app. It can take a few seconds the first time.",
         "open_link": "Open it", "open_browser": "Open in the browser", "what_it_is": "What it is", "link_note": "This one lives in your AI assistant. It opens in a new browser tab.",
         "share_team": "Share with the team", "share_confirm": "**{title}** moves to the team's artifacts and is saved for the whole team: everyone will be able to see it and change it.",
         "share_yes": "Share", "share_no": "Cancel", "delete": "Delete", "delete_yes": "Delete it", "delete_confirm": "**{title}** is only on this computer: deleting it cannot be undone.", "deleted": "Deleted: {title}.", "close": "Close", "share_summary": "Shared artifact: {title}",
@@ -143,7 +145,7 @@ T = {
         "ago": {"now": "recién", "min": "hace {n} min", "h": "hace {n} h", "d": "hace {n} días"},
         "perm_summary": "Permisos: {items}",
         "reports_intro": "Reportes, presentaciones, tableros y apps hechos con la IA.",
-        "shared_by": "de {who}", "view": "Ver", "back": "Volver a la lista", "about_artifact": "Qué es y cómo volver a hacerlo", "app_opening": "Abriendo la app en tu navegador. La primera vez puede tardar unos segundos.",
+        "shared_by": "de {who}", "view": "Ver", "back": "Volver a la lista", "about_artifact": "Qué es y cómo volver a hacerlo", "app_failed": "La app no pudo arrancar. Pedile al asistente de IA que la revise.", "app_opening": "Abriendo la app. La primera vez puede tardar unos segundos.",
         "open_link": "Abrir", "open_browser": "Abrir en el navegador", "what_it_is": "Qué es", "link_note": "Este está en tu asistente de IA. Se abre en otra pestaña del navegador.",
         "share_team": "Compartir con el equipo", "share_confirm": "**{title}** pasa a los artefactos del equipo y se guarda para todos: cualquiera va a poder verlo y cambiarlo.",
         "share_yes": "Compartir", "share_no": "Cancelar", "delete": "Borrar", "delete_yes": "Borrarlo", "delete_confirm": "**{title}** está solo en esta computadora: si lo borrás, no se puede recuperar.", "deleted": "Borrado: {title}.", "close": "Cerrar", "share_summary": "Artefacto compartido: {title}",
@@ -853,9 +855,20 @@ def confirm_delete(item):
         st.rerun()
 
 
+def app_port(folder):
+    """The port of this app artifact when it is already running (run_app.py keeps them in .git/apps.json)."""
+    try:
+        port = load_json(ROOT / ".git/apps.json", {}).get(str(Path(folder).relative_to(ROOT)))
+        with socket.create_connection(("127.0.0.1", int(port)), timeout=0.5):
+            return int(port)
+    except (OSError, TypeError, ValueError):
+        return None
+
+
 def start_app(folder):
-    """Start a Streamlit app artifact in the browser (run_app.py), in the background."""
-    runner = [str(CORE / "facade/run_app.py"), str(folder)]
+    """Start a Streamlit app artifact in the background (run_app.py), without opening the browser:
+    the team page shows it inside itself."""
+    runner = [str(CORE / "facade/run_app.py"), str(folder), "--no-browser"]
     uv = shutil.which("uv") or next((str(u) for u in (Path.home() / ".local/bin/uv", Path.home() / ".local/bin/uv.exe")
                                      if u.is_file()), None)
     if uv:
@@ -878,10 +891,11 @@ def artifact_about(item):
 
 
 def enter_artifact(item):
-    """One click on the artifact's name: apps open in the browser, the rest open inside this page."""
+    """One click on the artifact's name: it opens inside this page (apps too, started in the background)."""
     if item["kind"] == "folder" and (item["path"] / "app.py").is_file():
-        start_app(item["path"])
-        st.toast(t["app_opening"])
+        if not app_port(item["path"]):
+            start_app(item["path"])
+        st.session_state.viewing = item["key"]
     elif item["kind"] == "file" and item["path"].suffix.lower() in SAFE_TO_OPEN \
             and item["path"].suffix.lower() not in (".html", ".htm", ".png", ".jpg", ".jpeg", ".gif", ".svg", ".md", ".txt", ".csv"):
         webbrowser.open(item["path"].as_uri())
@@ -895,6 +909,20 @@ def show_report(item):
     if item["private"] and action.button(t["share_team"], type="primary", use_container_width=True):
         confirm_share(item)
     p = item["path"]
+    if item["kind"] == "folder" and (p / "app.py").is_file():
+        # The app itself, inside the page: opening it shows what it is for.
+        port = app_port(p)
+        if not port:
+            with st.spinner(t["app_opening"]):
+                for _ in range(120):  # up to a minute for the first start
+                    time.sleep(0.5)
+                    if (port := app_port(p)):
+                        break
+        if port:
+            components.iframe(f"http://localhost:{port}/?embed=true", height=820, scrolling=True)
+        else:
+            st.warning(t["app_failed"])
+        return
     if item["kind"] == "folder":
         entry = p / "index.html"
         # The page is already shown below, so only the folder button is offered.

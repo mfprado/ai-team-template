@@ -8,6 +8,8 @@ Open button, both through uv with Streamlit:
 
 It runs from the team folder, so the app gets the team's theme (.streamlit/config.toml). An app
 that is already running is only opened again in the browser. Keeps running until the app stops.
+
+With --no-browser (the team page, which shows the app inside itself) nothing opens in the browser.
 """
 
 import json
@@ -35,7 +37,9 @@ def free_port():
 
 
 def main():
-    folder = Path(sys.argv[1]).resolve()
+    args = [a for a in sys.argv[1:] if a != "--no-browser"]
+    browser = "--no-browser" not in sys.argv[1:]
+    folder = Path(args[0]).resolve()
     app = folder / "app.py"
     if not app.is_file():
         print(f"There is no app.py in {folder}.")
@@ -52,7 +56,8 @@ def main():
     key = str(folder.relative_to(root))
     port = state.get(key)
     if port and alive(port):
-        webbrowser.open(f"http://localhost:{port}")
+        if browser:
+            webbrowser.open(f"http://localhost:{port}")
         print(f"The app is already open: http://localhost:{port}")
         return 0
 
@@ -77,7 +82,8 @@ def main():
     if process.poll() is not None:
         print("The app could not start. Ask the assistant to look at it.")
         return 1
-    webbrowser.open(f"http://localhost:{port}")
+    if browser:
+        webbrowser.open(f"http://localhost:{port}")
     print(f"The app is open in your browser: http://localhost:{port}")
     print("Keep this window open while you use it.")
     return process.wait()
