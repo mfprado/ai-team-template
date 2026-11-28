@@ -105,6 +105,8 @@ in one plain line that you are preparing their computer; never ask them to doubl
 launcher for this. Only installing Git or GitHub's tool, and signing in to GitHub, need the
 person (`.agents/rules/setup-problems.md`).
 
+On Windows, run it in Git Bash (the Bash tool), not PowerShell: `sh` is only on PowerShell's PATH after the setup. The first run takes 2 to 4 minutes: give it a 10-minute timeout, or run it in the background and wait for `Setup finished.` in `.git/launch.log`.
+
 ## Always
 
 - **Deterministic first.** Fixed steps belong in scripts inside the skill; you only reason where judgement is needed.
