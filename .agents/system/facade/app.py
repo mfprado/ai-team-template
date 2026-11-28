@@ -927,9 +927,6 @@ def show_report(item):
         return
     if item["kind"] == "folder":
         entry = p / "index.html"
-        # The page is already shown below, so only the folder button is offered.
-        if st.button(t["show_folder"], icon=":material/folder_open:"):
-            show_in_folder(entry if entry.is_file() else p)
         if entry.is_file():
             page = "<style>html{background:#fff;color:#111}</style>" + entry.read_text(encoding="utf-8", errors="replace")
             components.html(page, height=720, scrolling=True)
@@ -973,9 +970,15 @@ if section == t["tab_artifacts"]:
                     "header[data-testid='stHeader'] *{pointer-events:auto}"
                     "iframe[src*='embed=true'],iframe[srcdoc]{height:calc(100vh - 70px)!important}</style>",
                     unsafe_allow_html=True)
-        if st.button("", icon=":material/arrow_back:", type="tertiary", help=t["back"]):
+        # One thin row: back on the left, the artifact's folder on the right.
+        back, _, folder = st.columns([1, 20, 1], vertical_alignment="center")
+        if back.button("", icon=":material/arrow_back:", type="tertiary", help=t["back"]):
             st.session_state.pop("viewing", None)
             st.rerun()
+        if viewing["kind"] != "link" and folder.button("", icon=":material/folder_open:", type="tertiary",
+                                                      help=t["show_folder"]):
+            p = viewing["path"]
+            show_in_folder(p / "index.html" if (p / "index.html").is_file() else p / "app.py" if (p / "app.py").is_file() else p)
         show_report(viewing)
     else:
         st.write(t["reports_intro"])
