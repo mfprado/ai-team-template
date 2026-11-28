@@ -440,25 +440,32 @@ with st.sidebar:
     if st.session_state.get("section") not in SECTIONS:
         st.session_state.section = SECTIONS[0]
     menu = st.container(key="menu")
+    artifact_menu = docs_menu = None
+    TREES = (t["tab_artifacts"], t["tab_docs"])
     for name in SECTIONS:
         current = st.session_state.section == name
-        folded = st.session_state.get(f"fold-{name}", False)
-        if menu.button(name, icon=ICONS[name], type="primary" if current else "secondary",
-                     use_container_width=True, key=f"menu-{name}"):
-            if current and not st.session_state.get("viewing") and not st.session_state.get("viewing_doc"):
-                # Clicking the open section again hides or shows its list underneath.
-                st.session_state[f"fold-{name}"] = not folded
-                st.rerun()
-            # A section's own entry takes you back to its start (out of an artifact, a skill).
+        # Artifacts and Documents keep their folder tree open or closed, like a code editor's:
+        # the arrow folds it, whatever section you are in. Each starts open only where you are.
+        folded = st.session_state.setdefault(f"fold-{name}", not current) if name in TREES else False
+        arrow, box = menu.columns([1, 9], gap="small", vertical_alignment="center")  # same place for every entry
+        if name in TREES:
+            with arrow.container(key=f"menufold-{TREES.index(name)}"):
+                if st.button("", icon=":material/chevron_right:" if folded else ":material/expand_more:",
+                             key=f"fold-btn-{name}", type="tertiary"):
+                    st.session_state[f"fold-{name}"] = not folded
+                    st.rerun()
+        if box.button(name, icon=ICONS[name], type="primary" if current else "secondary",
+                      use_container_width=True, key=f"menu-{name}"):
+            # A section's own entry takes you back to its start (out of an artifact, a skill), tree open.
             st.session_state.section = name
             st.session_state.pop("viewing", None)
             st.session_state.pop("viewing_doc", None)
+            st.session_state[f"fold-{name}"] = False
             st.rerun()
-        if name == t["tab_docs"] and current:
-            docs_menu = menu.container(key="docsmenu-folded" if folded else "docsmenu")  # filled in the Documents section
-        if name == t["tab_artifacts"] and current:
-            # Filled further down, once the artifacts are listed: one entry per artifact.
-            artifact_menu = menu.container(key="artmenu-folded" if folded else "artmenu")
+        if name == t["tab_docs"] and not folded:
+            docs_menu = menu.container(key="docsmenu")  # filled at the end, once the documents are listed
+        if name == t["tab_artifacts"] and not folded:
+            artifact_menu = menu.container(key="artmenu")  # filled at the end, once the artifacts are listed
     section = st.session_state.section
 
 if not ((section == t["tab_artifacts"] and st.session_state.get("viewing"))
@@ -1123,7 +1130,7 @@ def explorer_here(base, state_key):
     return here if here.is_dir() and base in (here, *here.parents) else base
 
 
-def side_tree(menu, name, base, here, state_key, open_key, names, children, leaf, icon):
+def side_tree(menu, name, base, here, state_key, open_key, names, children, leaf, icon, section_name):
     """The side menu as a folder tree, like a code editor's: a folder's name opens or closes it,
     its contents indented underneath. When the page moves to a folder, the way to it opens."""
     opened = st.session_state.setdefault(f"tree-{name}", set())
@@ -1144,6 +1151,7 @@ def side_tree(menu, name, base, here, state_key, open_key, names, children, leaf
                     opened.add(key)
                     st.session_state[state_key] = key  # the page shows the folder you open
                     st.session_state.pop(open_key, None)
+                    st.session_state.section = section_name
                 st.rerun()
             if is_open:
                 draw(box.container(key=f"treelvl-{name}-{abs(hash(key)) % 10**9}"), d)
@@ -1212,26 +1220,6 @@ if section == t["tab_artifacts"]:
     def folder_icon(d):
         return ":material/lock:" if d == private else ":material/folder:"
 
-    def art_children(d):
-        subs = sorted((x for x in d.iterdir() if x.is_dir() and not x.name.startswith(".")
-                       and not any(i.get("path") == x for i in items) and any(holds(x, i) for i in items)),
-                      key=lambda x: (x == private, x.name.lower())) if d.is_dir() else []
-        own = sorted((i for i in items if (d == (private if i["private"] else base) if i["kind"] == "link"
-                                           else i["path"].parent == d)), key=lambda i: i["title"].lower())
-        return subs, own
-
-    def art_leaf(box, item):
-        if item["kind"] == "link":
-            box.link_button(item["title"], item["url"], icon=artifact_icon(item), type="tertiary",
-                            use_container_width=True)
-        elif box.button(item["title"], icon=artifact_icon(item), use_container_width=True,
-                        type="primary" if viewing and viewing["key"] == item["key"] else "tertiary",
-                        key=f"artmenu-{item['key']}"):
-            enter_artifact(item)
-            st.rerun()
-
-    # Sidebar: every folder and artifact as a tree.
-    side_tree(artifact_menu, "art", base, here, "art_dir", "viewing", names, art_children, art_leaf, folder_icon)
     if viewing:
         if open_bar("viewing", viewing.get("path")):
             p = viewing["path"]
@@ -1286,18 +1274,6 @@ if section == t["tab_docs"]:
     names = {base: t["tab_docs"]}
     inside = sorted((p for p in here.iterdir() if not p.name.startswith(".")),
                     key=lambda p: (p.is_file(), p.name.lower())) if here.is_dir() else []
-    def doc_children(d):
-        entries = sorted((x for x in d.iterdir() if not x.name.startswith(".")), key=lambda x: x.name.lower()) if d.is_dir() else []
-        return [x for x in entries if x.is_dir()], [x for x in entries if x.is_file()]
-
-    def doc_leaf(box, f):
-        if box.button(f.name, icon=doc_icon(f), key=f"docmenu-{f}", use_container_width=True,
-                      type="primary" if doc == f else "tertiary"):
-            st.session_state.viewing_doc = str(f)
-            st.rerun()
-
-    # Sidebar: every folder and document as a tree.
-    side_tree(docs_menu, "docs", base, here, "docs_dir", "viewing_doc", names, doc_children, doc_leaf, None)
     if doc:
         if open_bar("viewing_doc", doc):
             show_in_folder(doc)
@@ -1340,3 +1316,59 @@ if section == t["tab_history"]:
                     f'{html.escape(what or t["what"]["other"])}</div>'
                     f'<div class="note">{html.escape(subject)}<span class="when">{ago(int(ts), t)}</span></div>'
                     f'{flag}</div>', unsafe_allow_html=True)
+
+
+# Side menu trees, drawn last (they need the functions above). Both can stay open together.
+def art_tree(box_menu):
+    items = report_items()
+    base, private = artifact_folders()
+    viewing = st.session_state.get("viewing") if section == t["tab_artifacts"] else None
+
+    def holds(d, item):
+        return item.get("path") is not None and d in item["path"].parents
+
+    def children(d):
+        subs = sorted((x for x in d.iterdir() if x.is_dir() and not x.name.startswith(".")
+                       and not any(i.get("path") == x for i in items) and any(holds(x, i) for i in items)),
+                      key=lambda x: (x == private, x.name.lower())) if d.is_dir() else []
+        own = sorted((i for i in items if (d == (private if i["private"] else base) if i["kind"] == "link"
+                                           else i["path"].parent == d)), key=lambda i: i["title"].lower())
+        return subs, own
+
+    def leaf(box, item):
+        if item["kind"] == "link":
+            box.link_button(item["title"], item["url"], icon=artifact_icon(item), type="tertiary",
+                            use_container_width=True)
+        elif box.button(item["title"], icon=artifact_icon(item), use_container_width=True,
+                        type="primary" if viewing == item["key"] else "tertiary", key=f"artmenu-{item['key']}"):
+            st.session_state.section = t["tab_artifacts"]
+            enter_artifact(item)
+            st.rerun()
+
+    side_tree(box_menu, "art", base, explorer_here(base, "art_dir"), "art_dir", "viewing",
+              {base: t["tab_artifacts"], private: t["private"]}, children, leaf, None, t["tab_artifacts"])
+
+
+def docs_tree(box_menu):
+    base = docs_folder()
+    viewing = st.session_state.get("viewing_doc") if section == t["tab_docs"] else None
+
+    def children(d):
+        entries = sorted((x for x in d.iterdir() if not x.name.startswith(".")), key=lambda x: x.name.lower()) if d.is_dir() else []
+        return [x for x in entries if x.is_dir()], [x for x in entries if x.is_file()]
+
+    def leaf(box, f):
+        if box.button(f.name, icon=doc_icon(f), key=f"docmenu-{f}", use_container_width=True,
+                      type="primary" if viewing == str(f) else "tertiary"):
+            st.session_state.section = t["tab_docs"]
+            st.session_state.viewing_doc = str(f)
+            st.rerun()
+
+    side_tree(box_menu, "docs", base, explorer_here(base, "docs_dir"), "docs_dir", "viewing_doc",
+              {base: t["tab_docs"]}, children, leaf, None, t["tab_docs"])
+
+
+if artifact_menu is not None:
+    art_tree(artifact_menu)
+if docs_menu is not None:
+    docs_tree(docs_menu)

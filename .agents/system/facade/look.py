@@ -316,6 +316,12 @@ button:focus-visible {{ outline:2px solid var(--accent) !important; outline-offs
 [data-testid="stMarkdownContainer"] th {{ font-weight:650; border-bottom:1.5px solid var(--muted) !important; }}
 [data-testid="stMarkdownContainer"] tr {{ background:transparent !important; }}
 [data-testid="stMarkdownContainer"] td:first-child {{ color:var(--muted) !important; }}
+/* The arrow that folds Artifacts or Documents in the side menu, like a code editor's */
+[class*="st-key-menufold-"] button {{ padding:.2rem !important; min-height:0; color:var(--muted) !important;
+  background:transparent !important; border:0 !important; justify-content:center !important; }}
+[class*="st-key-menufold-"] button:hover {{ color:var(--accent) !important; }}
+.st-key-menu > div > [data-testid="stHorizontalBlock"], .st-key-menu > [data-testid="stHorizontalBlock"] {{ gap:.1rem !important; }}
+.st-key-menu [data-testid="stHorizontalBlock"] > [data-testid="stColumn"]:first-child {{ flex:0 0 1.6rem !important; width:1.6rem !important; min-width:0; }}
 /* Side menu tree (Artifacts, Documents): each level indented, with a thin guide line */
 [class*="st-key-treelvl-"] {{ margin-left:.85rem; padding-left:.35rem; border-left:1px solid var(--rule); gap:.05rem !important;
   width:calc(100% - .85rem) !important; box-sizing:border-box; }}
