@@ -92,9 +92,18 @@ settings), read `.agents/rules/changes.md`.
 Every session started in this folder starts the team page in the background, without opening
 the person's own browser, and its first message gives the address. If you have a built-in
 browser, open that address in it straight away. If someone asks to open the page again, start it
-with `TEAM_PAGE_NO_BROWSER=1 uv run --quiet --no-project --python 3.12 --with streamlit==1.41.1 .agents/system/facade/page.py`
-in the background (never the launcher, which opens their browser), read the address it prints
-and open it in your built-in browser.
+with `sh .agents/system/bin/team-page` in the background (same command on Mac and Windows; never
+the launcher, which opens their browser), read the address it prints and open it in your
+built-in browser.
+
+## Preparing a computer
+
+If the session's first message says the computer is not set up yet, or a tool or the team page
+is missing, run `sh .agents/system/bin/setup` yourself, without asking (same command on Mac and
+Windows). It installs what is needed, turns on the team checks and repairs them. Tell the person
+in one plain line that you are preparing their computer; never ask them to double-click the
+launcher for this. Only installing Git or GitHub's tool, and signing in to GitHub, need the
+person (`.agents/rules/setup-problems.md`).
 
 ## Always
 
@@ -103,4 +112,4 @@ and open it in your built-in browser.
 - **Never read or print secrets** (`.env`, keys, tokens). Ask the person to configure them instead.
 - **Nothing is lost.** Every change goes through git. Do not force-push or rewrite history.
 - After changing anything in `.agents/`, regenerate the tool files: `sh .agents/system/bin/py .agents/system/scripts/sync.py`.
-- **If a team check stops you** (a message starting with "TEAM CHECKS", or a blocked save), never work around it. Follow its instructions, and tell the person what to do in one simple sentence (usually: double-click the team launcher).
+- **If a team check stops you** (a message starting with "TEAM CHECKS", or a blocked save), never work around it. Follow its instructions (usually: run `sh .agents/system/bin/setup` yourself), and only if that does not fix it tell the person what to do in one simple sentence.

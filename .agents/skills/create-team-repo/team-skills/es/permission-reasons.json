@@ -15,5 +15,9 @@
   "Copies made automatically for each AI assistant: never edited by hand.": "Copias que se arman solas para cada asistente de IA: no se tocan a mano.",
   "Could change how the team checks work.": "Podría cambiar cómo funcionan los controles del equipo.",
   "The team folder's machinery, the same for every team.": "La maquinaria de la carpeta del equipo, igual para todos los equipos.",
-  "Instructions every AI assistant follows in this folder.": "Instrucciones que sigue cualquier asistente de IA en esta carpeta."
+  "Instructions every AI assistant follows in this folder.": "Instrucciones que sigue cualquier asistente de IA en esta carpeta.",
+  "Prepares this computer for the team folder: installs what is missing and turns on the team checks.": "Prepara esta computadora para la carpeta del equipo: instala lo que falta y enciende los controles del equipo.",
+  "Opens the team page inside the assistant's browser, without opening the person's browser.": "Abre la página del equipo dentro del navegador del asistente, sin abrir el navegador de la persona.",
+  "Checks that this computer is ready for the team folder (changes nothing).": "Revisa que esta computadora esté lista para la carpeta del equipo (no cambia nada).",
+  "Checks that the team checks still block what they must (changes nothing).": "Revisa que los controles del equipo sigan bloqueando lo que deben (no cambia nada)."
 }

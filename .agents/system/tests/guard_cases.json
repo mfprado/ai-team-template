@@ -6,5 +6,20 @@
   { "expect": "ask",   "event": { "tool_name": "Edit", "tool_input": { "file_path": "./docs/../.agents/permissions.json" } } },
   { "expect": "allow", "event": { "tool_name": "mcp__slack__slack_send_message_draft", "tool_input": {} } },
   { "expect": "allow", "event": { "tool_name": "Bash", "tool_input": { "command": "git push -u origin change/self-test" } } },
-  { "expect": "allow", "event": { "tool_name": "Read", "tool_input": { "file_path": "README.md" } } }
+  { "expect": "allow", "event": { "tool_name": "Read", "tool_input": { "file_path": "README.md" } } },
+  { "expect": "deny",  "event": {"tool_name": "PowerShell", "tool_input": {"command": "git push origin main --force"}} },
+  { "expect": "ask",   "event": {"tool_name": "Bash", "tool_input": {"command": "echo broken > .agents/system/hooks/guard.py"}} },
+  { "expect": "ask",   "event": {"tool_name": "Bash", "tool_input": {"command": "rm .agents/system/hooks/guard.py"}} },
+  { "expect": "ask",   "event": {"tool_name": "Bash", "tool_input": {"command": "rm -rf ./.agents/system/"}} },
+  { "expect": "ask",   "event": {"tool_name": "Bash", "tool_input": {"command": "cat x 2>/dev/nullx > .agents/system/hooks/guard.py"}} },
+  { "expect": "ask",   "event": {"tool_name": "Bash", "tool_input": {"command": "find .agents/system -name '*.py' -delete"}} },
+  { "expect": "allow", "event": {"tool_name": "Bash", "tool_input": {"command": "cd \"C:/Team-AI\" && cat .agents/system/bin/py | head -40; echo ---; ls .agents/system 2>/dev/null"}} },
+  { "expect": "allow", "event": {"tool_name": "Bash", "tool_input": {"command": "cd \"C:/Team-AI\" && sh .agents/system/bin/py -I .agents/system/scripts/doctor.py | grep -E '\"ok\"' 2>&1"}} },
+  { "expect": "allow", "event": {"tool_name": "Bash", "tool_input": {"command": "sh .agents/system/bin/setup"}} },
+  { "expect": "allow", "event": {"tool_name": "Bash", "tool_input": {"command": "cd \"C:/Team-AI\" && sh .agents/system/bin/team-page 2>&1"}} },
+  { "expect": "allow", "event": {"tool_name": "Bash", "tool_input": {"command": "cd \"C:/Team-AI\" && sh .agents/system/bin/py -I .agents/system/scripts/ideas.py list"}} },
+  { "expect": "allow", "event": {"tool_name": "PowerShell", "tool_input": {"command": "Get-Content .agents\\system\\hooks\\guard.sh"}} },
+  { "expect": "allow", "event": {"tool_name": "Bash", "tool_input": {"command": "sh .agents/system/bin/py -I .agents/system/scripts/doctor.py | grep -E '\"id\"|\"ok\"'"}} },
+  { "expect": "ask",   "event": {"tool_name": "Bash", "tool_input": {"command": "echo \"$(rm -rf .agents/system)\""}} },
+  { "expect": "ask",   "event": {"tool_name": "Bash", "tool_input": {"command": "echo 'x' >'.agents/system/hooks/guard.py'"}} }
 ]

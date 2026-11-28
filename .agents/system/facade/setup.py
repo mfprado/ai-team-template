@@ -7,7 +7,9 @@ Safe to repeat: each step checks before changing anything.
 3. Apply the team's brand (.agents/brand.json): team page colours and the folder's icon.
 4. Hide technical files so they don't show in Finder / File Explorer.
 5. Mark the folder as trusted in Codex, so its rules and hooks load (with a notice).
-6. Check the team checks (guard) work; if not, restore .agents/system/ from the last saved version.
+6. Windows: put Git's sh on the person's own PATH, so Codex (started from Windows, not Git Bash)
+   can run the team checks. Only the person's PATH, never the system one.
+7. Check the team checks (guard) work; if not, restore .agents/system/ from the last saved version.
 
 Standard library only. Messages are plain words for non-technical people.
 """
@@ -16,6 +18,7 @@ import hashlib
 import json
 import os
 import platform
+import shutil
 import subprocess
 import sys
 from pathlib import Path
@@ -79,6 +82,52 @@ def codex_trust():
         f.write(("\n" if text and not text.endswith("\n") else "") + f'\n{header}\ntrust_level = "trusted"\n')
     return ("Codex will now apply this team's rules in this folder "
             "(the folder was marked as trusted in Codex's settings).")
+
+
+def git_sh_folder():
+    """Folder with sh.exe from Git for Windows (Git/usr/bin), or None."""
+    roots = [os.environ.get("ProgramFiles", r"C:\Program Files"), os.environ.get("ProgramW6432", ""),
+             str(Path(os.environ.get("LOCALAPPDATA", "")) / "Programs")]
+    for root in filter(None, roots):
+        folder = Path(root) / "Git" / "usr" / "bin"
+        if (folder / "sh.exe").exists():
+            return folder
+    git = shutil.which("git")
+    if git:  # Git/cmd/git.exe -> Git/usr/bin
+        folder = Path(git).resolve().parents[1] / "usr" / "bin"
+        if (folder / "sh.exe").exists():
+            return folder
+    return None
+
+
+def windows_sh_on_path():
+    """Windows only. Codex is started from Windows, so the PATH that matters is the one Windows
+    gives new programs (the person's + the system's), not this process's (Git Bash adds its own)."""
+    if SYSTEM != "Windows":
+        return None
+    import winreg
+    folders = []
+    for hive, key in ((winreg.HKEY_CURRENT_USER, "Environment"),
+                      (winreg.HKEY_LOCAL_MACHINE, r"SYSTEM\CurrentControlSet\Control\Session Manager\Environment")):
+        try:
+            with winreg.OpenKey(hive, key) as k:
+                folders += os.path.expandvars(winreg.QueryValueEx(k, "Path")[0]).split(";")
+        except OSError:
+            pass
+    if any(f and (Path(f) / "sh.exe").exists() for f in folders):
+        return None
+    folder = git_sh_folder()
+    if not folder:
+        return None  # no Git for Windows: the launcher installs it
+    # [Environment]::SetEnvironmentVariable also tells open programs the PATH changed; setx would cut long PATHs.
+    script = ("$f=$env:TEAM_SH_FOLDER; $p=[Environment]::GetEnvironmentVariable('Path','User'); "
+              "if (-not $p) { $p='' }; if (($p -split ';') -notcontains $f) "
+              "{ [Environment]::SetEnvironmentVariable('Path', ($p.TrimEnd(';') + ';' + $f).TrimStart(';'), 'User') }")
+    done = subprocess.run(["powershell", "-NoProfile", "-NonInteractive", "-Command", script],
+                          env=dict(os.environ, TEAM_SH_FOLDER=str(folder)), capture_output=True, text=True)
+    if done.returncode != 0:
+        return "Could not add Git's tools to this computer's settings; Codex may not run the team checks."
+    return "Git's tools were added to this computer's settings, so Codex can run the team checks."
 
 
 def guard_ok():
@@ -260,7 +309,7 @@ def main():
     if not (ROOT / ".git").exists():
         print("This folder is not connected to the team yet. Ask your AI Champion for help.")
         return 1
-    notes = [n for n in (git_hooks(), get_latest(), apply_brand(), hide_files(), codex_trust(), repair_guard()) if n]
+    notes = [n for n in (git_hooks(), get_latest(), apply_brand(), hide_files(), codex_trust(), windows_sh_on_path(), repair_guard()) if n]
     for n in notes:
         print(f"- {n}")
     print("Your team folder is ready.")

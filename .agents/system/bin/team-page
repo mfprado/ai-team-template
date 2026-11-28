@@ -1,0 +1,18 @@
+#!/bin/sh
+# Start this folder's team page without opening the person's browser, and print its address
+# ("The team page is ready at http://127.0.0.1:<port>") so the AI assistant opens it in its own
+# built-in browser. Same command on Mac and Windows (Git Bash):
+#
+#   sh .agents/system/bin/team-page
+#
+# Finds uv even when the session started before uv was installed. If uv is missing, it says to
+# run bin/setup first.
+HERE="$(printf '%s' "$0" | tr '\\' '/')"; HERE="${HERE%/*}"
+ROOT="$(cd "$HERE/../../.." && pwd)" || exit 1
+UV="$(sh "$ROOT/.agents/system/bin/find-uv")" || {
+  echo "This computer is not set up yet. Run: sh .agents/system/bin/setup" >&2
+  exit 127
+}
+cd "$ROOT" || exit 1
+TEAM_PAGE_NO_BROWSER=1 exec "$UV" run --quiet --no-project --python 3.12 --with streamlit==1.41.1 \
+  .agents/system/facade/page.py

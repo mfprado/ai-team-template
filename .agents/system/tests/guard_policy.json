@@ -4,6 +4,8 @@
     { "tool": "Bash", "pattern": "git push --force", "tier": "deny" },
     { "tool": "Read", "pattern": "**/.env", "tier": "deny" },
     { "tool": "mcp__*send*", "unless": ["*draft*"], "tier": "deny" },
-    { "tool": "Edit", "pattern": ".agents/permissions.json", "tier": "ask" }
+    { "tool": "Edit", "pattern": ".agents/permissions.json", "tier": "ask" },
+    { "tool": "Edit", "pattern": ".agents/system/**", "tier": "ask" },
+    { "tool": "Bash", "pattern": "sh .agents/system/bin/py -I .agents/system/scripts/ideas.py", "tier": "allow" }
   ]
 }

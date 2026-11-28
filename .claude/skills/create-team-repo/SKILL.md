@@ -44,7 +44,7 @@ flowchart TD
     %% Q: Asks the Champion, one question at a time, how the team works: structure, rhythm, processes, how it uses each tool and where time goes. Saves it for the team so the AI assistant always has that context, and proposes the solutions that fit the team best.
     %% O: Offers to bring an automation the Champion already uses into the team with the migrate skill.
     %% R: Deletes the temporary copy of the template.
-    %% L: The AI assistant runs the team icon itself: it installs what is needed, turns on the team checks, hides technical files and opens the team page in its own browser. If it cannot, the Champion double-clicks the icon. Last, it says in three lines where the folder is and how to open it.
+    %% L: The AI assistant prepares the computer itself, on Mac and Windows: it installs what is needed, turns on the team checks, hides technical files and opens the team page in its own browser. If it cannot, the Champion double-clicks the icon. Last, it says in three lines where the folder is and how to open it.
 ```
 
 You are helping an **AI Champion** create their team's shared AI workspace, usually during
@@ -292,42 +292,38 @@ Delete `TEMPLATE_DIR` (the temporary copy). No need to tell the Champion.
 This is the last step. Do it yourself; do not ask the Champion to double-click the icon. Say
 in one line what you are doing ("Preparing your computer and opening your team's page...").
 
-**On a Mac** (`uname` answers `Darwin`), run the team icon from the team folder, in the
-background (it keeps the team page running), with the browser opening turned off and no input:
+The same two commands work on Mac and on Windows (Claude Code runs them in Git Bash there), and
+they need no approval from the Champion. In the team folder:
 
-```
-cd "<Desktop>/<Team>-AI" && TEAM_PAGE_NO_BROWSER=1 bash "<Team>-AI.command" < /dev/null
-```
-
-Then read `<Desktop>/<Team>-AI/.git/launch.log`, where the icon writes what its window would
-show, until it says `Launcher finished.` and a line with the page's address
-(`http://127.0.0.1:<port>`). It usually takes under a minute the first time.
+1. Prepare the computer, and wait for it (the first time takes a minute or two):
+   ```
+   cd "<Desktop>/<Team>-AI" && sh .agents/system/bin/setup
+   ```
+   It installs uv and Python, turns on the team checks, applies the brand and icons, hides
+   technical files, trusts the folder in Codex and, on Windows, puts Git's `sh` on the Champion's
+   own PATH. It ends with `Setup finished.`; the same lines are in `.git/launch.log`.
+2. Start the team page in the background (it keeps running while this conversation does):
+   ```
+   cd "<Desktop>/<Team>-AI" && sh .agents/system/bin/team-page
+   ```
+   It prints `The team page is ready at http://127.0.0.1:<port>`.
 
 - **The address is there:** open it in your own browser (in the Claude desktop app, the built-in
   browser) so the Champion sees the team page next to the chat. If you have no browser of your
-  own, open it in the computer's browser (`open <address>`). Look at each section before going
-  on and fix what does not read well on the brand (contrast, logos, buttons on two lines); if
-  you cannot see it, ask the Champion in one line whether it looks right. (The icons are made
-  from the logo on each computer and never saved: nothing is left to save after the launch.)
-- **It stopped to install Apple's developer tools, or to sign in to GitHub:** those need the
-  Champion. Fall back to the double-click below.
-- **Anything else:** explain the last lines in plain words and help fix them.
-
-The page you started keeps running only while this conversation does; the closing message
-tells the Champion how to open it next time.
-
-**On Windows** (`%OS%` = `Windows_NT`), or when the Mac run needs the Champion: ask them to
-double-click **`<Team>-AI.command`** (Mac) or **`<Team>-AI.bat`** (Windows), in the `<Team>-AI`
-folder on their Desktop, and to tell you when a window has opened and stopped moving. Mention
-only their system's file and help, for example: "Hacé doble clic en Adopcion-IA.command,
-dentro de la carpeta Adopcion-IA de tu Escritorio." Never ask them to copy the window: read
-the same `launch.log`.
-
-- No log: the icon has not run yet. On a Mac, if it was blocked, right-click the file and choose
-  **Open**; if macOS asks whether Terminal may access the Desktop, choose **Allow**. On Windows,
-  if a blue "Windows protected your PC" box appears, click **More info**, then **Run anyway**.
-- `Setup finished.` and `Launcher finished.`: done; the team page is open in their browser.
-  Check it as above.
+  own, open it in the computer's browser (`open <address>` on a Mac, `start <address>` on
+  Windows). Look at each section before going on and fix what does not read well on the brand
+  (contrast, logos, buttons on two lines); if you cannot see it, ask the Champion in one line
+  whether it looks right. (The icons are made from the logo on each computer and never saved:
+  nothing is left to save after the launch.)
+- **Setup says GitHub's tool is missing or not signed in, or Git is missing:** those need the
+  Champion (an installer or a browser sign-in). Ask them to double-click **`<Team>-AI.command`**
+  (Mac) or **`<Team>-AI.bat`** (Windows), in the `<Team>-AI` folder on their Desktop, mentioning
+  only their system's file, for example: "Hacé doble clic en Adopcion-IA.bat, dentro de la
+  carpeta Adopcion-IA de tu Escritorio." Then read `.git/launch.log`; never ask them to copy the
+  window. If a blue "Windows protected your PC" box appears, they click **More info**, then
+  **Run anyway**; on a Mac, if it was blocked, right-click the file and choose **Open**.
+- **Anything else:** explain the last lines in plain words and help fix them
+  (`.agents/rules/setup-problems.md` in the team folder).
 
 **Check the computer before closing.** In the team folder, run
 `sh .agents/system/bin/py -I .agents/system/scripts/doctor.py` and follow

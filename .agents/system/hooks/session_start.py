@@ -66,13 +66,29 @@ def find_uv():
     found = shutil.which("uv")
     if found:
         return found
-    local = Path.home() / ".local/bin" / ("uv.exe" if os.name == "nt" else "uv")
-    return str(local) if local.exists() else None
+    for folder in (Path.home() / ".local/bin", Path.home() / ".cargo/bin"):
+        local = folder / ("uv.exe" if os.name == "nt" else "uv")
+        if local.exists():
+            return str(local)
+    return None
+
+
+def needs_setup():
+    """This computer has not been prepared yet (no uv, or the team's git checks are off)."""
+    hooks = git("config", "--get", "core.hooksPath").stdout.strip()
+    return not find_uv() or hooks != ".agents/system/git-hooks"
 
 
 def open_team_page(seconds=15):  # short: the session waits for this, and Windows starts slower
     if os.environ.get("CLAUDE_CODE_REMOTE") or os.environ.get("CI"):
         return  # cloud sessions have no team page
+    if needs_setup():
+        print("This computer is not set up for the team folder yet. Set it up yourself now, without asking "
+              "the person and without asking them to open the launcher: run `sh .agents/system/bin/setup` "
+              "(it installs what is needed; the first time takes a minute or two), then start the team page "
+              "in the background with `sh .agents/system/bin/team-page` and open the address it prints in "
+              "your built-in browser. Tell the person in one plain line that you are preparing their computer.")
+        return
     url = page_ready()
     if not url:
         uv = find_uv()

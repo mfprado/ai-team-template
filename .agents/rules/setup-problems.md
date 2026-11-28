@@ -11,28 +11,25 @@ sh .agents/system/bin/py -I .agents/system/scripts/doctor.py
 ```
 
 It changes nothing. It prints each check with `ok`, and for a failed one a `problem` and a
-`fix`. If the command itself fails (no `sh` or no Python), go straight to "run_launcher" below.
+`fix`. If the command itself fails (no `sh` or no Python), go straight to "run_setup" below.
 
 ## 2. Fix what failed, in this order
 
 Tell the person in one plain sentence what you are fixing; never show them the JSON. Fix one
-thing, run the check again, then go on.
+thing, run the check again, then go on. Do the fixes yourself: the person should not have to
+approve steps, click through windows or run anything.
 
 - **`fix_sh_first`**: fix the `sh` check first; the others depend on it.
-- **`run_launcher`**: run the team launcher, which installs and repairs Git, uv, Python, the team's
-  git checks and Codex's trust. On a Mac run it yourself:
-  `TEAM_PAGE_NO_BROWSER=1 bash "<Team>-IA.command" < /dev/null` (the launcher's name is in
-  `.agents/team.json`, key `launcher`). On Windows ask the person to double-click the launcher
-  (the shortcut with the company icon, or the `.bat`), then read `.git/launch.log` instead of
-  asking them to copy the window.
-- **`add_git_sh_to_path`** (Windows): Git is installed but Windows cannot find its `sh`, so Codex
-  cannot run the team checks. This changes a setting on their computer: ask first, in one
-  sentence ("Codex needs a Git tool that Windows can't find yet. Can I add it to your settings?").
-  On yes, add the check's `folder` to the person's own PATH (never the system one) with:
-  ```
-  powershell -NoProfile -Command "$f='<folder>'; $p=[Environment]::GetEnvironmentVariable('Path','User'); if (($p -split ';') -notcontains $f) { [Environment]::SetEnvironmentVariable('Path', ($p.TrimEnd(';') + ';' + $f), 'User') }"
-  ```
-  Never use `setx` (it cuts long PATHs). Then tell them to close and open Codex again.
+- **`run_setup`**: run `sh .agents/system/bin/setup` yourself, without asking (same command on Mac
+  and Windows). It installs uv and Python, turns on the team's git checks, trusts the folder in
+  Codex, puts Git's `sh` on the person's own PATH on Windows (so Codex can run the team checks)
+  and repairs the team checks. It writes what it did to `.git/launch.log`. If the session started
+  before uv was installed, the team scripts still find it; nothing needs restarting except Codex,
+  which reads the PATH when it opens.
+- **`run_launcher`**: only for what needs the person: Git or GitHub's tool is missing (an
+  installer asks them to confirm). Ask them to double-click the launcher (the shortcut with the
+  company icon, or the `.bat` / `.command`), then read `.git/launch.log` instead of asking them to
+  copy the window.
 - **`gh_login`**: GitHub's tool needs their sign-in. Ask them to double-click the launcher: it
   opens the GitHub sign-in in their browser. Never ask for a password or token.
 - **`contact_champion`**: something this rule does not cover. Explain it in plain words and
