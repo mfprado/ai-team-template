@@ -1,0 +1,128 @@
+<!doctype html>
+<html lang="__LANG__">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>__TITLE__</title>
+__FONT_LINK__<style>
+:root{--top:48px;--bot:40px;--bg:__BG__;--fg:__FG__;--accent:__ACCENT__;--muted:__MUTED__;--line:__LINE__;--card:__CARD__}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;background:var(--bg);color:var(--fg);font-family:__FONT__;overflow:hidden}
+.deck{position:fixed;top:var(--top);bottom:var(--bot);left:0;right:0;display:flex;align-items:center;justify-content:center}
+.slide{position:absolute;width:min(100vw,calc((100vh - var(--top) - var(--bot)) * 1.7778));height:min(56.25vw,calc(100vh - var(--top) - var(--bot)));padding:6% 8%;display:none;flex-direction:column;justify-content:center;gap:2.2vmin}
+.slide.on{display:flex}
+.tag{color:var(--accent);font-weight:600;letter-spacing:.14em;font-size:clamp(12px,1.6vmin,18px)}
+h1{font-size:clamp(36px,9vmin,110px);font-weight:800;line-height:1}
+h2{font-size:clamp(26px,6vmin,72px);font-weight:800;line-height:1.05}
+h3{font-size:clamp(18px,3.6vmin,40px);font-weight:400;color:var(--muted)}
+p,li,td,th{font-size:clamp(16px,3.2vmin,36px);line-height:1.35}
+ul,ol{padding-left:1.2em;display:flex;flex-direction:column;gap:1.2vmin}
+li::marker{color:var(--accent);font-weight:800}
+b{color:var(--accent);font-weight:600}
+blockquote{border-left:4px solid var(--accent);padding:1vmin 2vmin;font-size:clamp(18px,3.6vmin,40px);font-style:italic}
+table{border-collapse:collapse;width:100%}
+td,th{text-align:left;padding:1vmin 2vmin;border-bottom:1px solid var(--line)}
+th{color:var(--muted);font-weight:600;font-size:clamp(13px,2.2vmin,24px)}
+tr.hl td{color:var(--accent);font-weight:600}
+.cover{justify-content:flex-end;padding-bottom:10%}
+.cover::before{content:"";position:absolute;left:8%;top:12%;width:14vmin;height:1.2vmin;background:var(--accent)}
+.divider{background:var(--accent);color:var(--bg)}
+.divider .tag{color:var(--bg)}
+.nowrap{white-space:nowrap}
+.muted{color:var(--muted)}
+.cards{display:grid;grid-template-columns:1fr 1fr;gap:3vmin}
+.card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:4vmin;display:flex;flex-direction:column;gap:1.5vmin}
+.card.hl{border-color:var(--accent)}
+.card .what{color:var(--accent);font-weight:600;letter-spacing:.12em;font-size:clamp(12px,1.8vmin,20px)}
+.card h4{font-size:clamp(20px,4vmin,46px);font-weight:800;line-height:1.1}
+.card p{color:var(--muted);font-size:clamp(14px,2.6vmin,30px)}
+.foot{position:fixed;bottom:0;left:0;right:0;height:var(--bot);padding:0 3vmin;background:var(--card);border-top:1px solid var(--line);display:grid;grid-template-columns:1fr auto 1fr;align-items:center;font-size:clamp(11px,1.6vmin,16px);color:var(--muted);pointer-events:none}
+.foot #num{text-align:right}
+.foot img{height:clamp(16px,3vmin,30px)}
+.bar{position:fixed;top:var(--top);z-index:6;left:0;height:3px;background:var(--accent);transition:width .25s}
+.notes{position:fixed;left:0;right:0;bottom:0;max-height:34vh;overflow:auto;background:var(--card);border-top:2px solid var(--accent);padding:2vmin 3vmin;font-size:clamp(14px,2vmin,20px);line-height:1.45;display:none}
+body.shownotes .notes{display:block}
+.nav{position:fixed;top:var(--top);bottom:var(--bot);width:20%;cursor:pointer;background:none;border:0}
+.nav.prev{left:0}.nav.next{right:0}
+.ctl{position:fixed;top:0;left:0;right:0;height:var(--top);padding:0 3vmin;display:flex;justify-content:flex-end;align-items:center;gap:8px;z-index:5;background:var(--card);border-bottom:1px solid var(--line)}
+.ctl button{font:600 13px __FONT__;color:var(--fg);background:var(--card);border:1px solid var(--line);border-radius:999px;padding:7px 14px;cursor:pointer;white-space:nowrap}
+.ctl button.icon{display:inline-flex;align-items:center;justify-content:center;padding:7px 10px}
+.ctl button:hover{border-color:var(--accent);color:var(--accent)}
+.ctl button.act{background:var(--accent);border-color:var(--accent);color:var(--bg)}
+/* Full screen: the slide takes the whole screen; the bars appear only while the mouse is over them. */
+:root:fullscreen{--top:0px;--bot:0px}
+:root:fullscreen .ctl,:root:fullscreen .foot{height:48px;opacity:0;transition:opacity .2s;z-index:7;pointer-events:auto}
+:root:fullscreen .ctl:hover,:root:fullscreen .foot:hover{opacity:1}
+:root:fullscreen .bar{opacity:0;transition:opacity .2s}
+:root:fullscreen .ctl:hover~.bar,:root:fullscreen body:has(.ctl:hover) .bar{opacity:1}
+@media print{.foot,.bar,.notes,.nav,.ctl{display:none}.slide{display:flex;position:relative;page-break-after:always;width:100vw;height:56.25vw}html,body{overflow:visible}.deck{position:static;display:block}}
+</style>
+</head>
+<!--
+  Presentation made from the team's model (.agents/system/templates/presentation.html).
+  Only change the slides (the <section class="slide"> blocks) and the footer text.
+  Keep the bars, the buttons and the script: they work the same in every presentation
+  (controls bar on top, footer below, full screen hides both until the mouse is over them).
+  Slide kinds: class="slide cover" (title), class="slide" (content), class="slide divider" (section break).
+  Notes for whoever presents go in an <aside> inside the slide.
+-->
+<body>
+<div class="bar" id="bar"></div>
+<div class="deck" id="deck">
+<section class="slide cover">
+<div class="tag">[__TAG__]</div>
+<h1>__TITLE__</h1>
+<h3>__SUBTITLE__</h3>
+<aside>__NOTE__</aside>
+</section>
+
+<section class="slide">
+<div class="tag">[__TAG__]</div>
+<h2>__HEADING__</h2>
+<ul><li>__POINT__</li><li>__POINT__</li><li>__POINT__</li></ul>
+<aside>__NOTE__</aside>
+</section>
+
+<section class="slide divider">
+<div class="tag">[__TAG__]</div>
+<h2>__HEADING__</h2>
+</section>
+
+<section class="slide cover">
+<div class="tag">[__CLOSE_TAG__]</div>
+<h1>__QUESTIONS__</h1>
+<aside>__NOTE__</aside>
+</section>
+</div>
+<button class="nav prev" aria-label="__PREV__"></button>
+<button class="nav next" aria-label="__NEXT__"></button>
+<div class="ctl">
+<button id="bPrev" title="__PREV_TITLE__">‹ __PREV__</button>
+<button id="bNext" title="__NEXT_TITLE__">__NEXT__ ›</button>
+<button id="bNotes" title="__NOTES_TITLE__">__NOTES__</button>
+<button id="bFull" class="icon" title="__FULL__" aria-label="__FULL__"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"/></svg></button>
+</div>
+<div class="foot" id="foot"><span>__TITLE__</span>__LOGO__<span id="num"></span></div>
+<div class="notes" id="notes"></div>
+<script>
+const s=[...document.querySelectorAll('.slide')];s.forEach(x=>{const a=x.querySelector('aside');x.dataset.note=a?a.textContent:'';a&&a.remove()});
+let i=Math.min(Math.max(parseInt(location.hash.slice(1))-1||0,0),s.length-1);
+function go(n){i=Math.min(Math.max(n,0),s.length-1);s.forEach((x,k)=>x.classList.toggle('on',k===i));
+document.getElementById('num').textContent=(i+1)+' / '+s.length;
+document.getElementById('bar').style.width=((i+1)/s.length*100)+'%';
+document.getElementById('notes').textContent=s[i].dataset.note;try{history.replaceState(null,'','#'+(i+1))}catch(e){}}
+document.addEventListener('keydown',e=>{if(['ArrowRight','PageDown',' '].includes(e.key))go(i+1);else if(['ArrowLeft','PageUp'].includes(e.key))go(i-1);
+else if(e.key==='n'||e.key==='N')notes();
+else if(e.key==='f'||e.key==='F')full();
+else if(e.key==='Home')go(0);else if(e.key==='End')go(s.length-1)});
+function notes(){document.body.classList.toggle('shownotes');document.getElementById('bNotes').classList.toggle('act')}
+function full(){document.activeElement&&document.activeElement.blur();document.fullscreenElement?document.exitFullscreen():document.documentElement.requestFullscreen()}
+document.addEventListener('fullscreenchange',()=>{const b=document.getElementById('bFull'),on=!!document.fullscreenElement;
+b.innerHTML=on?'<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 14h6v6M20 10h-6V4M14 10l7-7M3 21l7-7"/></svg>':'<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"/></svg>';b.title=b.ariaLabel=on?'__EXIT_FULL__':'__FULL__'});
+document.getElementById('bPrev').onclick=()=>go(i-1);document.getElementById('bNext').onclick=()=>go(i+1);
+document.getElementById('bNotes').onclick=notes;document.getElementById('bFull').onclick=full;
+document.querySelector('.prev').onclick=()=>go(i-1);document.querySelector('.next').onclick=()=>go(i+1);
+go(i);
+</script>
+</body>
+</html>

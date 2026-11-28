@@ -11,8 +11,10 @@ import json
 import platform
 import re
 import shutil
+import socket
 import subprocess
 import sys
+import time
 import webbrowser
 from pathlib import Path
 
@@ -83,7 +85,7 @@ T = {
         "ago": {"now": "just now", "min": "{n} min ago", "h": "{n} h ago", "d": "{n} days ago"},
         "perm_summary": "Permissions: {items}",
         "reports_intro": "Reports, presentations, dashboards and apps made with the AI.",
-        "shared_by": "by {who}", "view": "View", "back": "Back to the list", "about_artifact": "What it is and how to make it again", "app_opening": "Opening the app in your browser. It can take a few seconds the first time.",
+        "shared_by": "by {who}", "view": "View", "back": "Back to the list", "about_artifact": "What it is and how to make it again", "app_failed": "The app could not start. Ask the AI assistant to look at it.", "app_opening": "Starting the app. It can take a few seconds the first time.",
         "open_link": "Open it", "open_browser": "Open in the browser", "what_it_is": "What it is", "link_note": "This one lives in your AI assistant. It opens in a new browser tab.",
         "share_team": "Share with the team", "share_confirm": "**{title}** moves to the team's artifacts and is saved for the whole team: everyone will be able to see it and change it.",
         "share_yes": "Share", "share_no": "Cancel", "delete": "Delete", "delete_yes": "Delete it", "delete_confirm": "**{title}** is only on this computer: deleting it cannot be undone.", "deleted": "Deleted: {title}.", "close": "Close", "share_summary": "Shared artifact: {title}",
@@ -143,7 +145,7 @@ T = {
         "ago": {"now": "recién", "min": "hace {n} min", "h": "hace {n} h", "d": "hace {n} días"},
         "perm_summary": "Permisos: {items}",
         "reports_intro": "Reportes, presentaciones, tableros y apps hechos con la IA.",
-        "shared_by": "de {who}", "view": "Ver", "back": "Volver a la lista", "about_artifact": "Qué es y cómo volver a hacerlo", "app_opening": "Abriendo la app en tu navegador. La primera vez puede tardar unos segundos.",
+        "shared_by": "de {who}", "view": "Ver", "back": "Volver a la lista", "about_artifact": "Qué es y cómo volver a hacerlo", "app_failed": "La app no pudo arrancar. Pedile al asistente de IA que la revise.", "app_opening": "Abriendo la app. La primera vez puede tardar unos segundos.",
         "open_link": "Abrir", "open_browser": "Abrir en el navegador", "what_it_is": "Qué es", "link_note": "Este está en tu asistente de IA. Se abre en otra pestaña del navegador.",
         "share_team": "Compartir con el equipo", "share_confirm": "**{title}** pasa a los artefactos del equipo y se guarda para todos: cualquiera va a poder verlo y cambiarlo.",
         "share_yes": "Compartir", "share_no": "Cancelar", "delete": "Borrar", "delete_yes": "Borrarlo", "delete_confirm": "**{title}** está solo en esta computadora: si lo borrás, no se puede recuperar.", "deleted": "Borrado: {title}.", "close": "Cerrar", "share_summary": "Artefacto compartido: {title}",
@@ -408,7 +410,8 @@ with st.sidebar:
             artifact_menu = menu.container(key="artmenu")
     section = st.session_state.section
 
-st.title(section)
+if not (section == t["tab_artifacts"] and st.session_state.get("viewing")):  # an open artifact gets the whole page
+    st.title(section)
 st.session_state.pop("in_dialog", None)
 if "flash" in st.session_state:
     ok, message = st.session_state.pop("flash")
@@ -853,9 +856,20 @@ def confirm_delete(item):
         st.rerun()
 
 
+def app_port(folder):
+    """The port of this app artifact when it is already running (run_app.py keeps them in .git/apps.json)."""
+    try:
+        port = load_json(ROOT / ".git/apps.json", {}).get(str(Path(folder).relative_to(ROOT)))
+        with socket.create_connection(("127.0.0.1", int(port)), timeout=0.5):
+            return int(port)
+    except (OSError, TypeError, ValueError):
+        return None
+
+
 def start_app(folder):
-    """Start a Streamlit app artifact in the browser (run_app.py), in the background."""
-    runner = [str(CORE / "facade/run_app.py"), str(folder)]
+    """Start a Streamlit app artifact in the background (run_app.py), without opening the browser:
+    the team page shows it inside itself."""
+    runner = [str(CORE / "facade/run_app.py"), str(folder), "--no-browser"]
     uv = shutil.which("uv") or next((str(u) for u in (Path.home() / ".local/bin/uv", Path.home() / ".local/bin/uv.exe")
                                      if u.is_file()), None)
     if uv:
@@ -878,10 +892,11 @@ def artifact_about(item):
 
 
 def enter_artifact(item):
-    """One click on the artifact's name: apps open in the browser, the rest open inside this page."""
+    """One click on the artifact's name: it opens inside this page (apps too, started in the background)."""
     if item["kind"] == "folder" and (item["path"] / "app.py").is_file():
-        start_app(item["path"])
-        st.toast(t["app_opening"])
+        if not app_port(item["path"]):
+            start_app(item["path"])
+        st.session_state.viewing = item["key"]
     elif item["kind"] == "file" and item["path"].suffix.lower() in SAFE_TO_OPEN \
             and item["path"].suffix.lower() not in (".html", ".htm", ".png", ".jpg", ".jpeg", ".gif", ".svg", ".md", ".txt", ".csv"):
         webbrowser.open(item["path"].as_uri())
@@ -890,16 +905,31 @@ def enter_artifact(item):
 
 
 def show_report(item):
-    head, action = st.columns([3, 2])
-    head.subheader(item["title"])
-    if item["private"] and action.button(t["share_team"], type="primary", use_container_width=True):
-        confirm_share(item)
+    # Pages and apps show their own title; the row is left out when it would be empty.
+    titled = item["kind"] == "link" or (item["kind"] == "file" and item["path"].suffix.lower() not in (".html", ".htm"))
+    if titled or item["private"]:
+        head, action = st.columns([3, 2])
+        if titled:
+            head.subheader(item["title"])
+        if item["private"] and action.button(t["share_team"], type="primary", use_container_width=True):
+            confirm_share(item)
     p = item["path"]
+    if item["kind"] == "folder" and (p / "app.py").is_file():
+        # The app itself, inside the page: opening it shows what it is for.
+        port = app_port(p)
+        if not port:
+            with st.spinner(t["app_opening"]):
+                for _ in range(120):  # up to a minute for the first start
+                    time.sleep(0.5)
+                    if (port := app_port(p)):
+                        break
+        if port:
+            components.iframe(f"http://localhost:{port}/?embed=true", height=820, scrolling=True)
+        else:
+            st.warning(t["app_failed"])
+        return
     if item["kind"] == "folder":
         entry = p / "index.html"
-        # The page is already shown below, so only the folder button is offered.
-        if st.button(t["show_folder"], icon=":material/folder_open:"):
-            show_in_folder(entry if entry.is_file() else p)
         if entry.is_file():
             page = "<style>html{background:#fff;color:#111}</style>" + entry.read_text(encoding="utf-8", errors="replace")
             components.html(page, height=720, scrolling=True)
@@ -936,9 +966,23 @@ if section == t["tab_artifacts"]:
             st.rerun()
     viewing = next((i for i in items if i["key"] == st.session_state.get("viewing")), None)
     if viewing:
-        if st.button(f"← {t['back']}"):
+        # An open artifact gets the whole window: no top margin, full width, as tall as the window.
+        # The page's top bar stays see-through so the back arrow under it can be clicked.
+        st.markdown("<style>[data-testid='stMainBlockContainer']{max-width:100%!important;padding:.5rem 2rem 0}"
+                    "header[data-testid='stHeader']{background:transparent;pointer-events:none}"
+                    "header[data-testid='stHeader'] *{pointer-events:auto}"
+                    "iframe[src*='embed=true'],iframe[srcdoc]{height:calc(100vh - 110px)!important}"
+                    ".st-key-artbar{padding:0 2.5rem}</style>",  # clear of the sidebar toggle and the menu
+                    unsafe_allow_html=True)
+        # One thin row: back on the left, the artifact's folder on the right.
+        back, _, folder = st.container(key="artbar").columns([1, 20, 1], vertical_alignment="center")
+        if back.button("", icon=":material/arrow_back:", type="tertiary", help=t["back"]):
             st.session_state.pop("viewing", None)
             st.rerun()
+        if viewing["kind"] != "link" and folder.button("", icon=":material/folder_open:", type="tertiary",
+                                                      help=t["show_folder"]):
+            p = viewing["path"]
+            show_in_folder(p / "index.html" if (p / "index.html").is_file() else p / "app.py" if (p / "app.py").is_file() else p)
         show_report(viewing)
     else:
         st.write(t["reports_intro"])

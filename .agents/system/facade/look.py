@@ -130,6 +130,11 @@ hr {{ border-color:var(--rule) !important; }}
 [class*="st-key-to-perms-"] button:hover {{ text-decoration:underline; }}
 /* The hidden frame that runs the copy feedback takes no room */
 [data-testid="stIFrame"][height="0"], iframe[height="0"] {{ display:none; }}
+/* Reopening the menu shows a side-panel icon, not an arrow (an arrow reads as "back"). */
+[data-testid="stSidebarCollapsedControl"] button svg {{ display:none; }}
+[data-testid="stSidebarCollapsedControl"] button::before {{ content:""; width:20px; height:20px; background:currentColor;
+  -webkit-mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2'%3E%3Crect x='3' y='4' width='18' height='16' rx='3'/%3E%3Cpath d='M9 4v16'/%3E%3C/svg%3E") center/contain no-repeat;
+  mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2'%3E%3Crect x='3' y='4' width='18' height='16' rx='3'/%3E%3Cpath d='M9 4v16'/%3E%3C/svg%3E") center/contain no-repeat; }}
 /* Sidebar header: the logo, and the team's name to its right */
 .team-head {{ display:flex; align-items:center; gap:.75rem; margin:.2rem 0 .35rem; }}
 .team-head img {{ width:40px; height:40px; object-fit:contain; flex:none; }}
