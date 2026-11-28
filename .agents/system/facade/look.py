@@ -316,19 +316,20 @@ button:focus-visible {{ outline:2px solid var(--accent) !important; outline-offs
 [data-testid="stMarkdownContainer"] th {{ font-weight:650; border-bottom:1.5px solid var(--muted) !important; }}
 [data-testid="stMarkdownContainer"] tr {{ background:transparent !important; }}
 [data-testid="stMarkdownContainer"] td:first-child {{ color:var(--muted) !important; }}
-/* Documents: a folder explorer. A trail of where you are, then one row per folder or file */
-.st-key-docscrumbs button {{ padding:.1rem .2rem !important; min-height:0; color:var(--muted) !important; }}
-.st-key-docscrumbs button:hover {{ color:var(--accent) !important; }}
-.st-key-docscrumbs button:disabled {{ color:var(--ink) !important; font-weight:650; opacity:1; }}
-.st-key-docscrumbs [data-testid="stHorizontalBlock"] {{ gap:.1rem !important; flex-wrap:nowrap; }}
-.st-key-docscrumbs [data-testid="stColumn"] {{ width:auto !important; flex:0 0 auto !important; min-width:0; }}
-.st-key-docslist {{ gap:0 !important; padding:.3rem .4rem !important; }}
-.st-key-docslist [data-testid="stElementContainer"] {{ border-bottom:1px solid var(--rule); }}
-.st-key-docslist [data-testid="stElementContainer"]:last-child {{ border-bottom:0; }}
-.st-key-docslist button {{ width:100%; justify-content:flex-start; padding:.65rem .6rem !important; border-radius:8px; }}
-.st-key-docslist button > div {{ justify-content:flex-start; }}
-.st-key-docslist button:hover {{ background:var(--wash) !important; color:var(--accent) !important; }}
-.st-key-docslist [class*="st-key-dir-"] button span {{ color:var(--accent); }}
+/* Artifacts and Documents: a folder explorer. A trail of where you are, then one row per folder or file */
+[class*="st-key-expcrumbs-"] button {{ padding:.1rem .2rem !important; min-height:0; color:var(--muted) !important; }}
+[class*="st-key-expcrumbs-"] button:hover {{ color:var(--accent) !important; }}
+[class*="st-key-expcrumbs-"] button:disabled {{ color:var(--ink) !important; font-weight:650; opacity:1; }}
+[class*="st-key-expcrumbs-"] [data-testid="stHorizontalBlock"] {{ gap:.1rem !important; flex-wrap:nowrap; }}
+[class*="st-key-expcrumbs-"] [data-testid="stColumn"] {{ width:auto !important; flex:0 0 auto !important; min-width:0; }}
+[class*="st-key-explist-"] {{ gap:0 !important; padding:.3rem .4rem !important; }}
+[class*="st-key-explist-"] > [data-testid="stElementContainer"], [class*="st-key-explist-"] > [data-testid="stHorizontalBlock"] {{ border-bottom:1px solid var(--rule); }}
+[class*="st-key-explist-"] > :last-child {{ border-bottom:0 !important; }}
+[class*="st-key-explist-"] [data-testid="stCaptionContainer"] {{ text-align:right; }}
+[class*="st-key-explist-"] button {{ width:100%; justify-content:flex-start; padding:.65rem .6rem !important; border-radius:8px; }}
+[class*="st-key-explist-"] button > div {{ justify-content:flex-start; }}
+[class*="st-key-explist-"] button:hover {{ background:var(--wash) !important; color:var(--accent) !important; }}
+[class*="st-key-explist-"] [class*="st-key-dir-"] button span {{ color:var(--accent); }}
 /* Hover hints (the "?" and the sun or moon): readable, day or night */
 [data-testid="stTooltipContent"], [data-baseweb="tooltip"] > div {{ background:var(--ink) !important; }}
 [data-testid="stTooltipContent"], [data-testid="stTooltipContent"] * {{ color:var(--paper) !important; }}

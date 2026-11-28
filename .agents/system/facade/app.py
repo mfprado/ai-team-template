@@ -1055,6 +1055,18 @@ def open_bar(state_key, path):
     return bool(path) and folder.button("", icon=":material/folder_open:", type="tertiary", help=t["show_folder"])
 
 
+def explorer_trail(name, base, here, state_key, names):
+    """Where you are in a folder explorer (Artifacts, Documents): each step goes back to that folder."""
+    steps = [base, *reversed([p for p in here.parents if base in p.parents]), here] if here != base else [base]
+    with st.container(key=f"expcrumbs-{name}"):
+        trail = st.columns([1] * len(steps) + [max(1, 8 - len(steps))], gap="small", vertical_alignment="center")
+        for i, step in enumerate(steps):
+            if trail[i].button(names.get(step, step.name), key=f"crumb-{name}-{step}", type="tertiary",
+                               icon=":material/chevron_right:" if i else ":material/folder:", disabled=step == here):
+                st.session_state[state_key] = step.relative_to(base).as_posix() if step != base else ""
+                st.rerun()
+
+
 def docs_folder():
     return ROOT / ("documentos" if team.get("language") == "es" else "documents")
 
@@ -1103,31 +1115,34 @@ if section == t["tab_artifacts"]:
         show_report(viewing)
     else:
         st.write(t["reports_intro"])
-        # The team's first; then yours, only on this computer until you share it.
-        for heading, group in ((t["shared"], [i for i in items if not i["private"]]),
-                               (t["private"], [i for i in items if i["private"]])):
-            st.subheader(heading)
-            if not group:
-                if heading == t["private"]:
-                    empty_state(t["no_private"], team.get("example_ask") or t["ask_report"])
-                else:
-                    empty_state(t["no_shared"])
-            # Grouped by type (presentations, dashboards, apps...), each with a small heading.
-            by_type = {}
-            for item in group:
-                by_type.setdefault(artifact_group(item), []).append(item)
-            rows = []
-            for type_name in sorted(by_type):
-                rows.append(type_name)
-                rows.extend(by_type[type_name])
-            i = 0
-            for item in rows:
-                if isinstance(item, str):
-                    if len(by_type) > 1 or item:
-                        st.markdown(f"**{html.escape(item)}**")
-                    continue
-                i += 1
-                with st.container(border=True, key=f"artrow-{heading == t['private']}-{i}"):
+        base, private = artifact_folders()
+        if not items:
+            empty_state(t["no_private"], team.get("example_ask") or t["ask_report"])
+        else:
+            # Like a file explorer, as Documents: where you are, then its folders, then its artifacts.
+            # The private folder ("only on this computer") is one more folder, at the end.
+            here = base / st.session_state.get("art_dir", "")
+            if not here.is_dir() or base not in (here, *here.parents):
+                here = base
+            names = {base: t["tab_artifacts"], private: t["private"]}
+            explorer_trail("art", base, here, "art_dir", names)
+
+            def holds(d, item):
+                return item.get("path") is not None and d in item["path"].parents
+
+            folders = sorted((d for d in here.iterdir() if d.is_dir() and not d.name.startswith(".")
+                              and not any(i.get("path") == d for i in items) and any(holds(d, i) for i in items)),
+                             key=lambda d: (d == private, d.name.lower()))
+            shown = sorted((i for i in items if (here == (private if i["private"] else base) if i["kind"] == "link"
+                                                 else i["path"].parent == here)), key=lambda i: i["title"].lower())
+            with st.container(border=True, key="explist-art"):
+                for d in folders:
+                    count = sum(1 for i in items if holds(d, i))
+                    if st.button(names.get(d, d.name), icon=":material/lock:" if d == private else ":material/folder:",
+                                 key=f"dir-{d}", type="tertiary", help=t["docs_count"].format(n=count)):
+                        st.session_state.art_dir = d.relative_to(base).as_posix()
+                        st.rerun()
+                for item in shown:
                     about = artifact_about(item)
                     cols = st.columns([9, 1, 1, 1] if item["private"] else [11, 1], vertical_alignment="center", gap="small")
                     if item["kind"] == "link":
@@ -1146,6 +1161,8 @@ if section == t["tab_artifacts"]:
                     if item["private"] and cols[3].button("", key=f"delete-{item['key']}", icon=":material/delete:",
                                                           help=t["delete"]):
                         confirm_delete(item)
+            if not folders and not shown:
+                empty_state(t["no_private"] if here == private else t["no_shared"])
 
 # Documents: a viewer of the team's documents folder
 if section == t["tab_docs"]:
@@ -1188,18 +1205,10 @@ if section == t["tab_docs"]:
             here = base / st.session_state.get("docs_dir", "")
             if not here.is_dir() or base not in (here, *here.parents):
                 here = base
-            steps = [base, *reversed([p for p in here.parents if base in p.parents]), here] if here != base else [base]
-            with st.container(key="docscrumbs"):
-                trail = st.columns([1] * len(steps) + [max(1, 8 - len(steps))], gap="small", vertical_alignment="center")
-                for i, step in enumerate(steps):
-                    name = t["tab_docs"] if step == base else step.name
-                    if trail[i].button(name, key=f"crumb-{step}", type="tertiary",
-                                       icon=":material/chevron_right:" if i else ":material/folder:", disabled=step == here):
-                        st.session_state.docs_dir = step.relative_to(base).as_posix() if step != base else ""
-                        st.rerun()
+            explorer_trail("docs", base, here, "docs_dir", {base: t["tab_docs"]})
             inside = sorted((p for p in here.iterdir() if not p.name.startswith(".")),
                             key=lambda p: (p.is_file(), p.name.lower()))
-            with st.container(border=True, key="docslist"):
+            with st.container(border=True, key="explist-docs"):
                 for item in inside:
                     if item.is_dir():
                         count = sum(1 for f in files if item in f.parents)
