@@ -410,7 +410,8 @@ with st.sidebar:
             artifact_menu = menu.container(key="artmenu")
     section = st.session_state.section
 
-st.title(section)
+if not (section == t["tab_artifacts"] and st.session_state.get("viewing")):  # an open artifact gets the whole page
+    st.title(section)
 st.session_state.pop("in_dialog", None)
 if "flash" in st.session_state:
     ok, message = st.session_state.pop("flash")
@@ -923,7 +924,7 @@ def show_report(item):
         if port:
             components.iframe(f"http://localhost:{port}/?embed=true", height=820, scrolling=True)
             # As tall as the window, not a small box with its own scroll.
-            st.markdown("<style>iframe[src*='embed=true']{height:calc(100vh - 180px)!important}</style>",
+            st.markdown("<style>iframe[src*='embed=true']{height:calc(100vh - 110px)!important}</style>",
                         unsafe_allow_html=True)
         else:
             st.warning(t["app_failed"])
@@ -969,7 +970,7 @@ if section == t["tab_artifacts"]:
             st.rerun()
     viewing = next((i for i in items if i["key"] == st.session_state.get("viewing")), None)
     if viewing:
-        if st.button(f"← {t['back']}"):
+        if st.button("", icon=":material/arrow_back:", type="tertiary", help=t["back"]):
             st.session_state.pop("viewing", None)
             st.rerun()
         show_report(viewing)
