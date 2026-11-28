@@ -1086,6 +1086,22 @@ def open_bar(state_key, path):
     return bool(path) and folder.button("", icon=":material/folder_open:", type="tertiary", help=t["show_folder"])
 
 
+def open_side_at_start(name, at_start):
+    """At the start of Artifacts or Documents the page is short: show the side menu if it is hidden
+    (once, on arriving there, so closing it again is respected)."""
+    was = st.session_state.get(f"at-start-{name}", False)
+    st.session_state[f"at-start-{name}"] = at_start
+    if at_start and not was:
+        components.html("""<script>
+const doc = window.parent.document;
+const side = doc.querySelector('[data-testid="stSidebar"]');
+if (side && side.getAttribute("aria-expanded") !== "true") {
+  const open = doc.querySelector('[data-testid="stSidebarCollapsedControl"] button, [data-testid="stExpandSidebarButton"]');
+  if (open) open.click();
+}
+</script>""", height=0)
+
+
 def rel_dir(base, folder):
     """A folder as the explorer keeps it: relative to its base, with "/" (also on Windows)."""
     return folder.relative_to(base).as_posix() if folder != base else ""
@@ -1171,6 +1187,7 @@ if section == t["tab_artifacts"]:
     if viewing and viewing.get("path") is not None and base in viewing["path"].parents:
         st.session_state.art_dir = rel_dir(base, viewing["path"].parent)  # the explorer follows what is open
     here = explorer_here(base, "art_dir")
+    open_side_at_start("art", not viewing and here == base)
     names = {base: t["tab_artifacts"], private: t["private"]}
 
     def holds(d, item):
@@ -1255,6 +1272,7 @@ if section == t["tab_docs"]:
     if doc:
         st.session_state.docs_dir = rel_dir(base, doc.parent)  # the explorer follows what is open
     here = explorer_here(base, "docs_dir")
+    open_side_at_start("docs", not doc and here == base)
     names = {base: t["tab_docs"]}
     inside = sorted((p for p in here.iterdir() if not p.name.startswith(".")),
                     key=lambda p: (p.is_file(), p.name.lower())) if here.is_dir() else []
