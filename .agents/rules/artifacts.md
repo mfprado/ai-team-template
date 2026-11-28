@@ -48,6 +48,16 @@ Controls that are a common action use their usual icon, with the words in a tool
 (`title` and `aria-label`): full screen is an expand icon (a collapse icon while in full
 screen), close is ×, next and previous are arrows. Keep words on buttons whose action is not obvious.
 
+## Presentations
+
+`new_artifact.py --type presentation` writes `index.html` from the team's model
+(`.agents/system/templates/presentation.html`), already in the company's colours, type and logo.
+Write only the slides (the `<section class="slide">` blocks, with notes for whoever presents in an
+`<aside>`) and the footer text. Keep the rest as it is, so every presentation works the same: the
+controls in a bar on top, the footer (title, logo, slide number) in a bar below, never over the
+slides, and in full screen both bars hidden until the mouse is over them. If something about how
+presentations work should change, change the model, not one presentation.
+
 ## Apps: HTML or Streamlit
 
 An app (`--type app`) or a dashboard can be built two ways. Choose by what it needs:

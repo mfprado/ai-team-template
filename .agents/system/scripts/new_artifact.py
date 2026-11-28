@@ -21,14 +21,18 @@ Extra Python packages go in requirements.txt next to app.py.
 dashboards or apps (reportes, presentaciones, tableros, aplicaciones). Every artifact starts in
 the private subfolder (privado/), only on this computer, until the person shares it with the team
 (the team page's Share button, or share_artifact.py). The short name is the title in lowercase,
-without accents, with hyphens. Prints the folder as JSON; the caller writes index.html.
+without accents, with hyphens. Prints the folder as JSON; the caller writes index.html, except
+for a presentation: it starts from the team's model (.agents/system/templates/presentation.html),
+in the company's colours, and the caller only writes its slides.
 Standard library only.
 """
 
 import argparse
 import datetime
+import html
 import json
 import re
+import shutil
 import subprocess
 import sys
 import unicodedata
@@ -125,6 +129,54 @@ README_APP = {
 }
 
 
+DECK_TEXT = {
+    "en": {"TAG": "SECTION", "SUBTITLE": "One line on what this is about", "HEADING": "Slide title",
+           "POINT": "One idea per line", "NOTE": "Notes for whoever presents.", "CLOSE_TAG": "CLOSING",
+           "QUESTIONS": "Questions?", "PREV": "Previous", "NEXT": "Next", "NOTES": "Notes",
+           "PREV_TITLE": "Previous slide", "NEXT_TITLE": "Next slide",
+           "NOTES_TITLE": "Show or hide the notes for whoever presents",
+           "FULL": "Full screen", "EXIT_FULL": "Exit full screen"},
+    "es": {"TAG": "SECCIÓN", "SUBTITLE": "Una línea sobre de qué se trata", "HEADING": "Título de la diapositiva",
+           "POINT": "Una idea por línea", "NOTE": "Notas para quien presenta.", "CLOSE_TAG": "CIERRE",
+           "QUESTIONS": "¿Preguntas?", "PREV": "Anterior", "NEXT": "Siguiente", "NOTES": "Notas",
+           "PREV_TITLE": "Diapositiva anterior", "NEXT_TITLE": "Diapositiva siguiente",
+           "NOTES_TITLE": "Mostrar u ocultar las notas para quien presenta",
+           "FULL": "Pantalla completa", "EXIT_FULL": "Salir de pantalla completa"},
+}
+
+
+def mix(a, b, amount):
+    """Colour a moved `amount` (0..1) of the way towards b."""
+    ra, rb = (tuple(int(c.lstrip("#")[i:i + 2], 16) for i in (0, 2, 4)) for c in (a, b))
+    return "#" + "".join(f"{round(x + (y - x) * amount):02X}" for x, y in zip(ra, rb))
+
+
+def presentation(title, lang, folder):
+    """index.html from the team's presentation model, in the company's colours, type and logo:
+    every presentation has the same controls, footer and full screen behaviour."""
+    try:
+        brand = json.loads((ROOT / ".agents/brand.json").read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        brand = {}
+    bg, fg = brand.get("background") or "#FFFFFF", brand.get("text") or "#17201D"
+    family = brand.get("font_family")
+    font = f"'{family}', system-ui, sans-serif" if family else (
+        "Georgia, serif" if brand.get("font") == "serif" else "system-ui, sans-serif")
+    link = (f'<link href="https://fonts.googleapis.com/css2?family={family.replace(" ", "+")}:wght@400;600;800'
+            f'&display=swap" rel="stylesheet">\n') if family else ""
+    logo = "<span></span>"
+    source = ROOT / brand["logo"] if brand.get("logo") else None
+    if source and source.is_file():
+        shutil.copyfile(source, folder / "assets" / f"logo{source.suffix}")
+        logo = f'<img src="assets/logo{source.suffix}" alt="">'
+    values = {"LANG": lang, "TITLE": html.escape(title), "BG": bg, "FG": fg,
+              "ACCENT": brand.get("primary") or "#1F6F5C", "MUTED": mix(fg, bg, 0.4), "LINE": mix(bg, fg, 0.1),
+              "CARD": mix(bg, fg, 0.04), "FONT": font, "FONT_LINK": link, "LOGO": logo, **DECK_TEXT[lang]}
+    page = (ROOT / ".agents/system/templates/presentation.html").read_text(encoding="utf-8")
+    page = re.sub(r"__([A-Z_]+)__", lambda m: values.get(m.group(1), m.group(0)), page)
+    (folder / "index.html").write_text(page, encoding="utf-8")
+
+
 def launcher_name(title):
     """'Weekly sales' -> 'Weekly-sales': the app's name, readable, safe on Mac and Windows."""
     name = slug(title)
@@ -183,6 +235,8 @@ def main():
         mac.chmod(0o755)
         (folder / f"{launcher}.bat").write_bytes(WINDOWS_LAUNCHER.format().replace("\n", "\r\n").encode())
         readme += README_APP[lang].format(launcher=launcher)
+    elif args.type == "presentation":
+        presentation(args.title.strip(), lang, folder)
     (folder / "README.md").write_text(readme, encoding="utf-8")
     print(json.dumps({"folder": str(folder.relative_to(ROOT)), "entry": str(entry.relative_to(ROOT))}))
     return 0
