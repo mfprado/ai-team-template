@@ -98,16 +98,9 @@ def company_font(brand, brand_dir):
     return css, f"'{family}', {FONTS[kind]}"
 
 
-def page_background(colour):
-    """Never black: content (cards, frames, artifacts) has to stand out from the page,
-    so a near-black brand background becomes a dark grey."""
-    r, g, b = rgb(colour)
-    return mix(colour, "#FFFFFF", 0.1) if 0.299 * r + 0.587 * g + 0.114 * b < 24 else colour
-
-
 def palette(brand):
     colours = {k: brand.get(k) or v for k, v in DEFAULT.items()}
-    p, bg, tx = colours["primary"], page_background(colours["background"]), colours["text"]
+    p, bg, tx = colours["primary"], colours["background"], colours["text"]
     return {
         "primary": p, "background": bg, "text": tx, "on_primary": on(p),
         "check": mix(bg, p, 0.14),          # checks: a light tint of the brand colour
