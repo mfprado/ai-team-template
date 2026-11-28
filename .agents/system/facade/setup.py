@@ -161,27 +161,29 @@ MAC_SET_ICON = """function run(argv) {
 
 
 def folder_icon(icon_png, icon_ico, team):
-    """Give the team folder (and the Mac launcher) the company's icon. True the first time or when it changes."""
+    """Give the Mac launcher the company's icon. The team folder itself looks like any other folder
+    (an icon given to it before is taken away). True the first time or when the icon changes."""
     stamp = ROOT / ".git/brand-icon"
     source = icon_ico if SYSTEM == "Windows" else icon_png
     if not source.exists():
         return False
     digest = hashlib.sha256(source.read_bytes()).hexdigest()
     unchanged = stamp.exists() and stamp.read_text().strip() == digest
-    if unchanged and SYSTEM != "Darwin":
-        return False
     if SYSTEM == "Darwin":  # every launch: an update replaces the launcher file and drops its icon
-        targets = [str(ROOT)] + [str(p) for p in ROOT.glob("*.command")]
-        if run("osascript", "-l", "JavaScript", "-e", MAC_SET_ICON, str(source), *targets).returncode != 0:
+        if (ROOT / "Icon\r").exists():  # the folder had the company's icon: back to a plain folder
+            (ROOT / "Icon\r").unlink(missing_ok=True)
+            run("xattr", "-d", "com.apple.FinderInfo", str(ROOT))  # drops the "has its own icon" mark
+        launchers = [str(p) for p in ROOT.glob("*.command")]
+        if launchers and run("osascript", "-l", "JavaScript", "-e", MAC_SET_ICON, str(source), *launchers).returncode != 0:
             return False
     elif SYSTEM == "Windows":
         ini = ROOT / "desktop.ini"
-        if ini.exists():
-            run("attrib", "-h", "-s", str(ini))
-        ini.write_text("[.ShellClassInfo]\r\nIconResource=" + str(source.relative_to(ROOT)) + ",0\r\n"
-                       f"InfoTip={team} AI workspace\r\n", encoding="utf-8")
-        run("attrib", "+h", "+s", str(ini))
-        run("attrib", "+r", str(ROOT))  # Windows only reads desktop.ini in read-only or system folders
+        if ini.exists() and "AI workspace" in ini.read_text(encoding="utf-8", errors="replace"):
+            run("attrib", "-h", "-s", str(ini))  # the folder had the company's icon: back to a plain folder
+            ini.unlink(missing_ok=True)
+            run("attrib", "-r", str(ROOT))
+        if unchanged:
+            return False
     else:
         return False
     stamp.write_text(digest + "\n")
@@ -250,7 +252,7 @@ def apply_brand():
     changed = folder_icon(brand_dir / "icon.png", brand_dir / "icon.ico", team)
     changed = windows_shortcut(brand_dir / "icon.ico") or changed
     if made or changed:
-        return "The team folder now has your company's icon."
+        return "The team launcher now has your company's icon."
     return None
 
 
