@@ -134,6 +134,9 @@ def page_theme(brand):
     """The team page reads .streamlit/config.toml from the folder it starts in (the team folder)."""
     lines = ["[theme]"]
     background, text = brand.get("background"), brand.get("text")
+    r, g, b = rgb(background) if background else (255, 255, 255)
+    if 0.299 * r + 0.587 * g + 0.114 * b < 24:  # never black (same rule as flow_page.page_background)
+        background = mix(background, "#FFFFFF", 0.1)
     if background or text:
         # Without a base, Streamlit keeps its light sidebar and inputs: light text on a dark
         # brand becomes unreadable there. Pick the base from the colours and tint the sidebar.

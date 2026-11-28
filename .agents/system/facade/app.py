@@ -968,10 +968,11 @@ if section == t["tab_artifacts"]:
         st.markdown("<style>[data-testid='stMainBlockContainer']{max-width:100%!important;padding:.5rem 2rem 0}"
                     "header[data-testid='stHeader']{background:transparent;pointer-events:none}"
                     "header[data-testid='stHeader'] *{pointer-events:auto}"
-                    "iframe[src*='embed=true'],iframe[srcdoc]{height:calc(100vh - 70px)!important}</style>",
+                    "iframe[src*='embed=true'],iframe[srcdoc]{height:calc(100vh - 70px)!important}"
+                    ".st-key-artbar{padding:0 2.5rem}</style>",  # clear of the sidebar toggle and the menu
                     unsafe_allow_html=True)
         # One thin row: back on the left, the artifact's folder on the right.
-        back, _, folder = st.columns([1, 20, 1], vertical_alignment="center")
+        back, _, folder = st.container(key="artbar").columns([1, 20, 1], vertical_alignment="center")
         if back.button("", icon=":material/arrow_back:", type="tertiary", help=t["back"]):
             st.session_state.pop("viewing", None)
             st.rerun()
