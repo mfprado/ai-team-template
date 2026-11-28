@@ -5,6 +5,7 @@ Changes to settings are shared like any other change: the AI Champion's go strai
 team; anyone else's become a change request the Champion approves (propose_change.py).
 """
 
+import base64
 import datetime
 import html
 import json
@@ -399,18 +400,23 @@ with st.sidebar:
     menu = st.container(key="menu")
     for name in SECTIONS:
         current = st.session_state.section == name
+        folded = st.session_state.get(f"fold-{name}", False)
         if menu.button(name, icon=ICONS[name], type="primary" if current else "secondary",
                      use_container_width=True, key=f"menu-{name}"):
+            if current and not st.session_state.get("viewing") and not st.session_state.get("viewing_doc"):
+                # Clicking the open section again hides or shows its list underneath.
+                st.session_state[f"fold-{name}"] = not folded
+                st.rerun()
             # A section's own entry takes you back to its start (out of an artifact, a skill).
             st.session_state.section = name
             st.session_state.pop("viewing", None)
             st.session_state.pop("viewing_doc", None)
             st.rerun()
         if name == t["tab_docs"] and current:
-            docs_menu = menu.container(key="docsmenu")  # filled in the Documents section
+            docs_menu = menu.container(key="docsmenu-folded" if folded else "docsmenu")  # filled in the Documents section
         if name == t["tab_artifacts"] and current:
             # Filled further down, once the artifacts are listed: one entry per artifact.
-            artifact_menu = menu.container(key="artmenu")
+            artifact_menu = menu.container(key="artmenu-folded" if folded else "artmenu")
     section = st.session_state.section
 
 if not ((section == t["tab_artifacts"] and st.session_state.get("viewing"))
@@ -918,6 +924,23 @@ def enter_artifact(item):
         st.session_state.viewing = item["key"]
 
 
+PDF_VIEWER = """<style>html,body{margin:0;background:#525659}canvas{display:block;margin:12px auto;max-width:96%;
+box-shadow:0 1px 4px rgba(0,0,0,.4);background:#fff}</style><div id="pages"></div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<script>
+pdfjsLib.GlobalWorkerOptions.workerSrc = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
+const bytes = Uint8Array.from(atob("__DATA__"), c => c.charCodeAt(0));
+pdfjsLib.getDocument({data: bytes, standardFontDataUrl: "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/standard_fonts/"}).promise.then(async pdf => {
+  for (let n = 1; n <= pdf.numPages; n++) {
+    const page = await pdf.getPage(n), view = page.getViewport({scale: 2});
+    const c = document.createElement("canvas"); c.width = view.width; c.height = view.height;
+    document.getElementById("pages").appendChild(c);
+    await page.render({canvasContext: c.getContext("2d"), viewport: view}).promise;
+  }
+});
+</script>"""
+
+
 def show_report(item):
     # Pages and apps show their own title; the row is left out when it would be empty.
     titled = item["kind"] == "link" or (item["kind"] == "file" and item["path"].suffix.lower() not in (".html", ".htm", ".md"))
@@ -952,6 +975,10 @@ def show_report(item):
         # White by default (reports written without a background are unreadable on a dark page).
         page = "<style>html{background:#fff;color:#111}</style>" + p.read_text(encoding="utf-8", errors="replace")
         components.html(page, height=720, scrolling=True)
+    elif p.suffix.lower() == ".pdf":
+        # Drawn page by page with PDF.js: the browser's own PDF viewer does not run inside the page's frame.
+        data = base64.b64encode(p.read_bytes()).decode()
+        components.html(PDF_VIEWER.replace("__DATA__", data), height=720, scrolling=True)
     elif p.suffix.lower() in (".png", ".jpg", ".jpeg", ".gif", ".svg"):
         st.image(str(p))
     elif p.suffix.lower() == ".md":
