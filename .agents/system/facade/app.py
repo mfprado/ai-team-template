@@ -958,6 +958,39 @@ pdfjsLib.getDocument({data: bytes, standardFontDataUrl: "https://cdnjs.cloudflar
 </script>"""
 
 
+IMAGE_TYPES = {".png": "image/png", ".jpg": "image/jpeg", ".jpeg": "image/jpeg", ".gif": "image/gif",
+               ".webp": "image/webp", ".svg": "image/svg+xml"}
+
+
+def inline_images(text, md_path):
+    """Markdown shown on the page cannot load images saved next to it, so embed them.
+
+    Relative image links (inline `![x](img.png)` and reference `[id]: img.png`) are
+    read from disk and turned into data URIs. Web links, data URIs and files outside
+    the team folder are left as they are.
+    """
+    def embed(target):
+        clean = target.strip().strip("<>").split(" ")[0]
+        if not clean or re.match(r"^[a-z]+:", clean, re.I):
+            return None
+        f = (md_path.parent / clean.replace("%20", " ")).resolve()
+        kind = IMAGE_TYPES.get(f.suffix.lower())
+        if not kind or not f.is_file() or ROOT.resolve() not in f.parents:
+            return None
+        return f"data:{kind};base64," + base64.b64encode(f.read_bytes()).decode()
+
+    def inline(m):
+        uri = embed(m.group(2))
+        return f"{m.group(1)}({uri})" if uri else m.group(0)
+
+    def reference(m):
+        uri = embed(m.group(2))
+        return f"{m.group(1)}{uri}" if uri else m.group(0)
+
+    text = re.sub(r"(!\[[^\]]*\])\(([^)]+)\)", inline, text)
+    return re.sub(r"(?m)^(\s*\[[^\]]+\]:\s*)(\S+)\s*$", reference, text)
+
+
 def show_report(item):
     # Pages and apps show their own title; the row is left out when it would be empty.
     titled = item["kind"] == "link" or (item["kind"] == "file" and item["path"].suffix.lower() not in (".html", ".htm", ".md"))
@@ -999,7 +1032,7 @@ def show_report(item):
     elif p.suffix.lower() in (".png", ".jpg", ".jpeg", ".gif", ".svg"):
         st.image(str(p))
     elif p.suffix.lower() == ".md":
-        st.markdown(p.read_text(encoding="utf-8", errors="replace"))
+        st.markdown(inline_images(p.read_text(encoding="utf-8", errors="replace"), p))
     elif p.suffix.lower() in (".txt", ".csv"):
         st.text(p.read_text(encoding="utf-8", errors="replace"))
     elif st.button(t["show_folder"]):  # a file the page cannot show or open
