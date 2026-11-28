@@ -297,6 +297,15 @@ button:focus-visible {{ outline:2px solid var(--accent) !important; outline-offs
 [data-testid="stTable"] th, [data-testid="stTable"] td {{ color:var(--ink) !important; border-color:var(--rule) !important;
   background:transparent !important; }}
 [data-testid="stTable"] th {{ color:var(--muted) !important; font-weight:600; }}
+/* Radio choices: an empty ring when not chosen, the brand colour when chosen */
+[data-testid="stRadio"] label > div:first-child:not([data-testid]) {{ background:var(--card) !important;
+  box-shadow:inset 0 0 0 1.5px var(--muted); }}
+[data-testid="stRadio"] label:has(input:checked) > div:first-child:not([data-testid]) {{ background:var(--accent) !important;
+  box-shadow:none; }}
+[data-testid="stRadio"] label > div:first-child:not([data-testid]) > div {{ background:var(--card) !important; }}
+/* "Working..." messages: on the page, not on a dark band */
+[data-testid="stSpinner"], [data-testid="stSpinner"] > div {{ background:transparent !important; color:var(--ink) !important; }}
+[data-testid="stSpinner"] i {{ border-color:var(--rule) !important; border-top-color:var(--accent) !important; }}
 /* Hover hints (the "?" and the sun or moon): readable, day or night */
 [data-testid="stTooltipContent"], [data-baseweb="tooltip"] > div {{ background:var(--ink) !important; }}
 [data-testid="stTooltipContent"], [data-testid="stTooltipContent"] * {{ color:var(--paper) !important; }}
