@@ -1,0 +1,56 @@
+#!/bin/sh
+# Prepare this computer for the team folder, with no questions: the AI assistant runs it itself,
+# on Mac and on Windows (Git Bash), so the person never has to click through a setup.
+#
+#   sh .agents/system/bin/setup
+#
+# Safe to repeat. Steps:
+# 1. Install uv if it is missing (it installs and runs the right Python).
+# 2. Install Python 3.12 through uv.
+# 3. Run facade/setup.py: team checks on, team's latest, brand and icons, hidden technical files,
+#    Codex trust, Windows PATH for Git's sh, and a self-test of the team checks (repaired if broken).
+# Then it prints "Your team folder is ready." and anything still needing the person (for example,
+# signing in to GitHub), and writes the same to .git/launch.log.
+#
+# It does not install Git or GitHub's tool, or sign in to GitHub: those need the person (an
+# installer window or a browser sign-in), so the double-click launcher keeps doing them.
+HERE="$(printf '%s' "$0" | tr '\\' '/')"; HERE="${HERE%/*}"
+ROOT="$(cd "$HERE/../../.." && pwd)" || exit 1
+cd "$ROOT" || exit 1
+LOG=".git/launch.log"
+case "$(uname -s)" in
+  Darwin) SYSTEM=Mac ;;
+  MINGW*|MSYS*|CYGWIN*) SYSTEM=Windows ;;
+  *) SYSTEM="$(uname -s)" ;;
+esac
+say() { echo "$1"; [ -d .git ] && echo "$1" >> "$LOG"; }
+[ -d .git ] && echo "Setting up this computer... ($(date '+%Y-%m-%d %H:%M'), $SYSTEM, run by the AI assistant)" > "$LOG"
+
+UV="$(sh .agents/system/bin/find-uv)"
+if [ -z "$UV" ]; then
+  say "Installing the tools your team folder needs, one time only..."
+  if [ "$SYSTEM" = Windows ]; then
+    powershell -NoProfile -ExecutionPolicy ByPass -Command "irm https://astral.sh/uv/install.ps1 | iex" >> "$LOG" 2>&1
+  else
+    curl -LsSf https://astral.sh/uv/install.sh | sh >> "$LOG" 2>&1
+  fi
+  UV="$(sh .agents/system/bin/find-uv)" || {
+    say "The installation failed. Check the internet connection and try again, or ask your AI Champion."
+    exit 1
+  }
+fi
+
+"$UV" python install 3.12 --quiet >> "$LOG" 2>&1
+"$UV" run --quiet --no-project --python 3.12 --with pillow==11.0.0 .agents/system/facade/setup.py > "$LOG.setup" 2>&1
+code=$?
+cat "$LOG.setup"; cat "$LOG.setup" >> "$LOG"; rm -f "$LOG.setup"
+[ "$code" -eq 0 ] || exit "$code"
+
+GH="$(command -v gh 2>/dev/null)"
+[ -z "$GH" ] && [ -f "/c/Program Files/GitHub CLI/gh.exe" ] && GH="/c/Program Files/GitHub CLI/gh.exe"
+if [ -z "$GH" ]; then
+  say "- GitHub's tool is missing: the person double-clicks the team launcher once to install it."
+elif ! "$GH" auth status --hostname github.com >/dev/null 2>&1; then
+  say "- GitHub is not signed in yet: the person double-clicks the team launcher once to sign in."
+fi
+say "Setup finished."

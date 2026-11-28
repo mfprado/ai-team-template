@@ -30,7 +30,8 @@ from pathlib import Path, PurePosixPath
 ROOT = Path(__file__).resolve().parents[3]
 POLICY = ROOT / ".agents" / "permissions.json"
 
-SHELL_TOOLS = {"bash", "shell", "local_shell", "exec_command"}
+# PowerShell: Claude Code on Windows has a PowerShell tool next to Bash; the same rules apply to it.
+SHELL_TOOLS = {"bash", "shell", "local_shell", "exec_command", "powershell"}
 READ_TOOLS = {"read", "view", "read_file", "notebookread", "grep", "glob", "search", "ls"}
 EDIT_TOOLS = {"edit", "write", "multiedit", "notebookedit", "apply_patch", "create_file", "str_replace", "write_file"}
 
@@ -38,12 +39,26 @@ WRAPPERS = {"env", "command", "exec", "nohup", "time", "sudo", "nice", "xargs"}
 SHELLS = {"sh", "bash", "zsh", "dash"}
 GIT_GLOBAL_WITH_ARG = {"-C", "-c", "--git-dir", "--work-tree", "--namespace", "--exec-path"}
 SEARCH_TOOLS = {"grep", "search"}
-# Shell commands that only read, allowed to name protected files without asking.
-READ_ONLY_PROGRAMS = {"cat", "less", "more", "head", "tail", "grep", "rg", "ls", "wc", "diff", "file", "stat"}
+# Shell commands that only read (or move around), so they may name protected files, such as the
+# team's machinery in .agents/system/, without asking: looking is not editing. Programs that can
+# also write a file (sort -o, uniq in out, sed -i...) are left out on purpose.
+READ_ONLY_PROGRAMS = {"cat", "less", "more", "head", "tail", "grep", "egrep", "fgrep", "rg", "ls", "wc", "diff",
+                      "file", "stat", "cd", "pwd", "echo", "printf", "which", "type", "true", "false", "test", "[",
+                      "cut", "tr", "jq", "basename", "dirname", "realpath", "readlink", "uname", "whoami",
+                      "Get-Content", "Get-ChildItem", "Test-Path", "Write-Output", "Select-String", "Get-Item",
+                      "Resolve-Path", "Get-Location", "Set-Location"}
+# `find` only reads unless it is told to delete, run or write something.
+# Looked for in the command as typed (flag expansion would split -delete into -d -e -l...).
+FIND_WRITES = re.compile(r"(?<!\S)-(?:delete|exec|execdir|ok|okdir|fprint0?|fprintf|fls)(?!\S)")
+# Redirections that only throw output away or merge it (2>/dev/null, 2>&1, 2>$null): they write nothing.
+HARMLESS_REDIRECTS = re.compile(r"(?:\d?>>?|&>>?)\s*(?:/dev/null|\$null|NUL)(?![\w./\\-])|\d?>&\d")
 READ_ONLY_GIT = {"diff", "log", "status", "show", "blame"}
 # Team scripts the agent runs as part of normal work: running them is not editing them.
-CORE_SCRIPTS = {PurePosixPath(f".agents/system/scripts/{n}") for n in ("sync.py", "propose_change.py", "selftest.py", "ideas.py", "doctor.py")}
+CORE_SCRIPTS = {PurePosixPath(f".agents/system/scripts/{n}") for n in (
+    "sync.py", "propose_change.py", "selftest.py", "ideas.py", "doctor.py", "new_artifact.py", "artifact_link.py")}
 PY_FINDER = ".agents/system/bin/py"
+# Team tools run with sh: setting up this computer and starting the team page.
+CORE_SH_TOOLS = {PurePosixPath(".agents/system/bin/setup"), PurePosixPath(".agents/system/bin/team-page")}
 
 # Used when .agents/permissions.json cannot be read: the critical basics stay enforced.
 FALLBACK_RULES = [
@@ -220,6 +235,8 @@ def path_matches(pattern, path):
     while bare.startswith("**/"):
         bare = bare[3:]
     s = str(p)
+    if pattern.endswith("/**") and fnmatch.fnmatch(s, pattern[:-3]):
+        return True  # the folder itself (rm -rf .agents/system), not only what is inside it
     return fnmatch.fnmatch(p.name, bare) or fnmatch.fnmatch(s, pattern) or fnmatch.fnmatch(s, bare)
 
 
@@ -232,17 +249,46 @@ def paths_in(tool_input):
     return found
 
 
-def read_only_or_sync(command):
-    """True when every part of the command only reads, or runs a known team script."""
-    if re.search(r"[<>]", command):
+# Quoted text with nothing the shell would run inside it ('...' always; "..." without $ or `).
+LITERAL_QUOTES = re.compile(r"'[^']*'|\"(?:[^\"\\$`]|\\.)*\"")
+
+
+def allowed_by_rule(seg, rules):
+    """True when this simple command is one the team allowed explicitly (tier "allow")."""
+    command = shlex.join(seg)
+    for r in rules:
+        if r.get("tool") != "Bash" or r.get("tier") != "allow" or not r.get("pattern"):
+            continue
+        want = r["pattern"].split()
+        while want and re.match(r"^\w+=", want[0]):
+            want = want[1:]  # TEAM_PAGE_NO_BROWSER=1 uv run ...: the command itself is what counts
+        if want and command_matches(" ".join(want), command):
+            return True
+    return False
+
+
+def read_only_or_sync(command, rules=()):
+    """True when every part of the command only reads, runs a known team script or tool, or is a
+    command the team allowed explicitly. Then naming the team's machinery is not editing it."""
+    # Literal quoted text (grep -E '"id"|"ok"', cd "C:/Team") can hold | ; > without being
+    # commands or redirections: blank it out first. Only decides read-only; paths are checked apart.
+    plain = LITERAL_QUOTES.sub(" Q ", command)
+    plain = HARMLESS_REDIRECTS.sub(" ", plain)
+    if re.search(r"[<>]", plain):
         return False
-    for seg in segments(command):
+    for seg in segments(plain):
         prog = seg[0]
         if prog in READ_ONLY_PROGRAMS:
             continue
+        if prog == "find" and not FIND_WRITES.search(command):
+            continue
         if prog == "git" and len(seg) > 1 and seg[1] in READ_ONLY_GIT:
             continue
+        if allowed_by_rule(seg, rules):
+            continue
         args = seg[1:]
+        if prog in SHELLS and args and relative(args[0]) in CORE_SH_TOOLS:
+            continue
         if prog == "sh" and args and relative(args[0]) == PurePosixPath(PY_FINDER):
             args = [a for a in args[1:] if a not in ("-I", "-E", "-s", "-P")]  # sh .agents/system/bin/py [-I] <script>
         elif prog == "py":
@@ -307,7 +353,7 @@ def disables_hooks(tool, tool_input):
     return False
 
 
-def decide(rule, tool, tool_input):
+def decide(rule, tool, tool_input, rules=()):
     rule_tool = rule.get("tool", "")
     pattern = rule.get("pattern")
     name = tool.lower()
@@ -327,7 +373,7 @@ def decide(rule, tool, tool_input):
             return False
         if name in SHELL_TOOLS:
             cmd = command_of(tool_input)
-            if rule_tool == "Edit" and read_only_or_sync(cmd):
+            if rule_tool == "Edit" and read_only_or_sync(cmd, rules):
                 return False
             words = []
             for seg in segments(cmd):
@@ -363,7 +409,7 @@ def main():
         return 2
     for tier in ("deny", "ask"):
         for rule in (r for r in rules if r.get("tier", "deny") == tier):
-            result = decide(rule, tool, tool_input)
+            result = decide(rule, tool, tool_input, rules)
             if result:
                 reason = rule.get("reason") or "Blocked by .agents/permissions.json."
                 if result == "ask":

@@ -1,0 +1,12 @@
+#!/bin/sh
+# Print the path of uv on this computer, or nothing (exit 1) if it is not installed.
+# Used by bin/setup and bin/team-page. Looks in the PATH and where uv's installer puts it,
+# because a session opened before the first install still has the old PATH (Mac and Windows).
+for uv_bin in "$(command -v uv 2>/dev/null)" "$HOME/.local/bin/uv" "$HOME/.local/bin/uv.exe" \
+              "$HOME/.cargo/bin/uv" "$HOME/.cargo/bin/uv.exe"; do
+  if [ -n "$uv_bin" ] && [ -f "$uv_bin" ]; then
+    printf '%s\n' "$uv_bin"
+    exit 0
+  fi
+done
+exit 1

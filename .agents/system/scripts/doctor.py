@@ -81,7 +81,7 @@ def check_sh():
     found = git_sh()
     if found:
         return {"ok": False, "problem": "Git for Windows is installed, but its sh is not on the PATH, so "
-                "Codex's team checks cannot run.", "fix": "add_git_sh_to_path", "folder": str(found.parent)}
+                "Codex's team checks cannot run.", "fix": "run_setup", "folder": str(found.parent)}
     return {"ok": False, "problem": "Git for Windows is missing.", "fix": "run_launcher"}
 
 
@@ -97,7 +97,7 @@ def find_uv():
 
 
 def check_uv():
-    return {"ok": True} if find_uv() else {"ok": False, "problem": "uv is not installed.", "fix": "run_launcher"}
+    return {"ok": True} if find_uv() else {"ok": False, "problem": "uv is not installed.", "fix": "run_setup"}
 
 
 def check_python(sh_ok):
@@ -107,7 +107,7 @@ def check_python(sh_ok):
     if out.returncode == 0 and out.stdout.strip() == "True":
         return {"ok": True}
     return {"ok": False, "problem": "The Python the team checks use does not run (on Windows, often the "
-            "Microsoft Store placeholder).", "fix": "run_launcher"}
+            "Microsoft Store placeholder).", "fix": "run_setup"}
 
 
 def check_guard(sh_ok):
@@ -116,7 +116,7 @@ def check_guard(sh_ok):
     out = run(sys.executable, "-I", str(ROOT / ".agents/system/scripts/selftest.py"), timeout=120)
     if out.returncode == 0:
         return {"ok": True}
-    return {"ok": False, "problem": "The team checks do not block what they must.", "fix": "run_launcher",
+    return {"ok": False, "problem": "The team checks do not block what they must.", "fix": "run_setup",
             "details": (out.stdout + out.stderr).strip()[-600:]}
 
 
@@ -124,7 +124,7 @@ def check_git_hooks():
     current = run("git", "config", "--get", "core.hooksPath").stdout.strip()
     if current == HOOKS_PATH:
         return {"ok": True}
-    return {"ok": False, "problem": "The team's git checks are off on this computer.", "fix": "run_launcher"}
+    return {"ok": False, "problem": "The team's git checks are off on this computer.", "fix": "run_setup"}
 
 
 def check_codex_trust():
@@ -140,7 +140,7 @@ def check_codex_trust():
     if any(f"[projects.{k}]" in text for k in keys):
         return {"ok": True}
     return {"ok": False, "problem": "Codex does not trust this folder yet, so it ignores the team's rules here.",
-            "fix": "run_launcher"}
+            "fix": "run_setup"}
 
 
 def check_gh():

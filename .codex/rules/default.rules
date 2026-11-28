@@ -108,3 +108,27 @@ prefix_rule(
     decision = "allow",
     justification = "Anota y lee las ideas del equipo.",
 )
+
+prefix_rule(
+    pattern = ["sh", ".agents/system/bin/setup"],
+    decision = "allow",
+    justification = "Prepares this computer for the team folder: installs what is missing and turns on the team checks.",
+)
+
+prefix_rule(
+    pattern = ["sh", ".agents/system/bin/team-page"],
+    decision = "allow",
+    justification = "Opens the team page inside the assistant's browser, without opening the person's browser.",
+)
+
+prefix_rule(
+    pattern = ["sh", ".agents/system/bin/py", "-I", ".agents/system/scripts/doctor.py"],
+    decision = "allow",
+    justification = "Checks that this computer is ready for the team folder (changes nothing).",
+)
+
+prefix_rule(
+    pattern = ["sh", ".agents/system/bin/py", "-I", ".agents/system/scripts/selftest.py"],
+    decision = "allow",
+    justification = "Checks that the team checks still block what they must (changes nothing).",
+)

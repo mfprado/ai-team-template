@@ -246,6 +246,30 @@
       "reason": "Anota y lee las ideas del equipo."
     },
     {
+      "tool": "Bash",
+      "pattern": "sh .agents/system/bin/setup",
+      "tier": "allow",
+      "reason": "Prepares this computer for the team folder: installs what is missing and turns on the team checks."
+    },
+    {
+      "tool": "Bash",
+      "pattern": "sh .agents/system/bin/team-page",
+      "tier": "allow",
+      "reason": "Opens the team page inside the assistant's browser, without opening the person's browser."
+    },
+    {
+      "tool": "Bash",
+      "pattern": "sh .agents/system/bin/py -I .agents/system/scripts/doctor.py",
+      "tier": "allow",
+      "reason": "Checks that this computer is ready for the team folder (changes nothing)."
+    },
+    {
+      "tool": "Bash",
+      "pattern": "sh .agents/system/bin/py -I .agents/system/scripts/selftest.py",
+      "tier": "allow",
+      "reason": "Checks that the team checks still block what they must (changes nothing)."
+    },
+    {
       "tool": "mcp__Claude_Browser__preview_start",
       "tier": "allow",
       "reason": "Ver la página del equipo en el navegador del asistente."
