@@ -34,7 +34,7 @@ SAFE_TO_OPEN = {".html", ".htm", ".pdf", ".png", ".jpg", ".jpeg", ".gif", ".svg"
 T = {
     "en": {
         "title": "{team} AI workspace", "champion": "AI Champion: {name}",
-        "sync": "Get the team's latest", "night": "Night mode", "synced": "Up to date with the team.",
+        "sync": "Get the team's latest", "night": "Night mode", "day": "Day mode", "synced": "Up to date with the team.",
         "sync_fail": "Could not get the team's latest changes right now.",
         "tab_skills": "Skills", "tab_perms": "General permissions", "tab_artifacts": "Artifacts", "tab_history": "History",
         "tab_docs": "Documents", "docs_intro": "What is in the team's documents folder. Click one to see it here.", "no_docs": "The documents folder is empty. Put the team's documents there (or ask the AI assistant to).", "tab_ideas": "Ideas", "ideas_intro": "Ideas for the team's workspace. Anyone can add one or update its status.",
@@ -94,7 +94,7 @@ T = {
     },
     "es": {
         "title": "Espacio de IA de {team}", "champion": "IA Champion: {name}",
-        "sync": "Traer lo último del equipo", "night": "Modo noche", "synced": "Al día con el equipo.",
+        "sync": "Traer lo último del equipo", "night": "Modo noche", "day": "Modo día", "synced": "Al día con el equipo.",
         "sync_fail": "No se pudieron traer los últimos cambios del equipo ahora.",
         "tab_skills": "Skills", "tab_perms": "Permisos generales", "tab_artifacts": "Artefactos", "tab_history": "Historial",
         "tab_docs": "Documentos", "docs_intro": "Lo que hay en la carpeta de documentos del equipo. Hacé clic en uno para verlo acá.", "no_docs": "La carpeta de documentos está vacía. Poné ahí los documentos del equipo (o pedíselo al asistente de IA).", "tab_ideas": "Ideas", "ideas_intro": "Ideas para el espacio del equipo. Cualquiera puede sumar una o cambiar su estado.",
@@ -215,7 +215,7 @@ def skill_flow(body):
 
 def show_flow(diagram):
     """The skill's flow, in the company's design (flow_page.py). Clicking a step shows its details."""
-    brand = load_json(ROOT / ".agents/brand.json", {})
+    brand = look.in_mode(load_json(ROOT / ".agents/brand.json", {}), st.session_state.night)  # day or night, like the page
     page = flow_page.build(diagram, brand, ROOT / ".agents/brand", language=team.get("language", "en"))
     # A first guess at the height; the diagram then sizes its frame to fit.
     components.html(page, height=min(900, 60 * diagram.count("\n")))
@@ -386,13 +386,21 @@ ICONS = dict(zip(SECTIONS, [":material/bar_chart:", ":material/folder:", ":mater
                             ":material/lightbulb:", ":material/shield:", ":material/history:"]))
 
 with st.sidebar:
-    st.markdown(look.team_header(logo, team.get("team", "Team"), t["champion"].format(name=champion)),
-                unsafe_allow_html=True)
+    name_col, mode_col = st.columns([6, 1], vertical_alignment="top")
+    name_col.markdown(look.team_header(logo, team.get("team", "Team"), t["champion"].format(name=champion)),
+                      unsafe_allow_html=True)
+
+    def flip_mode():
+        st.session_state.night = not st.session_state.night
+
+    # Sun in night mode (to go to day), moon in day mode (to go to night).
+    with mode_col.container(key="modeswitch"):
+        st.button("", icon=":material/light_mode:" if st.session_state.night else ":material/dark_mode:",
+                  type="tertiary", help=t["day" if st.session_state.night else "night"], on_click=flip_mode)
     refresh = st.button(t["sync"], icon=":material/refresh:", use_container_width=True)
     if refresh or "synced" not in st.session_state:
         git("fetch", "--quiet")  # then fast-forward, keeping unsaved work (whatever pull.rebase says)
         st.session_state.synced = git("merge", "--ff-only", "--autostash", "--quiet", "@{upstream}").returncode == 0
-    st.toggle(t["night"], key="night")
     status, ok = sync_status()
     st.markdown(look.sync_badge(status, ok), unsafe_allow_html=True)
     if status == t["unshared"]:
@@ -653,7 +661,9 @@ if section == t["tab_ideas"]:
         # Folded like a skill card: title, author, status and owner always; a click on the title
         # opens the description, the workflow and the comments. A second click folds it again.
         is_open = st.session_state.get("open_idea") == n
-        with st.container(border=True, key=f"ideacard-{n}"):
+        # The key says open or folded, so look.py can drop the height the diagram gave its frame
+        # (Streamlit reuses that wrapper, which would stay as an empty space after folding).
+        with st.container(border=True, key=f"ideacard-{n}-{'open' if is_open else 'folded'}"):
             head, tag = st.columns([5, 1.7], vertical_alignment="top")
             if head.button(idea["text"], key=f"ideaopen-{n}", type="tertiary", use_container_width=True,
                            icon=":material/expand_less:" if is_open else ":material/expand_more:"):
@@ -968,7 +978,7 @@ def show_report(item):
                     if (port := app_port(p)):
                         break
         if port:
-            components.iframe(f"http://localhost:{port}/?embed=true", height=820, scrolling=True)
+            components.iframe(f"http://localhost:{port}/?embed=true&mode={'night' if st.session_state.night else 'day'}", height=820, scrolling=True)
         else:
             st.warning(t["app_failed"])
         return

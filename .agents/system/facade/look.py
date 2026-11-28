@@ -34,8 +34,19 @@ def in_mode(brand, dark):
     return {**brand, "background": mix(c["text"], "#FFFFFF", 0.92), "text": c["background"]}
 
 
+def chosen_mode(brand):
+    """The brand in the mode the address asks for (?mode=night or ?mode=day). The team page sets it,
+    and passes it to the apps it opens, so they follow the person's choice too."""
+    try:
+        import streamlit as st
+        mode = st.query_params.get("mode")
+    except Exception:  # not running inside Streamlit
+        mode = None
+    return in_mode(brand, mode == "night") if mode in ("night", "day") else brand
+
+
 def tokens(brand):
-    c = palette(brand)
+    c = palette(chosen_mode(brand))
     light = on(c["background"]) != "#FFFFFF"
     return {
         **c,
@@ -174,6 +185,7 @@ button p {{ white-space:nowrap; }}
 .idea-text {{ font-size:1.05rem; font-weight:620; line-height:1.4; color:var(--ink); }}
 .idea-who {{ color:var(--muted); font-size:.85rem; margin:.2rem 0 .6rem; line-height:1.4; }}
 [class*="st-key-ideacard-"] {{ gap:.7rem; }}
+[class*="st-key-ideacard-"][class*="-folded"] [data-testid="stElementContainer"] {{ height:auto !important; }}
 [class*="st-key-ideacard-"] [data-testid="stTextInput"] input {{ background:transparent; }}
 [class*="st-key-ideacard-"] [data-testid="stTextInput"] > div > div {{ background:transparent !important;
   border:1px solid var(--rule) !important; }}
@@ -270,6 +282,19 @@ button:focus-visible {{ outline:2px solid var(--accent) !important; outline-offs
   color:var(--ink) !important; font-size:1.35rem !important; font-weight:560; letter-spacing:-0.01em;
   white-space:pre-wrap !important; font-variation-settings:'opsz' 36; line-height:1.3; }}
 
+/* Night or day: a sun or moon next to the team's name */
+.st-key-modeswitch {{ margin-top:.2rem; }}  /* level with the logo and the team's name (40px tall) */
+.st-key-modeswitch button {{ color:var(--muted) !important; padding:0 !important; min-height:0; height:40px; }}
+.st-key-modeswitch button:hover {{ color:var(--accent) !important; }}
+.st-key-modeswitch button span {{ font-size:1.4rem !important; }}
+/* Hover hints (the "?" and the sun or moon): readable, day or night */
+[data-testid="stTooltipContent"], [data-baseweb="tooltip"] > div {{ background:var(--ink) !important; }}
+[data-testid="stTooltipContent"], [data-testid="stTooltipContent"] * {{ color:var(--paper) !important; }}
+/* Switches: the track always shows against the page, day or night */
+/* (the track and its knob have no test id; the "?" help icon next to a label does) */
+[data-testid="stCheckbox"] label > div:first-child:not([data-testid]) {{ background:var(--rule) !important; }}
+[data-testid="stCheckbox"] label > div:first-child:not([data-testid]) > div {{ background:var(--card) !important; box-shadow:0 0 0 1px var(--muted); }}
+[data-testid="stCheckbox"] label:has(input:checked) > div:first-child:not([data-testid]) {{ background:var(--accent) !important; }}
 /* Text boxes and menus: in the page's colours, day or night */
 input, textarea, [data-baseweb="select"] > div, [data-baseweb="input"], [data-baseweb="textarea"],
 [data-baseweb="base-input"] {{ background:var(--card) !important; color:var(--ink) !important; }}
