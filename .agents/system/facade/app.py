@@ -1050,8 +1050,10 @@ def open_bar(state_key, path):
                 "iframe[src*='embed=true'],iframe[srcdoc]{height:calc(100vh - 110px)!important}"
                 ".st-key-artbar{padding:0 2.5rem}</style>",  # clear of the sidebar toggle and the menu
                 unsafe_allow_html=True)
-    # No back arrow: the section's entry in the side menu goes back to the list.
-    _, folder = st.container(key="artbar").columns([20, 1], vertical_alignment="center")
+    back, _, folder = st.container(key="artbar").columns([1, 19, 1], vertical_alignment="center")
+    if back.button("", icon=":material/arrow_back:", type="tertiary", help=t["back"], key=f"back-{state_key}"):
+        st.session_state.pop(state_key, None)
+        st.rerun()
     return bool(path) and folder.button("", icon=":material/folder_open:", type="tertiary", help=t["show_folder"])
 
 
