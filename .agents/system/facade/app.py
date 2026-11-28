@@ -37,7 +37,7 @@ T = {
         "sync": "Get the team's latest", "night": "Night mode", "day": "Day mode", "synced": "Up to date with the team.",
         "sync_fail": "Could not get the team's latest changes right now.",
         "tab_skills": "Skills", "tab_perms": "General permissions", "tab_artifacts": "Artifacts", "tab_history": "History",
-        "tab_docs": "Documents", "docs_intro": "What is in the team's documents folder. Click one to see it here.", "no_docs": "The documents folder is empty. Put the team's documents there (or ask the AI assistant to).", "tab_ideas": "Ideas", "ideas_intro": "Ideas for the team's workspace. Anyone can add one or update its status.",
+        "tab_docs": "Documents", "docs_intro": "What is in the team's documents folder. Click one to see it here.", "docs_count": "{n} files inside", "no_docs": "The documents folder is empty. Put the team's documents there (or ask the AI assistant to).", "tab_ideas": "Ideas", "ideas_intro": "Ideas for the team's workspace. Anyone can add one or update its status.",
         "no_ideas": "No ideas yet.", "comment": "Comment", "comment_hint": "Add a comment", "comment_send": "Comment",
         "comment_summary": "Comment on idea {n}", "new_idea": "Title", "new_idea_hint": "Your idea in a few words", "new_idea_text": "Description", "new_idea_text_hint": "Tell the team more: what it would solve, who it helps (optional)", "comments_n": "Comments ({n})", "idea_flow": "See the workflow", "done_n": "Show done ideas ({n})", "archived_n": "Show archived ideas ({n})", "take_idea": "I'll take it", "drop_idea": "Let it go", "taken_by": "{who} is on it", "assign_summary": "Idea {n}: {who} is on it", "unassign_summary": "Idea {n}: free again", "add_idea": "Add", "days": ["today", "yesterday", "{n} days ago"],
         "idea_summary": "New idea: {text}", "set_status": "Status", "save_status": "Save status",
@@ -97,7 +97,7 @@ T = {
         "sync": "Traer lo último del equipo", "night": "Modo noche", "day": "Modo día", "synced": "Al día con el equipo.",
         "sync_fail": "No se pudieron traer los últimos cambios del equipo ahora.",
         "tab_skills": "Skills", "tab_perms": "Permisos generales", "tab_artifacts": "Artefactos", "tab_history": "Historial",
-        "tab_docs": "Documentos", "docs_intro": "Lo que hay en la carpeta de documentos del equipo. Hacé clic en uno para verlo acá.", "no_docs": "La carpeta de documentos está vacía. Poné ahí los documentos del equipo (o pedíselo al asistente de IA).", "tab_ideas": "Ideas", "ideas_intro": "Ideas para el espacio del equipo. Cualquiera puede sumar una o cambiar su estado.",
+        "tab_docs": "Documentos", "docs_intro": "Lo que hay en la carpeta de documentos del equipo. Hacé clic en uno para verlo acá.", "docs_count": "{n} archivos adentro", "no_docs": "La carpeta de documentos está vacía. Poné ahí los documentos del equipo (o pedíselo al asistente de IA).", "tab_ideas": "Ideas", "ideas_intro": "Ideas para el espacio del equipo. Cualquiera puede sumar una o cambiar su estado.",
         "no_ideas": "Todavía no hay ideas.", "comment": "Comentario", "comment_hint": "Sumá un comentario", "comment_send": "Comentar",
         "comment_summary": "Comentario en la idea {n}", "new_idea": "Título", "new_idea_hint": "Tu idea en pocas palabras", "new_idea_text": "Descripción", "new_idea_text_hint": "Contale más al equipo: qué resolvería, a quién ayuda (opcional)", "comments_n": "Comentarios ({n})", "idea_flow": "Ver el flujo", "done_n": "Mostrar las hechas ({n})", "archived_n": "Mostrar las archivadas ({n})", "take_idea": "Me la asigno", "drop_idea": "Soltarla", "taken_by": "La tiene {who}", "assign_summary": "Idea {n}: la tiene {who}", "unassign_summary": "Idea {n}: quedó libre", "add_idea": "Agregar", "days": ["hoy", "ayer", "hace {n} días"],
         "idea_summary": "Nueva idea: {text}", "set_status": "Estado", "save_status": "Guardar estado",
@@ -1185,16 +1185,33 @@ if section == t["tab_docs"]:
             show_in_folder(base)
         if not files:
             empty_state(t["no_docs"])
-        last = None
-        for f in files:
-            group = f.parent.relative_to(base).as_posix()  # same "/" on Windows
-            if group != last:
-                last = group
-                if group != ".":
-                    st.markdown(f"**{html.escape(group)}**")
-            if st.button(f.name, icon=doc_icon(f), key=f"doc-{f}", type="tertiary"):
-                st.session_state.viewing_doc = str(f)
-                st.rerun()
+        else:
+            # Like a file explorer: where you are (each step clickable), then its folders, then its files.
+            here = base / st.session_state.get("docs_dir", "")
+            if not here.is_dir() or base not in (here, *here.parents):
+                here = base
+            steps = [base, *reversed([p for p in here.parents if base in p.parents]), here] if here != base else [base]
+            with st.container(key="docscrumbs"):
+                trail = st.columns([1] * len(steps) + [max(1, 8 - len(steps))], gap="small", vertical_alignment="center")
+                for i, step in enumerate(steps):
+                    name = t["tab_docs"] if step == base else step.name
+                    if trail[i].button(name, key=f"crumb-{step}", type="tertiary",
+                                       icon=":material/chevron_right:" if i else ":material/folder:", disabled=step == here):
+                        st.session_state.docs_dir = step.relative_to(base).as_posix() if step != base else ""
+                        st.rerun()
+            inside = sorted((p for p in here.iterdir() if not p.name.startswith(".")),
+                            key=lambda p: (p.is_file(), p.name.lower()))
+            with st.container(border=True, key="docslist"):
+                for item in inside:
+                    if item.is_dir():
+                        count = sum(1 for f in files if item in f.parents)
+                        if st.button(item.name, icon=":material/folder:", key=f"dir-{item}", type="tertiary",
+                                     help=t["docs_count"].format(n=count)):
+                            st.session_state.docs_dir = item.relative_to(base).as_posix()
+                            st.rerun()
+                    elif st.button(item.name, icon=doc_icon(item), key=f"doc-{item}", type="tertiary"):
+                        st.session_state.viewing_doc = str(item)
+                        st.rerun()
 
 # History: who changed what, in plain words
 if section == t["tab_history"]:
