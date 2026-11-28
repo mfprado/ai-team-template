@@ -906,8 +906,7 @@ def enter_artifact(item):
 
 def show_report(item):
     head, action = st.columns([3, 2])
-    is_app = item["kind"] == "folder" and (item["path"] / "app.py").is_file()
-    if not is_app:  # an app shows its own title
+    if item["kind"] == "link" or (item["kind"] == "file" and item["path"].suffix.lower() not in (".html", ".htm")):  # those show their own title
         head.subheader(item["title"])
     if item["private"] and action.button(t["share_team"], type="primary", use_container_width=True):
         confirm_share(item)
@@ -923,10 +922,6 @@ def show_report(item):
                         break
         if port:
             components.iframe(f"http://localhost:{port}/?embed=true", height=820, scrolling=True)
-            # As tall as the window, not a small box with its own scroll.
-            st.markdown("<style>iframe[src*='embed=true']{height:calc(100vh - 150px)!important}"
-                        "[data-testid='stMainBlockContainer']{max-width:100%!important;padding:3.2rem 2rem 0}</style>",
-                        unsafe_allow_html=True)
         else:
             st.warning(t["app_failed"])
         return
@@ -971,6 +966,13 @@ if section == t["tab_artifacts"]:
             st.rerun()
     viewing = next((i for i in items if i["key"] == st.session_state.get("viewing")), None)
     if viewing:
+        # An open artifact gets the whole window: no top margin, full width, as tall as the window.
+        # The page's top bar stays see-through so the back arrow under it can be clicked.
+        st.markdown("<style>[data-testid='stMainBlockContainer']{max-width:100%!important;padding:.5rem 2rem 0}"
+                    "header[data-testid='stHeader']{background:transparent;pointer-events:none}"
+                    "header[data-testid='stHeader'] *{pointer-events:auto}"
+                    "iframe[src*='embed=true'],iframe[srcdoc]{height:calc(100vh - 70px)!important}</style>",
+                    unsafe_allow_html=True)
         if st.button("", icon=":material/arrow_back:", type="tertiary", help=t["back"]):
             st.session_state.pop("viewing", None)
             st.rerun()
