@@ -1105,7 +1105,7 @@ if section == t["tab_docs"]:
     files = doc_files()
     last = None
     for f in files:
-        group = str(f.parent.relative_to(base))
+        group = f.parent.relative_to(base).as_posix()  # same "/" on Windows
         if group != last:
             last = group
             if group != ".":
@@ -1128,7 +1128,7 @@ if section == t["tab_docs"]:
             empty_state(t["no_docs"])
         last = None
         for f in files:
-            group = str(f.parent.relative_to(base))
+            group = f.parent.relative_to(base).as_posix()  # same "/" on Windows
             if group != last:
                 last = group
                 if group != ".":
