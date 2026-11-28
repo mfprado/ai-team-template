@@ -905,11 +905,14 @@ def enter_artifact(item):
 
 
 def show_report(item):
-    head, action = st.columns([3, 2])
-    if item["kind"] == "link" or (item["kind"] == "file" and item["path"].suffix.lower() not in (".html", ".htm")):  # those show their own title
-        head.subheader(item["title"])
-    if item["private"] and action.button(t["share_team"], type="primary", use_container_width=True):
-        confirm_share(item)
+    # Pages and apps show their own title; the row is left out when it would be empty.
+    titled = item["kind"] == "link" or (item["kind"] == "file" and item["path"].suffix.lower() not in (".html", ".htm"))
+    if titled or item["private"]:
+        head, action = st.columns([3, 2])
+        if titled:
+            head.subheader(item["title"])
+        if item["private"] and action.button(t["share_team"], type="primary", use_container_width=True):
+            confirm_share(item)
     p = item["path"]
     if item["kind"] == "folder" and (p / "app.py").is_file():
         # The app itself, inside the page: opening it shows what it is for.
@@ -968,10 +971,11 @@ if section == t["tab_artifacts"]:
         st.markdown("<style>[data-testid='stMainBlockContainer']{max-width:100%!important;padding:.5rem 2rem 0}"
                     "header[data-testid='stHeader']{background:transparent;pointer-events:none}"
                     "header[data-testid='stHeader'] *{pointer-events:auto}"
-                    "iframe[src*='embed=true'],iframe[srcdoc]{height:calc(100vh - 70px)!important}</style>",
+                    "iframe[src*='embed=true'],iframe[srcdoc]{height:calc(100vh - 110px)!important}"
+                    ".st-key-artbar{padding:0 2.5rem}</style>",  # clear of the sidebar toggle and the menu
                     unsafe_allow_html=True)
         # One thin row: back on the left, the artifact's folder on the right.
-        back, _, folder = st.columns([1, 20, 1], vertical_alignment="center")
+        back, _, folder = st.container(key="artbar").columns([1, 20, 1], vertical_alignment="center")
         if back.button("", icon=":material/arrow_back:", type="tertiary", help=t["back"]):
             st.session_state.pop("viewing", None)
             st.rerun()
