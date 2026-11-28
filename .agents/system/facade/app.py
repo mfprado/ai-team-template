@@ -34,7 +34,7 @@ SAFE_TO_OPEN = {".html", ".htm", ".pdf", ".png", ".jpg", ".jpeg", ".gif", ".svg"
 T = {
     "en": {
         "title": "{team} AI workspace", "champion": "AI Champion: {name}",
-        "sync": "Get the team's latest", "synced": "Up to date with the team.",
+        "sync": "Get the team's latest", "night": "Night mode", "synced": "Up to date with the team.",
         "sync_fail": "Could not get the team's latest changes right now.",
         "tab_skills": "Skills", "tab_perms": "General permissions", "tab_artifacts": "Artifacts", "tab_history": "History",
         "tab_docs": "Documents", "docs_intro": "What is in the team's documents folder. Click one to see it here.", "no_docs": "The documents folder is empty. Put the team's documents there (or ask the AI assistant to).", "tab_ideas": "Ideas", "ideas_intro": "Ideas for the team's workspace. Anyone can add one or update its status.",
@@ -94,7 +94,7 @@ T = {
     },
     "es": {
         "title": "Espacio de IA de {team}", "champion": "IA Champion: {name}",
-        "sync": "Traer lo último del equipo", "synced": "Al día con el equipo.",
+        "sync": "Traer lo último del equipo", "night": "Modo noche", "synced": "Al día con el equipo.",
         "sync_fail": "No se pudieron traer los últimos cambios del equipo ahora.",
         "tab_skills": "Skills", "tab_perms": "Permisos generales", "tab_artifacts": "Artefactos", "tab_history": "Historial",
         "tab_docs": "Documentos", "docs_intro": "Lo que hay en la carpeta de documentos del equipo. Hacé clic en uno para verlo acá.", "no_docs": "La carpeta de documentos está vacía. Poné ahí los documentos del equipo (o pedíselo al asistente de IA).", "tab_ideas": "Ideas", "ideas_intro": "Ideas para el espacio del equipo. Cualquiera puede sumar una o cambiar su estado.",
@@ -359,7 +359,13 @@ logo = ROOT / ".agents/brand/logo.png"
 icon = ROOT / ".agents/brand/icon.png"
 st.set_page_config(page_title=t["title"].format(team=team.get("team", "Team")), layout="centered",
                    page_icon=str(icon) if icon.exists() else None)
-st.markdown(look.css(load_json(ROOT / ".agents/brand.json", {})), unsafe_allow_html=True)
+brand = load_json(ROOT / ".agents/brand.json", {})
+# Night or day: the person's choice, kept in the address so a reload remembers it.
+if "night" not in st.session_state:
+    choice = st.query_params.get("mode")
+    st.session_state.night = look.is_dark_brand(brand) if choice not in ("night", "day") else choice == "night"
+st.query_params["mode"] = "night" if st.session_state.night else "day"
+st.markdown(look.css(look.in_mode(brand, st.session_state.night)), unsafe_allow_html=True)
 # Copy buttons: show "Copied!" for a moment after a click (the copy itself blurs the button,
 # so CSS alone cannot tell). The script runs in a hidden frame of the same page.
 components.html("""<script>
@@ -386,6 +392,7 @@ with st.sidebar:
     if refresh or "synced" not in st.session_state:
         git("fetch", "--quiet")  # then fast-forward, keeping unsaved work (whatever pull.rebase says)
         st.session_state.synced = git("merge", "--ff-only", "--autostash", "--quiet", "@{upstream}").returncode == 0
+    st.toggle(t["night"], key="night")
     status, ok = sync_status()
     st.markdown(look.sync_badge(status, ok), unsafe_allow_html=True)
     if status == t["unshared"]:

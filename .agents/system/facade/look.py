@@ -18,6 +18,22 @@ from flow_page import company_font, mix, on, palette
 BRAND_DIR = Path(__file__).resolve().parents[2] / "brand"
 
 
+def is_dark_brand(brand):
+    """True when the brand's own page is dark (light text on a dark background)."""
+    return on(palette(brand)["background"]) == "#FFFFFF"
+
+
+def in_mode(brand, dark):
+    """The brand in night (dark=True) or day colours. The brand's own look is one of the two;
+    the other swaps background and text, with the background a deep shade of the text colour."""
+    if dark == is_dark_brand(brand):
+        return brand
+    c = palette(brand)
+    if dark:
+        return {**brand, "background": mix(c["text"], "#000000", 0.35), "text": c["background"]}
+    return {**brand, "background": mix(c["text"], "#FFFFFF", 0.92), "text": c["background"]}
+
+
 def tokens(brand):
     c = palette(brand)
     light = on(c["background"]) != "#FFFFFF"
@@ -253,6 +269,13 @@ button:focus-visible {{ outline:2px solid var(--accent) !important; outline-offs
 [class*="st-key-ask-"] [data-testid="stCode"] code {{ font-family:{font} !important; background:transparent !important;
   color:var(--ink) !important; font-size:1.35rem !important; font-weight:560; letter-spacing:-0.01em;
   white-space:pre-wrap !important; font-variation-settings:'opsz' 36; line-height:1.3; }}
+
+/* Text boxes and menus: in the page's colours, day or night */
+input, textarea, [data-baseweb="select"] > div, [data-baseweb="input"], [data-baseweb="textarea"],
+[data-baseweb="base-input"] {{ background:var(--card) !important; color:var(--ink) !important; }}
+input::placeholder, textarea::placeholder {{ color:var(--muted) !important; opacity:1; }}
+[data-baseweb="popover"] ul, [data-baseweb="menu"] {{ background:var(--card) !important; color:var(--ink) !important; }}
+[data-testid="stMarkdownContainer"], [data-testid="stWidgetLabel"] p, label {{ color:var(--ink); }}
 
 /* Popovers (an artifact's "What it is"): readable on the brand, dark brands included */
 [data-testid="stPopoverBody"] {{ background:var(--card) !important; border:1px solid var(--rule) !important; }}
