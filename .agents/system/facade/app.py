@@ -378,6 +378,33 @@ if (!doc.body.dataset.copyFeedback) {
     b.classList.add("copied");
     setTimeout(() => b.classList.remove("copied"), 1500);
   }, true);
+  // On a narrow screen the side menu covers the page: a click on the page closes it
+  // (inside an open artifact too: the page's window loses focus to the artifact's frame).
+  const closeSide = target => {
+    const side = doc.querySelector('[data-testid="stSidebar"]');
+    if (!side || side.getAttribute("aria-expanded") !== "true" || (target && side.contains(target))) return;
+    const main = doc.querySelector('[data-testid="stMain"], section.main');
+    if (!main || side.getBoundingClientRect().right <= main.getBoundingClientRect().left + 1) return;  // side by side
+    const close = doc.querySelector('[data-testid="stSidebarCollapseButton"] button');
+    if (close) close.click();
+  };
+  doc.addEventListener("click", e => closeSide(e.target), true);
+  window.parent.addEventListener("blur", () => setTimeout(() => {
+    const f = doc.activeElement;
+    if (f && f.tagName === "IFRAME" && f.height !== "0") closeSide(f);
+  }, 0));
+  // Artifacts and documents open in frames: let them go full screen (presentations).
+  const allow = f => {
+    if (f.tagName !== "IFRAME" || f.height === "0" || (f.getAttribute("allow") || "").includes("fullscreen")) return;
+    f.setAttribute("allow", ((f.getAttribute("allow") || "") + "; fullscreen").replace(/^; /, ""));
+    f.setAttribute("allowfullscreen", "");
+    if (f.hasAttribute("srcdoc")) f.srcdoc = f.srcdoc; else if (f.src) f.src = f.src;  // reload with the new rights
+  };
+  doc.querySelectorAll("iframe").forEach(allow);
+  new MutationObserver(ms => ms.forEach(m => m.addedNodes.forEach(n => {
+    if (n.nodeType !== 1) return;
+    if (n.tagName === "IFRAME") allow(n); else n.querySelectorAll && n.querySelectorAll("iframe").forEach(allow);
+  }))).observe(doc.body, {childList: true, subtree: true});
 }
 </script>""", height=0)
 # Section picker that survives reruns (st.tabs jumps back to the first tab when a switch changes).

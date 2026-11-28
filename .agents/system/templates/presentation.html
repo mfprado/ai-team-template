@@ -55,6 +55,11 @@ body.shownotes .notes{display:block}
 :root:fullscreen .ctl:hover,:root:fullscreen .foot:hover{opacity:1}
 :root:fullscreen .bar{opacity:0;transition:opacity .2s}
 :root:fullscreen .ctl:hover~.bar,:root:fullscreen body:has(.ctl:hover) .bar{opacity:1}
+:root.full{--top:0px;--bot:0px}
+:root.full .ctl,:root.full .foot{height:48px;opacity:0;transition:opacity .2s;z-index:7;pointer-events:auto}
+:root.full .ctl:hover,:root.full .foot:hover{opacity:1}
+:root.full .bar{opacity:0;transition:opacity .2s}
+:root.full .ctl:hover~.bar,:root.full body:has(.ctl:hover) .bar{opacity:1}
 @media print{.foot,.bar,.notes,.nav,.ctl{display:none}.slide{display:flex;position:relative;page-break-after:always;width:100vw;height:56.25vw}html,body{overflow:visible}.deck{position:static;display:block}}
 </style>
 </head>
@@ -116,8 +121,11 @@ else if(e.key==='n'||e.key==='N')notes();
 else if(e.key==='f'||e.key==='F')full();
 else if(e.key==='Home')go(0);else if(e.key==='End')go(s.length-1)});
 function notes(){document.body.classList.toggle('shownotes');document.getElementById('bNotes').classList.toggle('act')}
-function full(){document.activeElement&&document.activeElement.blur();document.fullscreenElement?document.exitFullscreen():document.documentElement.requestFullscreen()}
-document.addEventListener('fullscreenchange',()=>{const b=document.getElementById('bFull'),on=!!document.fullscreenElement;
+function full(){document.activeElement&&document.activeElement.blur();const R=document.documentElement;if(document.fullscreenElement)return document.exitFullscreen();if(R.classList.contains('full'))return fake(false);const p=R.requestFullscreen?R.requestFullscreen():null;p&&p.catch?p.catch(()=>fake(true)):p||fake(true);setTimeout(()=>{if(!document.fullscreenElement&&!R.classList.contains('full'))fake(true)},600)}
+// Where the browser refuses full screen (some embedded browsers), the slides fill the window instead.
+function fake(on){const R=document.documentElement;R.classList.toggle('full',on);try{const f=window.frameElement;if(f){if(on){f.dataset.st=f.getAttribute('style')||'';f.style.cssText='position:fixed;inset:0;width:100vw;height:100vh;z-index:1000000;border:0'}else f.setAttribute('style',f.dataset.st||'')}}catch(e){}document.dispatchEvent(new Event('fullscreenchange'))}
+document.addEventListener('keydown',e=>{if(e.key==='Escape'&&document.documentElement.classList.contains('full'))fake(false)});
+document.addEventListener('fullscreenchange',()=>{const b=document.getElementById('bFull'),on=!!document.fullscreenElement||document.documentElement.classList.contains('full');
 b.innerHTML=on?'<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 14h6v6M20 10h-6V4M14 10l7-7M3 21l7-7"/></svg>':'<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"/></svg>';b.title=b.ariaLabel=on?'__EXIT_FULL__':'__FULL__'});
 document.getElementById('bPrev').onclick=()=>go(i-1);document.getElementById('bNext').onclick=()=>go(i+1);
 document.getElementById('bNotes').onclick=notes;document.getElementById('bFull').onclick=full;
