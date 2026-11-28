@@ -630,10 +630,16 @@ if section == t["tab_ideas"]:
 
     def idea_card(idea):
         n = str(idea["id"])
+        # Folded like a skill card: title, author, status and owner always; a click on the title
+        # opens the description, the workflow and the comments. A second click folds it again.
+        is_open = st.session_state.get("open_idea") == n
         with st.container(border=True, key=f"ideacard-{n}"):
             head, tag = st.columns([5, 1.7], vertical_alignment="top")
-            head.markdown(f'<div class="idea-text">{html.escape(idea["text"])}</div>'
-                          f'<div class="idea-who">{html.escape(idea["who"])}, {nice_date(idea["date"])}</div>',
+            if head.button(idea["text"], key=f"ideaopen-{n}", type="tertiary", use_container_width=True,
+                           icon=":material/expand_less:" if is_open else ":material/expand_more:"):
+                st.session_state.open_idea = None if is_open else n
+                st.rerun()
+            head.markdown(f'<div class="idea-who">{html.escape(idea["who"])}, {nice_date(idea["date"])}</div>',
                           unsafe_allow_html=True)
             # The status is a small coloured tag; clicking it opens the three states to pick another.
             if st.session_state.get(f"idea-{n}") != idea["key"]:
@@ -656,12 +662,16 @@ if section == t["tab_ideas"]:
                 elif not owner and idea["key"] not in ("done", "archived"):
                     st.button(t["take_idea"], key=f"take-{n}", use_container_width=True,
                               on_click=assign, args=(n, me or "?"))
+            comments = idea.get("comments", [])
+            if not is_open:
+                if comments:
+                    st.caption(t["comments_n"].format(n=len(comments)))
+                return
             if idea.get("description"):
                 st.markdown(f'<div class="idea-description">{html.escape(idea["description"])}</div>',
                             unsafe_allow_html=True)
             if idea.get("flow"):  # shown open, as on a skill: a diagram drawn while folded has no size
                 show_flow(idea["flow"])
-            comments = idea.get("comments", [])
             with st.expander(t["comments_n"].format(n=len(comments))):
                 for c in comments:
                     st.markdown(f'<div class="idea-comment"><div>{html.escape(c["text"])}</div>'
