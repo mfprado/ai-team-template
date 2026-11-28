@@ -96,6 +96,12 @@ https://advanced-dashboard-demo.streamlit.app/, in the company's colours and typ
   a small trend line or bars underneath.
   **All the cards in the row have the same height**, even when one has a longer text: put them in
   one CSS grid (`display:grid`), not in separate `st.columns`, which size each card to its text.
+- **Day and night:** the team page has a day and a night mode, and the apps it opens follow it
+  through `look.css` and `look.tokens`. Two things break that, so avoid them:
+  - Tables: use `st.table` (or an HTML table), not `st.dataframe`. `st.dataframe` keeps
+    Streamlit's own theme colours and ignores the mode.
+  - Altair charts: call `.configure(...)` first and set axis and legend colours after it (or all
+    in that one call). Called last, `.configure()` wipes the label colours.
 - **Then the charts**, each in a card with a short title and one line saying what it shows, the
   legend above the chart, values formatted for people ($1.2M, 12%), and a tooltip on hover.
   Choose the chart for the question: lines for change over time, stacked areas for parts of a
