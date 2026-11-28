@@ -344,6 +344,8 @@ button:focus-visible {{ outline:2px solid var(--accent) !important; outline-offs
 /* A Markdown document open on its own: centred between the back arrow and the folder button */
 .st-key-mdview {{ max-width:46rem; margin:0 auto; align-self:center; width:100% !important; }}
 .st-key-mdview [data-testid="stMarkdownContainer"] p {{ max-width:none; }}
+/* Streamlit gives the text a fixed width measured on the full page: keep it inside the centred column */
+.st-key-mdview [data-testid="stElementContainer"], .st-key-mdview [data-testid="stMarkdown"] {{ width:100% !important; max-width:100% !important; }}
 /* A presentation filling the window (where the browser refuses full screen): nothing on top of it */
 .slides-full [data-testid="stSidebar"], .slides-full [data-testid="stHeader"],
 .slides-full [data-testid="stSidebarCollapsedControl"] {{ display:none !important; }}
