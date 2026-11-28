@@ -335,6 +335,9 @@ button:focus-visible {{ outline:2px solid var(--accent) !important; outline-offs
 [class*="st-key-explist-"] button > div {{ justify-content:flex-start; }}
 [class*="st-key-explist-"] button:hover {{ background:var(--wash) !important; color:var(--accent) !important; }}
 [class*="st-key-explist-"] [class*="st-key-dir-"] button span {{ color:var(--accent); }}
+/* A Markdown document open on its own: centred between the back arrow and the folder button */
+.st-key-mdview {{ max-width:46rem; margin:0 auto; align-self:center; width:100% !important; }}
+.st-key-mdview [data-testid="stMarkdownContainer"] p {{ max-width:none; }}
 /* Hover hints (the "?" and the sun or moon): readable, day or night */
 [data-testid="stTooltipContent"], [data-baseweb="tooltip"] > div {{ background:var(--ink) !important; }}
 [data-testid="stTooltipContent"], [data-testid="stTooltipContent"] * {{ color:var(--paper) !important; }}

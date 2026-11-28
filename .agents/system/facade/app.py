@@ -1032,7 +1032,8 @@ def show_report(item):
     elif p.suffix.lower() in (".png", ".jpg", ".jpeg", ".gif", ".svg"):
         st.image(str(p))
     elif p.suffix.lower() == ".md":
-        st.markdown(inline_images(p.read_text(encoding="utf-8", errors="replace"), p))
+        with st.container(key="mdview"):  # a page to read: centred, at a reading width
+            st.markdown(inline_images(p.read_text(encoding="utf-8", errors="replace"), p))
     elif p.suffix.lower() in (".txt", ".csv"):
         st.text(p.read_text(encoding="utf-8", errors="replace"))
     elif st.button(t["show_folder"]):  # a file the page cannot show or open
