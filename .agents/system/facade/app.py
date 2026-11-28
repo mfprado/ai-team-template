@@ -924,8 +924,8 @@ def show_report(item):
         if port:
             components.iframe(f"http://localhost:{port}/?embed=true", height=820, scrolling=True)
             # As tall as the window, not a small box with its own scroll.
-            st.markdown("<style>iframe[src*='embed=true']{height:calc(100vh - 110px)!important}"
-                        "[data-testid='stMainBlockContainer']{max-width:100%!important;padding-left:2rem;padding-right:2rem}</style>",
+            st.markdown("<style>iframe[src*='embed=true']{height:calc(100vh - 150px)!important}"
+                        "[data-testid='stMainBlockContainer']{max-width:100%!important;padding:3.2rem 2rem 0}</style>",
                         unsafe_allow_html=True)
         else:
             st.warning(t["app_failed"])
